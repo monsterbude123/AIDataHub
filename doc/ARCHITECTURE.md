@@ -1,0 +1,74 @@
+# AI DataHub 架构全景
+
+## 系统定位
+
+AI DataHub 是一个以 **DDD + Contract First** 为核心的数据中台工程，采用“SDK 独立发布 + 微服务实现 + 前端门户”的分层架构，支持并行开发与长期演进。
+
+## 标准调用链（必须遵循）
+
+```text
+Next.js UI
+    -> SDK/BFF 调用层
+        -> NestJS Services（按 bounded context 划分）
+            -> 数据与计算基础设施（DB/对象存储/消息/调度/计算引擎）
+```
+
+该链路用于约束后续 AI 开发者：
+
+- 前端不直接访问数据库或计算引擎
+- 业务能力必须通过服务层暴露
+- 服务接口必须先对齐 `@ai-datahub/contract`
+- SDK 负责调用封装，不承载业务状态
+
+## 分层职责
+
+### 1) Next.js UI（交互层）
+
+- 负责页面、交互、可视化、用户会话
+- 可包含轻量 BFF（聚合多个服务调用）
+- 不承载核心领域规则
+
+### 2) SDK/BFF（调用编排层）
+
+- SDK：提供稳定类型化调用入口（Result/Error/Trace 统一）
+- BFF：按页面/场景聚合服务接口，减少前端复杂度
+- 仅做编排、鉴权透传、错误统一，不做领域持久化
+
+### 3) NestJS Services（领域能力层）
+
+- 每个 bounded context 对应一个服务（可按 MVP 先合并后拆分）
+- 负责领域规则、权限控制、幂等、审计、任务编排
+- 统一输出契约定义的返回模型
+
+### 4) 数据与计算基础设施（资源层）
+
+- 数据库（PostgreSQL/ClickHouse 等）
+- 对象存储（MinIO/OSS）
+- 调度与任务执行（Task Scheduler / Worker / Spark 等）
+- 消息与集成（Kafka/RocketMQ/通知渠道）
+
+## 技术栈基线
+
+- 前端：Next.js（React）
+- 后端：NestJS（REST/JSON）
+- 语言：TypeScript（strict）
+- 包管理：npm workspaces
+- 构建：tsup（包） + TypeScript
+- 测试：Vitest（当前），后续可按服务引入 Jest/Nest testing 体系
+- 契约：`packages/contract`
+- SDK：`packages/sdk`
+- 服务模板：`services/*`
+
+## AI 开发者执行提示
+
+1. 先确认变更所在层级（UI / SDK/BFF / Service / Infra），禁止跨层偷实现。
+2. 修改接口前先更新 Contract，再同步 SDK 与 Service。
+3. Service 发生异常时必须返回结构化错误（不可静默吞错）。
+4. 所有写操作优先支持 `idempotencyKey`，全链路透传 `traceId`。
+5. 新增服务时先在 `doc/services/` 创建开发计划，再开始代码实现。
+
+## 相关文档
+
+- 架构决策：`doc/DECISIONS.md`
+- 服务规划：`doc/services/README.md`
+- 设计手册入口：`doc/design/sdk/README.md`
