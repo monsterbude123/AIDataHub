@@ -13,28 +13,28 @@ export class ApprovalEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   businessType!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   businessId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   title!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   applicantId!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   currentNode?: number;
 
   @Column({ type: 'simple-json', nullable: true })
   payload?: Record<string, unknown>;
 
-  @Column()
+  @Column({ type: 'varchar' })
   templateId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   status!: ApprovalStatus;
 
   @Column({ type: 'simple-json', nullable: true })

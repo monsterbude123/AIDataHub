@@ -8,6 +8,7 @@ import { MenuModule } from './modules/menu/menu.module';
 import { DirectoryModule } from './modules/directory/directory.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ApprovalTemplateModule } from './modules/approval-template/approval-template.module';
+import { ApprovalModule } from './modules/approval/approval.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ApprovalTemplateModule } from './modules/approval-template/approval-tem
     DirectoryModule,
     AuthModule,
     ApprovalTemplateModule,
+    ApprovalModule,
   ],
   controllers: [HealthController],
 })
