@@ -10,10 +10,12 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ApprovalTemplateModule } from './modules/approval-template/approval-template.module';
 import { ApprovalModule } from './modules/approval/approval.module';
 import { DataPermissionModule } from './modules/data-permission/data-permission.module';
+import { InitModule } from './modules/init/init.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    InitModule,
     OrganizationModule,
     RoleModule,
     PermissionModule,
