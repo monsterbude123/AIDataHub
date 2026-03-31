@@ -12,7 +12,7 @@ export class DataPermissionEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   roleId!: string;
 
   @Column({ type: 'simple-json' })

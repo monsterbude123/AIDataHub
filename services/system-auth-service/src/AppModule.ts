@@ -9,6 +9,7 @@ import { DirectoryModule } from './modules/directory/directory.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ApprovalTemplateModule } from './modules/approval-template/approval-template.module';
 import { ApprovalModule } from './modules/approval/approval.module';
+import { DataPermissionModule } from './modules/data-permission/data-permission.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ApprovalModule } from './modules/approval/approval.module';
     AuthModule,
     ApprovalTemplateModule,
     ApprovalModule,
+    DataPermissionModule,
   ],
   controllers: [HealthController],
 })
