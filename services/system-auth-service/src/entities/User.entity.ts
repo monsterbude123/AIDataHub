@@ -20,8 +20,8 @@ export class UserEntity {
   @Column({ type: 'varchar' })
   username!: string;
 
-  @Column({ type: 'varchar', select: false })
-  passwordHash!: string;
+  @Column({ type: 'varchar', nullable: true, select: false })
+  passwordHash?: string;
 
   @Column({ type: 'varchar', nullable: true })
   email?: string;
