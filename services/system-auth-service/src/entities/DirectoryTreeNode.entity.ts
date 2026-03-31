@@ -13,13 +13,13 @@ export class DirectoryTreeNodeEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   parentId?: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   code!: string;
 
   @Column({ type: 'simple-json', nullable: true })

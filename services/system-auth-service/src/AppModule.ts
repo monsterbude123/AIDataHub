@@ -5,6 +5,7 @@ import { OrganizationModule } from './modules/organization/organization.module';
 import { RoleModule } from './modules/role/role.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { MenuModule } from './modules/menu/menu.module';
+import { DirectoryModule } from './modules/directory/directory.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MenuModule } from './modules/menu/menu.module';
     RoleModule,
     PermissionModule,
     MenuModule,
+    DirectoryModule,
   ],
   controllers: [HealthController],
 })
