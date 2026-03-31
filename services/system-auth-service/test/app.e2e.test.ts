@@ -9,10 +9,6 @@ import {
   afterEach,
 } from 'vitest';
 import { Test } from '@nestjs/testing';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -58,7 +54,6 @@ describe('system-auth-service E2E tests', () => {
   let testUserId: string;
   let testRoleId: string;
   let testPermissionId: string;
-  let testTemplateId: string;
 
   const entities = [
     OrganizationEntity,
@@ -180,7 +175,6 @@ describe('system-auth-service E2E tests', () => {
       definition: { nodes: [{ approverRole: 'test-role' }] },
     });
     await templateRepo.save(template);
-    testTemplateId = template.id;
   };
 
   describe('Organizations', () => {
@@ -192,7 +186,9 @@ describe('system-auth-service E2E tests', () => {
         org: { name: 'New Org', code: 'new-org', status: 'ENABLED' },
       });
       expect(result.ok).toBe(true);
-      expect(result.data?.orgId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.orgId).toBeDefined();
+      }
     });
 
     it('should reject duplicate code', async () => {
@@ -203,7 +199,9 @@ describe('system-auth-service E2E tests', () => {
         org: { name: 'Org 2', code: 'dup-code', status: 'ENABLED' },
       });
       expect(result.ok).toBe(false);
-      expect(result.error?.code).toBe('INVALID_ARGUMENT');
+      if (!result.ok) {
+        expect(result.error.code).toBe('INVALID_ARGUMENT');
+      }
     });
 
     it('should list organizations', async () => {
@@ -212,14 +210,18 @@ describe('system-auth-service E2E tests', () => {
       });
       const result = await organizationService.listOrganizations({});
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data)).toBe(true);
+      }
     });
 
     it('should update an organization', async () => {
       const createRes = await organizationService.createOrganization({
         org: { name: 'Update Org', code: 'update-org', status: 'ENABLED' },
       });
-      const orgId = createRes.data!.orgId;
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
+      const orgId = createRes.data.orgId;
       const result = await organizationService.updateOrganization({
         org: {
           id: orgId,
@@ -235,8 +237,10 @@ describe('system-auth-service E2E tests', () => {
       const createRes = await organizationService.createOrganization({
         org: { name: 'Delete Org', code: 'delete-org', status: 'ENABLED' },
       });
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
       const result = await organizationService.deleteOrganization({
-        orgId: createRes.data!.orgId,
+        orgId: createRes.data.orgId,
       });
       expect(result.ok).toBe(true);
     });
@@ -265,10 +269,12 @@ describe('system-auth-service E2E tests', () => {
 
     it('should reject duplicate username', async () => {
       const result = await userService.createUser({
-        user: { username: 'testuser', orgId: testOrgId },
+        user: { username: 'testuser', orgId: testOrgId, status: 'ENABLED' },
       });
       expect(result.ok).toBe(false);
-      expect(result.error?.code).toBe('USERNAME_DUPLICATE');
+      if (!result.ok) {
+        expect(result.error.code).toBe('USERNAME_DUPLICATE');
+      }
     });
 
     it('should list users with pagination', async () => {
@@ -276,8 +282,10 @@ describe('system-auth-service E2E tests', () => {
         page: { page: 1, pageSize: 10 },
       });
       expect(result.ok).toBe(true);
-      expect(result.data?.page).toBe(1);
-      expect(Array.isArray(result.data?.items)).toBe(true);
+      if (result.ok) {
+        expect(result.data.page).toBe(1);
+        expect(Array.isArray(result.data.items)).toBe(true);
+      }
     });
 
     it('should update a user', async () => {
@@ -312,25 +320,29 @@ describe('system-auth-service E2E tests', () => {
 
     it('should create a role', async () => {
       const result = await roleService.createRole({
-        role: { name: 'Admin', code: 'admin' },
+        role: { name: 'Admin', code: 'admin', permissions: [] },
       });
       expect(result.ok).toBe(true);
     });
 
     it('should list roles', async () => {
       await roleService.createRole({
-        role: { name: 'Viewer', code: 'viewer' },
+        role: { name: 'Viewer', code: 'viewer', permissions: [] },
       });
       const result = await roleService.listRoles({});
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data)).toBe(true);
+      }
     });
 
     it('should update a role', async () => {
       const createRes = await roleService.createRole({
-        role: { name: 'Updater', code: 'updater' },
+        role: { name: 'Updater', code: 'updater', permissions: [] },
       });
-      const roleId = createRes.data!.roleId;
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
+      const roleId = createRes.data.roleId;
       const result = await roleService.updateRole({
         role: { id: roleId, name: 'Updated', code: 'updater', permissions: [] },
       });
@@ -339,10 +351,12 @@ describe('system-auth-service E2E tests', () => {
 
     it('should delete a role', async () => {
       const createRes = await roleService.createRole({
-        role: { name: 'Deleter', code: 'deleter' },
+        role: { name: 'Deleter', code: 'deleter', permissions: [] },
       });
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
       const result = await roleService.deleteRole({
-        roleId: createRes.data!.roleId,
+        roleId: createRes.data.roleId,
       });
       expect(result.ok).toBe(true);
     });
@@ -369,10 +383,12 @@ describe('system-auth-service E2E tests', () => {
 
     it('should list permissions', async () => {
       const result = await permissionService.listPermissions({
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data?.items)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data.items)).toBe(true);
+      }
     });
 
     it('should bind permissions to role', async () => {
@@ -391,7 +407,9 @@ describe('system-auth-service E2E tests', () => {
     it('should return empty tree', async () => {
       const result = await menuService.listMenuTree({});
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data)).toBe(true);
+      }
     });
 
     it('should create a menu node', async () => {
@@ -405,8 +423,10 @@ describe('system-auth-service E2E tests', () => {
       const createRes = await menuService.upsertMenuNode({
         node: { type: 'BUTTON', name: 'Delete', enabled: true },
       });
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
       const result = await menuService.deleteMenuNode({
-        nodeId: createRes.data!.nodeId,
+        nodeId: createRes.data.nodeId,
       });
       expect(result.ok).toBe(true);
     });
@@ -419,7 +439,9 @@ describe('system-auth-service E2E tests', () => {
     it('should return empty tree', async () => {
       const result = await directoryService.listDirectoryTree({});
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data)).toBe(true);
+      }
     });
 
     it('should create a node', async () => {
@@ -433,8 +455,10 @@ describe('system-auth-service E2E tests', () => {
       const createRes = await directoryService.upsertDirectoryNode({
         node: { name: 'Delete', code: 'delete' },
       });
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
       const result = await directoryService.deleteDirectoryNode({
-        nodeId: createRes.data!.nodeId,
+        nodeId: createRes.data.nodeId,
       });
       expect(result.ok).toBe(true);
     });
@@ -483,14 +507,18 @@ describe('system-auth-service E2E tests', () => {
       });
       const result = await approvalTemplateService.listApprovalTemplates({});
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data)).toBe(true);
+      }
     });
 
     it('should update a template', async () => {
       const createRes = await approvalTemplateService.createApprovalTemplate({
         template: { businessType: 'test', name: 'Test', definition: {} },
       });
-      const templateId = createRes.data!.templateId;
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
+      const templateId = createRes.data.templateId;
       const result = await approvalTemplateService.updateApprovalTemplate({
         template: {
           id: templateId,
@@ -506,8 +534,10 @@ describe('system-auth-service E2E tests', () => {
       const createRes = await approvalTemplateService.createApprovalTemplate({
         template: { businessType: 'test', name: 'Test', definition: {} },
       });
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
       const result = await approvalTemplateService.deleteApprovalTemplate({
-        templateId: createRes.data!.templateId,
+        templateId: createRes.data.templateId,
       });
       expect(result.ok).toBe(true);
     });
@@ -553,7 +583,9 @@ describe('system-auth-service E2E tests', () => {
         page: { page: 1, pageSize: 10 },
       });
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data?.items)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data.items)).toBe(true);
+      }
     });
 
     it('should approve', async () => {
@@ -563,7 +595,9 @@ describe('system-auth-service E2E tests', () => {
         title: 'Test',
         applicantId: testUserId,
       });
-      const approvalId = createRes.data!.approvalId;
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
+      const approvalId = createRes.data.approvalId;
       const result = await approvalService.approve({
         approvalId,
         action: 'APPROVE',
@@ -579,8 +613,10 @@ describe('system-auth-service E2E tests', () => {
         title: 'Test',
         applicantId: testUserId,
       });
+      expect(createRes.ok).toBe(true);
+      if (!createRes.ok) return;
       const result = await approvalService.remindApproval({
-        approvalId: createRes.data!.approvalId,
+        approvalId: createRes.data.approvalId,
       });
       expect(result.ok).toBe(true);
     });
@@ -606,10 +642,12 @@ describe('system-auth-service E2E tests', () => {
       });
       const result = await dataPermissionService.listDataPermissions({
         roleId: testRoleId,
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
       expect(result.ok).toBe(true);
-      expect(Array.isArray(result.data?.items)).toBe(true);
+      if (result.ok) {
+        expect(Array.isArray(result.data.items)).toBe(true);
+      }
     });
   });
 
@@ -635,8 +673,10 @@ describe('system-auth-service E2E tests', () => {
       });
       expect(result).toHaveProperty('ok', false);
       expect(result).toHaveProperty('error');
-      expect(result.error).toHaveProperty('code');
-      expect(result.error).toHaveProperty('message');
+      if (!result.ok) {
+        expect(result.error).toHaveProperty('code');
+        expect(result.error).toHaveProperty('message');
+      }
     });
   });
 });

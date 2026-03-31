@@ -47,7 +47,6 @@ export class OrganizationService {
     const org = this.repo.create({
       name: req.org.name,
       code: req.org.code,
-      description: req.org.description,
       status: req.org.status,
       parentId: req.org.parentId,
       sort: req.org.sort,
@@ -67,7 +66,6 @@ export class OrganizationService {
 
     existing.name = req.org.name;
     existing.code = req.org.code;
-    existing.description = req.org.description;
     existing.status = req.org.status;
     existing.parentId = req.org.parentId;
     existing.sort = req.org.sort;

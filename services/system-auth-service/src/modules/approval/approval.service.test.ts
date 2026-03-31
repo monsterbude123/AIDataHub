@@ -6,7 +6,6 @@ import { ApprovalService } from './approval.service';
 import { ApprovalEntity } from '../../entities/Approval.entity';
 import { ApprovalTemplateEntity } from '../../entities/ApprovalTemplate.entity';
 import { DataSource } from 'typeorm';
-import { SystemAuthException } from '../../common/errors/system-auth.exception';
 
 describe('ApprovalService', () => {
   let service: ApprovalService;
@@ -55,7 +54,9 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.approvalId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.approvalId).toBeDefined();
+      }
     });
 
     it('should throw APPROVAL_TEMPLATE_NOT_FOUND when template not found', async () => {
@@ -78,7 +79,9 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.approvalId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.approvalId).toBeDefined();
+      }
     });
 
     it('should create approval with empty history', async () => {
@@ -89,7 +92,9 @@ describe('ApprovalService', () => {
         applicantId: 'user-1',
       });
 
-      const approval = await service.findById(result.data!.approvalId);
+      const approval = await service.findById(
+        result.ok ? result.data.approvalId : ''
+      );
       expect(approval?.history).toEqual([]);
       expect(approval?.status).toBe('PENDING');
     });
@@ -103,7 +108,8 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
-      const approvalId = createResult.data!.approvalId;
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
 
       const result = await service.approve({
         approvalId,
@@ -113,7 +119,9 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
 
       const approval = await service.findById(approvalId);
       expect(approval?.status).toBe('APPROVED');
@@ -129,7 +137,8 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
-      const approvalId = createResult.data!.approvalId;
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
 
       const result = await service.approve({
         approvalId,
@@ -162,7 +171,8 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
-      const approvalId = createResult.data!.approvalId;
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
 
       await service.approve({
         approvalId,
@@ -187,10 +197,11 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
-      const approvalId = createResult.data!.approvalId;
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
 
       // First approve
-      const result1 = await service.approve({
+      await service.approve({
         approvalId,
         action: 'APPROVE',
         approverId: 'approver-1',
@@ -211,7 +222,9 @@ describe('ApprovalService', () => {
       });
 
       expect(result2.ok).toBe(true);
-      expect(result2.data?.success).toBe(true);
+      if (result2.ok) {
+        expect(result2.data.success).toBe(true);
+      }
     });
 
     it('should throw when same approver tries different action', async () => {
@@ -221,7 +234,8 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
-      const approvalId = createResult.data!.approvalId;
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
 
       await service.approve({
         approvalId,
@@ -253,7 +267,8 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
-      const approvalId = createResult.data!.approvalId;
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
 
       const result = await service.approve({
         approvalId,
@@ -289,10 +304,12 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(2);
-      expect(result.data?.total).toBe(2);
-      expect(result.data?.page).toBe(1);
-      expect(result.data?.pageSize).toBe(10);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(2);
+        expect(result.data.total).toBe(2);
+        expect(result.data.page).toBe(1);
+        expect(result.data.pageSize).toBe(10);
+      }
     });
 
     it('should not list approved/rejected approvals', async () => {
@@ -303,8 +320,11 @@ describe('ApprovalService', () => {
         applicantId: 'user-1',
       });
 
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
+
       await service.approve({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         action: 'APPROVE',
         approverId: 'approver-1',
       });
@@ -315,8 +335,10 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(0);
-      expect(result.data?.total).toBe(0);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(0);
+        expect(result.data.total).toBe(0);
+      }
     });
 
     it('should support pagination', async () => {
@@ -335,9 +357,11 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(5);
-      expect(result.data?.total).toBe(15);
-      expect(result.data?.page).toBe(2);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(5);
+        expect(result.data.total).toBe(15);
+        expect(result.data.page).toBe(2);
+      }
     });
 
     it('should return empty array when no pending approvals', async () => {
@@ -347,8 +371,10 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(0);
-      expect(result.data?.total).toBe(0);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(0);
+        expect(result.data.total).toBe(0);
+      }
     });
   });
 
@@ -361,8 +387,11 @@ describe('ApprovalService', () => {
         applicantId: 'user-1',
       });
 
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
+
       await service.approve({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         action: 'APPROVE',
         approverId: 'approver-1',
       });
@@ -373,9 +402,11 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(1);
-      expect(result.data?.total).toBe(1);
-      expect(result.data?.items[0].status).toBe('APPROVED');
+      if (result.ok) {
+        expect(result.data.items.length).toBe(1);
+        expect(result.data.total).toBe(1);
+        expect(result.data.items[0].status).toBe('APPROVED');
+      }
     });
 
     it('should not list approvals where user has not acted', async () => {
@@ -386,8 +417,11 @@ describe('ApprovalService', () => {
         applicantId: 'user-1',
       });
 
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
+
       await service.approve({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         action: 'APPROVE',
         approverId: 'approver-1',
       });
@@ -398,8 +432,10 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(0);
-      expect(result.data?.total).toBe(0);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(0);
+        expect(result.data.total).toBe(0);
+      }
     });
 
     it('should list both approved and rejected approvals', async () => {
@@ -409,8 +445,10 @@ describe('ApprovalService', () => {
         title: 'Leave Request 1',
         applicantId: 'user-1',
       });
+      expect(createResult1.ok).toBe(true);
+      const approvalId1 = createResult1.ok ? createResult1.data.approvalId : '';
       await service.approve({
-        approvalId: createResult1.data!.approvalId,
+        approvalId: approvalId1,
         action: 'APPROVE',
         approverId: 'approver-1',
       });
@@ -421,8 +459,10 @@ describe('ApprovalService', () => {
         title: 'Leave Request 2',
         applicantId: 'user-2',
       });
+      expect(createResult2.ok).toBe(true);
+      const approvalId2 = createResult2.ok ? createResult2.data.approvalId : '';
       await service.approve({
-        approvalId: createResult2.data!.approvalId,
+        approvalId: approvalId2,
         action: 'REJECT',
         approverId: 'approver-1',
       });
@@ -433,8 +473,10 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(2);
-      expect(result.data?.total).toBe(2);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(2);
+        expect(result.data.total).toBe(2);
+      }
     });
 
     it('should not list pending approvals', async () => {
@@ -451,8 +493,10 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(0);
-      expect(result.data?.total).toBe(0);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(0);
+        expect(result.data.total).toBe(0);
+      }
     });
 
     it('should support pagination', async () => {
@@ -463,8 +507,10 @@ describe('ApprovalService', () => {
           title: `Leave Request ${i}`,
           applicantId: 'user-1',
         });
+        expect(createResult.ok).toBe(true);
+        const approvalId = createResult.ok ? createResult.data.approvalId : '';
         await service.approve({
-          approvalId: createResult.data!.approvalId,
+          approvalId,
           action: 'APPROVE',
           approverId: 'approver-1',
         });
@@ -476,9 +522,11 @@ describe('ApprovalService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(5);
-      expect(result.data?.total).toBe(15);
-      expect(result.data?.page).toBe(2);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(5);
+        expect(result.data.total).toBe(15);
+        expect(result.data.page).toBe(2);
+      }
     });
   });
 
@@ -491,13 +539,18 @@ describe('ApprovalService', () => {
         applicantId: 'user-1',
       });
 
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
+
       const result = await service.remindApproval({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         message: 'Please review',
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should throw APPROVAL_NOT_FOUND for non-existent approval', async () => {
@@ -513,15 +566,18 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
+
       await service.approve({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         action: 'APPROVE',
         approverId: 'approver-1',
       });
 
-      await expect(
-        service.remindApproval({ approvalId: createResult.data!.approvalId })
-      ).rejects.toThrow('Cannot remind approval in APPROVED status');
+      await expect(service.remindApproval({ approvalId })).rejects.toThrow(
+        'Cannot remind approval in APPROVED status'
+      );
     });
 
     it('should throw APPROVAL_STATE_INVALID for rejected approval', async () => {
@@ -531,15 +587,18 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
+
       await service.approve({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         action: 'REJECT',
         approverId: 'approver-1',
       });
 
-      await expect(
-        service.remindApproval({ approvalId: createResult.data!.approvalId })
-      ).rejects.toThrow('Cannot remind approval in REJECTED status');
+      await expect(service.remindApproval({ approvalId })).rejects.toThrow(
+        'Cannot remind approval in REJECTED status'
+      );
     });
 
     it('should be idempotent - multiple reminders succeed', async () => {
@@ -549,13 +608,15 @@ describe('ApprovalService', () => {
         title: 'Leave Request',
         applicantId: 'user-1',
       });
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
 
       const result1 = await service.remindApproval({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         message: 'Reminder 1',
       });
       const result2 = await service.remindApproval({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
         message: 'Reminder 2',
       });
 
@@ -571,12 +632,17 @@ describe('ApprovalService', () => {
         applicantId: 'user-1',
       });
 
+      expect(createResult.ok).toBe(true);
+      const approvalId = createResult.ok ? createResult.data.approvalId : '';
+
       const result = await service.remindApproval({
-        approvalId: createResult.data!.approvalId,
+        approvalId,
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
   });
 
@@ -589,7 +655,10 @@ describe('ApprovalService', () => {
         applicantId: 'user-1',
       });
 
-      const approval = await service.findById(createResult.data!.approvalId);
+      expect(createResult.ok).toBe(true);
+      const approval = await service.findById(
+        createResult.ok ? createResult.data.approvalId : ''
+      );
 
       expect(approval).not.toBeNull();
       expect(approval?.title).toBe('Leave Request');

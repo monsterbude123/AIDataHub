@@ -60,7 +60,9 @@ describe('RoleService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.roleId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.roleId).toBeDefined();
+      }
     });
 
     it('should not allow duplicate role codes', async () => {
@@ -72,7 +74,9 @@ describe('RoleService', () => {
       });
 
       expect(result.ok).toBe(false);
-      expect(result.error?.code).toBe('INVALID_ARGUMENT');
+      if (!result.ok) {
+        expect(result.error.code).toBe('INVALID_ARGUMENT');
+      }
     });
 
     it('should create role without description', async () => {
@@ -81,7 +85,9 @@ describe('RoleService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.roleId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.roleId).toBeDefined();
+      }
     });
   });
 
@@ -90,7 +96,8 @@ describe('RoleService', () => {
       const createResult = await service.createRole({
         role: { name: 'Admin', code: 'admin', permissions: [] },
       });
-      const roleId = createResult.data!.roleId;
+      expect(createResult.ok).toBe(true);
+      const roleId = createResult.ok ? createResult.data.roleId : '';
 
       const result = await service.updateRole({
         role: {
@@ -103,7 +110,9 @@ describe('RoleService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should throw ROLE_NOT_FOUND when updating non-existent role', async () => {
@@ -125,23 +134,27 @@ describe('RoleService', () => {
       const createResult = await service.createRole({
         role: { name: 'Admin', code: 'admin', permissions: [] },
       });
-      const roleId = createResult.data!.roleId;
+      expect(createResult.ok).toBe(true);
+      const roleId = createResult.ok ? createResult.data.roleId : '';
 
       const result = await service.deleteRole({ roleId });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should be idempotent when deleting non-existent role', async () => {
       const result = await service.deleteRole({ roleId: 'non-existent-id' });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should delete role permissions when deleting role', async () => {
-      const roleRepo = dataSource.getRepository(RoleEntity);
       const permRepo = dataSource.getRepository(PermissionEntity);
       const rolePermRepo = dataSource.getRepository(RolePermissionEntity);
 
@@ -158,7 +171,8 @@ describe('RoleService', () => {
       const createResult = await service.createRole({
         role: { name: 'Admin', code: 'admin', permissions: [] },
       });
-      const roleId = createResult.data!.roleId;
+      expect(createResult.ok).toBe(true);
+      const roleId = createResult.ok ? createResult.data.roleId : '';
 
       // Add role permission manually
       const rolePerm = rolePermRepo.create({ roleId, permissionId: perm.id });
@@ -185,7 +199,9 @@ describe('RoleService', () => {
       const result = await service.listRoles({});
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(2);
+      if (result.ok) {
+        expect(result.data.length).toBe(2);
+      }
     });
 
     it('should filter roles by keyword', async () => {
@@ -202,8 +218,10 @@ describe('RoleService', () => {
       const result = await service.listRoles({ keyword: 'admin' });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(1);
-      expect(result.data?.[0].name).toBe('Administrator');
+      if (result.ok) {
+        expect(result.data.length).toBe(1);
+        expect(result.data[0].name).toBe('Administrator');
+      }
     });
 
     it('should filter roles by code', async () => {
@@ -217,8 +235,10 @@ describe('RoleService', () => {
       const result = await service.listRoles({ keyword: 'user' });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(1);
-      expect(result.data?.[0].code).toBe('user');
+      if (result.ok) {
+        expect(result.data.length).toBe(1);
+        expect(result.data[0].code).toBe('user');
+      }
     });
 
     it('should return empty array when no roles match keyword', async () => {
@@ -229,7 +249,9 @@ describe('RoleService', () => {
       const result = await service.listRoles({ keyword: 'nonexistent' });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(0);
+      if (result.ok) {
+        expect(result.data.length).toBe(0);
+      }
     });
 
     it('should include permissions in role list', async () => {
@@ -255,7 +277,8 @@ describe('RoleService', () => {
       const createResult = await service.createRole({
         role: { name: 'Admin', code: 'admin', permissions: [] },
       });
-      const roleId = createResult.data!.roleId;
+      expect(createResult.ok).toBe(true);
+      const roleId = createResult.ok ? createResult.data.roleId : '';
 
       // Add role permissions
       const rolePerm1 = rolePermRepo.create({ roleId, permissionId: perm1.id });
@@ -266,8 +289,10 @@ describe('RoleService', () => {
       const result = await service.listRoles({});
 
       expect(result.ok).toBe(true);
-      expect(result.data?.[0].permissions).toContain('users:read');
-      expect(result.data?.[0].permissions).toContain('users:write');
+      if (result.ok) {
+        expect(result.data[0].permissions).toContain('users:read');
+        expect(result.data[0].permissions).toContain('users:write');
+      }
     });
   });
 
@@ -276,7 +301,8 @@ describe('RoleService', () => {
       const createResult = await service.createRole({
         role: { name: 'Admin', code: 'admin', permissions: [] },
       });
-      const roleId = createResult.data!.roleId;
+      expect(createResult.ok).toBe(true);
+      const roleId = createResult.ok ? createResult.data.roleId : '';
 
       const role = await service.findById(roleId);
 

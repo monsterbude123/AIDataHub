@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, IsNull, Like } from 'typeorm';
+import { Repository, In, Like } from 'typeorm';
 import {
   okResult,
   errResult,
   type Result,
   type DirectoryTreeNode,
+  type UpsertDirectoryNodeRequest,
 } from '@ai-datahub/contract';
 import { DirectoryTreeNodeEntity } from '../../entities/DirectoryTreeNode.entity';
 
@@ -81,10 +82,9 @@ export class DirectoryService {
    * - If id is provided and exists, update the node
    * - If id is not provided or doesn't exist, create a new node
    */
-  async upsertDirectoryNode(req: {
-    meta?: unknown;
-    node: Omit<DirectoryTreeNode, 'createdAt' | 'updatedAt'> & { id?: string };
-  }): Promise<Result<{ nodeId: string }>> {
+  async upsertDirectoryNode(
+    req: UpsertDirectoryNodeRequest
+  ): Promise<Result<{ nodeId: string }>> {
     let node: DirectoryTreeNodeEntity;
 
     if (req.node.id) {

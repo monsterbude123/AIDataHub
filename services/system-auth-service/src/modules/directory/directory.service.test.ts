@@ -42,7 +42,9 @@ describe('DirectoryService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.nodeId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.nodeId).toBeDefined();
+      }
     });
 
     it('should create a directory node with all fields', async () => {
@@ -55,7 +57,9 @@ describe('DirectoryService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.nodeId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.nodeId).toBeDefined();
+      }
     });
 
     it('should create a child directory node', async () => {
@@ -66,7 +70,8 @@ describe('DirectoryService', () => {
           code: 'ROOT',
         },
       });
-      const parentId = parentResult.data!.nodeId;
+      expect(parentResult.ok).toBe(true);
+      const parentId = parentResult.ok ? parentResult.data.nodeId : '';
 
       // Create child
       const childResult = await service.upsertDirectoryNode({
@@ -78,7 +83,9 @@ describe('DirectoryService', () => {
       });
 
       expect(childResult.ok).toBe(true);
-      expect(childResult.data?.nodeId).toBeDefined();
+      if (childResult.ok) {
+        expect(childResult.data.nodeId).toBeDefined();
+      }
     });
 
     it('should update an existing directory node by id', async () => {
@@ -89,7 +96,8 @@ describe('DirectoryService', () => {
           code: 'ORIGINAL',
         },
       });
-      const nodeId = createResult.data!.nodeId;
+      expect(createResult.ok).toBe(true);
+      const nodeId = createResult.ok ? createResult.data.nodeId : '';
 
       // Update with same id
       const updateResult = await service.upsertDirectoryNode({
@@ -101,11 +109,16 @@ describe('DirectoryService', () => {
       });
 
       expect(updateResult.ok).toBe(true);
-      expect(updateResult.data?.nodeId).toBe(nodeId);
+      if (updateResult.ok) {
+        expect(updateResult.data.nodeId).toBe(nodeId);
+      }
 
       // Verify update
       const nodes = await service.listDirectoryTree({});
-      const updatedNode = nodes.data?.find((n) => n.id === nodeId);
+      expect(nodes.ok).toBe(true);
+      const updatedNode = nodes.ok
+        ? nodes.data.find((n) => n.id === nodeId)
+        : undefined;
       expect(updatedNode?.name).toBe('Updated');
       expect(updatedNode?.code).toBe('UPDATED');
     });
@@ -118,7 +131,8 @@ describe('DirectoryService', () => {
           code: 'UNIQUE_CODE',
         },
       });
-      const firstId = createResult.data!.nodeId;
+      expect(createResult.ok).toBe(true);
+      const firstId = createResult.ok ? createResult.data.nodeId : '';
 
       // Upsert with same code (no id) - should update existing
       const upsertResult = await service.upsertDirectoryNode({
@@ -129,11 +143,16 @@ describe('DirectoryService', () => {
       });
 
       expect(upsertResult.ok).toBe(true);
-      expect(upsertResult.data?.nodeId).toBe(firstId);
+      if (upsertResult.ok) {
+        expect(upsertResult.data.nodeId).toBe(firstId);
+      }
 
       // Verify only one node exists
       const nodes = await service.listDirectoryTree({});
-      const codeNodes = nodes.data?.filter((n) => n.code === 'UNIQUE_CODE');
+      expect(nodes.ok).toBe(true);
+      const codeNodes = nodes.ok
+        ? nodes.data.filter((n) => n.code === 'UNIQUE_CODE')
+        : [];
       expect(codeNodes?.length).toBe(1);
       expect(codeNodes?.[0].name).toBe('Second');
     });
@@ -147,7 +166,8 @@ describe('DirectoryService', () => {
           attributes: { key: 'value' },
         },
       });
-      const nodeId = createResult.data!.nodeId;
+      expect(createResult.ok).toBe(true);
+      const nodeId = createResult.ok ? createResult.data.nodeId : '';
 
       // Update attributes
       await service.upsertDirectoryNode({
@@ -161,7 +181,10 @@ describe('DirectoryService', () => {
 
       // Verify update
       const nodes = await service.listDirectoryTree({});
-      const updatedNode = nodes.data?.find((n) => n.id === nodeId);
+      expect(nodes.ok).toBe(true);
+      const updatedNode = nodes.ok
+        ? nodes.data.find((n) => n.id === nodeId)
+        : undefined;
       expect(updatedNode?.attributes).toEqual({
         key: 'updated',
         newKey: 'newValue',
@@ -178,7 +201,9 @@ describe('DirectoryService', () => {
       });
 
       expect(result.ok).toBe(false);
-      expect(result.error?.code).toBe('DIRECTORY_NOT_FOUND');
+      if (!result.ok) {
+        expect(result.error.code).toBe('DIRECTORY_NOT_FOUND');
+      }
     });
   });
 
@@ -187,7 +212,9 @@ describe('DirectoryService', () => {
       const result = await service.listDirectoryTree({});
 
       expect(result.ok).toBe(true);
-      expect(result.data).toEqual([]);
+      if (result.ok) {
+        expect(result.data).toEqual([]);
+      }
     });
 
     it('should list all directory nodes', async () => {
@@ -201,7 +228,9 @@ describe('DirectoryService', () => {
       const result = await service.listDirectoryTree({});
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(2);
+      if (result.ok) {
+        expect(result.data.length).toBe(2);
+      }
     });
 
     it('should return directory nodes with correct structure', async () => {
@@ -213,8 +242,14 @@ describe('DirectoryService', () => {
         },
       });
 
+      expect(createResult.ok).toBe(true);
+      const nodeId = createResult.ok ? createResult.data.nodeId : '';
+
       const result = await service.listDirectoryTree({});
-      const node = result.data?.find((n) => n.id === createResult.data!.nodeId);
+      expect(result.ok).toBe(true);
+      const node = result.ok
+        ? result.data.find((n) => n.id === nodeId)
+        : undefined;
 
       expect(node).toBeDefined();
       expect(node?.name).toBe('System');
@@ -229,12 +264,14 @@ describe('DirectoryService', () => {
       const root1Result = await service.upsertDirectoryNode({
         node: { name: 'Root1', code: 'ROOT1' },
       });
-      const root1Id = root1Result.data!.nodeId;
+      expect(root1Result.ok).toBe(true);
+      const root1Id = root1Result.ok ? root1Result.data.nodeId : '';
 
       const root2Result = await service.upsertDirectoryNode({
         node: { name: 'Root2', code: 'ROOT2' },
       });
-      const root2Id = root2Result.data!.nodeId;
+      expect(root2Result.ok).toBe(true);
+      const root2Id = root2Result.ok ? root2Result.data.nodeId : '';
 
       // Create children of root1
       await service.upsertDirectoryNode({
@@ -253,16 +290,22 @@ describe('DirectoryService', () => {
       const root1Children = await service.listDirectoryTree({
         parentId: root1Id,
       });
-      expect(root1Children.data?.length).toBe(2);
-      expect(root1Children.data?.every((n) => n.parentId === root1Id)).toBe(
-        true
-      );
+      expect(root1Children.ok).toBe(true);
+      if (root1Children.ok) {
+        expect(root1Children.data.length).toBe(2);
+        expect(root1Children.data.every((n) => n.parentId === root1Id)).toBe(
+          true
+        );
+      }
 
       // Filter by root2
       const root2Children = await service.listDirectoryTree({
         parentId: root2Id,
       });
-      expect(root2Children.data?.length).toBe(1);
+      expect(root2Children.ok).toBe(true);
+      if (root2Children.ok) {
+        expect(root2Children.data.length).toBe(1);
+      }
     });
 
     it('should search by keyword in name', async () => {
@@ -279,8 +322,13 @@ describe('DirectoryService', () => {
       const result = await service.listDirectoryTree({ keyword: 'System' });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(2);
-      expect(result.data?.every((n) => n.name.includes('System'))).toBe(true);
+      if (result.ok) {
+        expect(result.data.length).toBe(2);
+      }
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.every((n) => n.name.includes('System'))).toBe(true);
+      }
     });
 
     it('should search by keyword in code', async () => {
@@ -297,8 +345,13 @@ describe('DirectoryService', () => {
       const result = await service.listDirectoryTree({ keyword: 'PANEL' });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(2);
-      expect(result.data?.every((n) => n.code.includes('PANEL'))).toBe(true);
+      if (result.ok) {
+        expect(result.data.length).toBe(2);
+      }
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.every((n) => n.code.includes('PANEL'))).toBe(true);
+      }
     });
 
     it('should combine parentId and keyword filters', async () => {
@@ -306,7 +359,8 @@ describe('DirectoryService', () => {
       const rootResult = await service.upsertDirectoryNode({
         node: { name: 'Root', code: 'ROOT' },
       });
-      const rootId = rootResult.data!.nodeId;
+      expect(rootResult.ok).toBe(true);
+      const rootId = rootResult.ok ? rootResult.data.nodeId : '';
 
       // Create children
       await service.upsertDirectoryNode({
@@ -327,8 +381,11 @@ describe('DirectoryService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(1);
-      expect(result.data?.[0].name).toBe('System Child');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.length).toBe(1);
+        expect(result.data[0].name).toBe('System Child');
+      }
     });
   });
 
@@ -337,16 +394,23 @@ describe('DirectoryService', () => {
       const createResult = await service.upsertDirectoryNode({
         node: { name: 'ToDelete', code: 'TO_DELETE' },
       });
-      const nodeId = createResult.data!.nodeId;
+      expect(createResult.ok).toBe(true);
+      const nodeId = createResult.ok ? createResult.data.nodeId : '';
 
       const result = await service.deleteDirectoryNode({ nodeId });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
 
       // Verify deletion
       const nodes = await service.listDirectoryTree({});
-      expect(nodes.data?.find((n) => n.id === nodeId)).toBeUndefined();
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.find((n) => n.id === nodeId)).toBeUndefined();
+      }
     });
 
     it('should be idempotent when deleting non-existent node', async () => {
@@ -355,7 +419,10 @@ describe('DirectoryService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should recursively delete child nodes', async () => {
@@ -363,36 +430,45 @@ describe('DirectoryService', () => {
       const parentResult = await service.upsertDirectoryNode({
         node: { name: 'Parent', code: 'PARENT' },
       });
-      const parentId = parentResult.data!.nodeId;
+      expect(parentResult.ok).toBe(true);
+      const parentId = parentResult.ok ? parentResult.data.nodeId : '';
 
       // Create children
       const child1Result = await service.upsertDirectoryNode({
         node: { parentId, name: 'Child1', code: 'CHILD1' },
       });
-      const child1Id = child1Result.data!.nodeId;
+      expect(child1Result.ok).toBe(true);
+      const child1Id = child1Result.ok ? child1Result.data.nodeId : '';
 
       // Create grandchild
       const grandchildResult = await service.upsertDirectoryNode({
         node: { parentId: child1Id, name: 'Grandchild', code: 'GRANDCHILD' },
       });
-      const grandchildId = grandchildResult.data!.nodeId;
+      expect(grandchildResult.ok).toBe(true);
+      const grandchildId = grandchildResult.ok
+        ? grandchildResult.data.nodeId
+        : '';
 
       // Create another child of parent
       const child2Result = await service.upsertDirectoryNode({
         node: { parentId, name: 'Child2', code: 'CHILD2' },
       });
-      const child2Id = child2Result.data!.nodeId;
+      expect(child2Result.ok).toBe(true);
+      const child2Id = child2Result.ok ? child2Result.data.nodeId : '';
 
       // Delete parent
       await service.deleteDirectoryNode({ nodeId: parentId });
 
       // Verify all are deleted
       const nodes = await service.listDirectoryTree({});
-      expect(nodes.data?.find((n) => n.id === parentId)).toBeUndefined();
-      expect(nodes.data?.find((n) => n.id === child1Id)).toBeUndefined();
-      expect(nodes.data?.find((n) => n.id === grandchildId)).toBeUndefined();
-      expect(nodes.data?.find((n) => n.id === child2Id)).toBeUndefined();
-      expect(nodes.data?.length).toBe(0);
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.find((n) => n.id === parentId)).toBeUndefined();
+        expect(nodes.data.find((n) => n.id === child1Id)).toBeUndefined();
+        expect(nodes.data.find((n) => n.id === grandchildId)).toBeUndefined();
+        expect(nodes.data.find((n) => n.id === child2Id)).toBeUndefined();
+        expect(nodes.data.length).toBe(0);
+      }
     });
 
     it('should not delete unrelated nodes when deleting a node', async () => {
@@ -401,17 +477,23 @@ describe('DirectoryService', () => {
         node: { name: 'Tree1', code: 'TREE1' },
       });
 
-      const tree2Result = await service.upsertDirectoryNode({
+      await service.upsertDirectoryNode({
         node: { name: 'Tree2', code: 'TREE2' },
       });
 
+      expect(tree1Result.ok).toBe(true);
+      const tree1Id = tree1Result.ok ? tree1Result.data.nodeId : '';
+
       // Delete tree1
-      await service.deleteDirectoryNode({ nodeId: tree1Result.data!.nodeId });
+      await service.deleteDirectoryNode({ nodeId: tree1Id });
 
       // Verify tree2 still exists
       const nodes = await service.listDirectoryTree({});
-      expect(nodes.data?.length).toBe(1);
-      expect(nodes.data?.[0].name).toBe('Tree2');
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.length).toBe(1);
+        expect(nodes.data[0].name).toBe('Tree2');
+      }
     });
 
     it('should delete a node with deep hierarchy', async () => {
@@ -427,7 +509,8 @@ describe('DirectoryService', () => {
             code: `LEVEL${i}`,
           },
         });
-        currentId = result.data!.nodeId;
+        expect(result.ok).toBe(true);
+        currentId = result.ok ? result.data.nodeId : '';
         allIds.push(currentId);
       }
 
@@ -436,7 +519,10 @@ describe('DirectoryService', () => {
 
       // Verify all are deleted
       const nodes = await service.listDirectoryTree({});
-      expect(nodes.data?.length).toBe(0);
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.length).toBe(0);
+      }
     });
   });
 });

@@ -7,7 +7,6 @@ import { UserEntity } from '../../entities/User.entity';
 import { UserRoleEntity } from '../../entities/UserRole.entity';
 import { RoleEntity } from '../../entities/Role.entity';
 import { RolePermissionEntity } from '../../entities/RolePermission.entity';
-import { PermissionEntity } from '../../entities/Permission.entity';
 
 export interface LoginRequest {
   username: string;
@@ -54,9 +53,7 @@ export class AuthService {
     @InjectRepository(RoleEntity)
     private readonly roleRepo: Repository<RoleEntity>,
     @InjectRepository(RolePermissionEntity)
-    private readonly rolePermissionRepo: Repository<RolePermissionEntity>,
-    @InjectRepository(PermissionEntity)
-    private readonly permissionRepo: Repository<PermissionEntity>
+    private readonly rolePermissionRepo: Repository<RolePermissionEntity>
   ) {
     this.jwtSecret = process.env.JWT_SECRET || 'dev-secret';
   }

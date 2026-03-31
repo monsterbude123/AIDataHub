@@ -60,7 +60,9 @@ describe('PermissionService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.permissionId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.permissionId).toBeDefined();
+      }
     });
 
     it('should create a permission with PAGE_ELEMENT type', async () => {
@@ -74,7 +76,9 @@ describe('PermissionService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.permissionId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.permissionId).toBeDefined();
+      }
     });
 
     it('should not allow duplicate permission codes', async () => {
@@ -97,7 +101,9 @@ describe('PermissionService', () => {
       });
 
       expect(result.ok).toBe(false);
-      expect(result.error?.code).toBe('INVALID_ARGUMENT');
+      if (!result.ok) {
+        expect(result.error.code).toBe('INVALID_ARGUMENT');
+      }
     });
   });
 
@@ -121,12 +127,14 @@ describe('PermissionService', () => {
       });
 
       const result = await service.listPermissions({
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(2);
-      expect(result.data?.total).toBe(2);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(2);
+        expect(result.data.total).toBe(2);
+      }
     });
 
     it('should filter permissions by keyword', async () => {
@@ -149,12 +157,14 @@ describe('PermissionService', () => {
 
       const result = await service.listPermissions({
         keyword: 'users',
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(1);
-      expect(result.data?.items?.[0].name).toBe('Read Users');
+      if (result.ok) {
+        expect(result.data.items.length).toBe(1);
+        expect(result.data.items[0].name).toBe('Read Users');
+      }
     });
 
     it('should filter permissions by code', async () => {
@@ -177,12 +187,14 @@ describe('PermissionService', () => {
 
       const result = await service.listPermissions({
         keyword: 'products:read',
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(1);
-      expect(result.data?.items?.[0].code).toBe('products:read');
+      if (result.ok) {
+        expect(result.data.items.length).toBe(1);
+        expect(result.data.items[0].code).toBe('products:read');
+      }
     });
 
     it('should support pagination', async () => {
@@ -199,27 +211,33 @@ describe('PermissionService', () => {
       }
 
       const page1 = await service.listPermissions({
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
       expect(page1.ok).toBe(true);
-      expect(page1.data?.items?.length).toBe(10);
-      expect(page1.data?.total).toBe(15);
+      if (page1.ok) {
+        expect(page1.data.items.length).toBe(10);
+        expect(page1.data.total).toBe(15);
+      }
 
       const page2 = await service.listPermissions({
-        page: { page: 2, size: 10 },
+        page: { page: 2, pageSize: 10 },
       });
       expect(page2.ok).toBe(true);
-      expect(page2.data?.items?.length).toBe(5);
+      if (page2.ok) {
+        expect(page2.data.items.length).toBe(5);
+      }
     });
 
     it('should return empty result when no permissions exist', async () => {
       const result = await service.listPermissions({
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(0);
-      expect(result.data?.total).toBe(0);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(0);
+        expect(result.data.total).toBe(0);
+      }
     });
 
     it('should return empty result when no permissions match keyword', async () => {
@@ -234,11 +252,13 @@ describe('PermissionService', () => {
 
       const result = await service.listPermissions({
         keyword: 'nonexistent',
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(0);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(0);
+      }
     });
   });
 
@@ -265,7 +285,8 @@ describe('PermissionService', () => {
           resource: '/api/users',
         },
       });
-      permId1 = permResult1.data!.permissionId;
+      expect(permResult1.ok).toBe(true);
+      permId1 = permResult1.ok ? permResult1.data.permissionId : '';
 
       const permResult2 = await service.createPermission({
         permission: {
@@ -275,7 +296,8 @@ describe('PermissionService', () => {
           resource: '/api/users',
         },
       });
-      permId2 = permResult2.data!.permissionId;
+      expect(permResult2.ok).toBe(true);
+      permId2 = permResult2.ok ? permResult2.data.permissionId : '';
     });
 
     it('should bind permissions to a role', async () => {
@@ -285,7 +307,9 @@ describe('PermissionService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should be idempotent - binding same permissions twice is fine', async () => {
@@ -302,7 +326,9 @@ describe('PermissionService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should throw ROLE_NOT_FOUND for non-existent role', async () => {
@@ -332,7 +358,8 @@ describe('PermissionService', () => {
           resource: '/api/users',
         },
       });
-      const permId3 = permResult3.data!.permissionId;
+      expect(permResult3.ok).toBe(true);
+      const permId3 = permResult3.ok ? permResult3.data.permissionId : '';
 
       // Bind initial permissions
       await service.bindPermissionsToRole({
@@ -384,7 +411,10 @@ describe('PermissionService', () => {
           resource: '/api/users',
         },
       });
-      const permissionId = createResult.data!.permissionId;
+      expect(createResult.ok).toBe(true);
+      const permissionId = createResult.ok
+        ? createResult.data.permissionId
+        : '';
 
       const permission = await service.findById(permissionId);
 

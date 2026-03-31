@@ -52,7 +52,9 @@ describe('ApprovalTemplateService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.templateId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.templateId).toBeDefined();
+      }
     });
 
     it('should allow multiple templates with different business types', async () => {
@@ -107,7 +109,9 @@ describe('ApprovalTemplateService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.templateId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.templateId).toBeDefined();
+      }
     });
   });
 
@@ -120,7 +124,8 @@ describe('ApprovalTemplateService', () => {
           definition: { nodes: [] },
         },
       });
-      const templateId = createResult.data!.templateId;
+      expect(createResult.ok).toBe(true);
+      const templateId = createResult.ok ? createResult.data.templateId : '';
 
       const result = await service.updateApprovalTemplate({
         template: {
@@ -136,7 +141,9 @@ describe('ApprovalTemplateService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should throw APPROVAL_TEMPLATE_NOT_FOUND when updating non-existent template', async () => {
@@ -164,12 +171,15 @@ describe('ApprovalTemplateService', () => {
           definition: { nodes: [] },
         },
       });
-      const templateId = createResult.data!.templateId;
+      expect(createResult.ok).toBe(true);
+      const templateId = createResult.ok ? createResult.data.templateId : '';
 
       const result = await service.deleteApprovalTemplate({ templateId });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should be idempotent when deleting non-existent template', async () => {
@@ -178,7 +188,9 @@ describe('ApprovalTemplateService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should return success when deleting already deleted template', async () => {
@@ -189,7 +201,8 @@ describe('ApprovalTemplateService', () => {
           definition: { nodes: [] },
         },
       });
-      const templateId = createResult.data!.templateId;
+      expect(createResult.ok).toBe(true);
+      const templateId = createResult.ok ? createResult.data.templateId : '';
 
       // First delete
       await service.deleteApprovalTemplate({ templateId });
@@ -198,7 +211,9 @@ describe('ApprovalTemplateService', () => {
       const result = await service.deleteApprovalTemplate({ templateId });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
   });
 
@@ -222,7 +237,9 @@ describe('ApprovalTemplateService', () => {
       const result = await service.listApprovalTemplates({});
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(2);
+      if (result.ok) {
+        expect(result.data.length).toBe(2);
+      }
     });
 
     it('should filter templates by businessType', async () => {
@@ -253,10 +270,12 @@ describe('ApprovalTemplateService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(2);
-      result.data?.forEach((t) => {
-        expect(t.businessType).toBe('LEAVE_REQUEST');
-      });
+      if (result.ok) {
+        expect(result.data.length).toBe(2);
+        result.data.forEach((t) => {
+          expect(t.businessType).toBe('LEAVE_REQUEST');
+        });
+      }
     });
 
     it('should return empty array when no templates match businessType filter', async () => {
@@ -273,14 +292,18 @@ describe('ApprovalTemplateService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(0);
+      if (result.ok) {
+        expect(result.data.length).toBe(0);
+      }
     });
 
     it('should return empty array when no templates exist', async () => {
       const result = await service.listApprovalTemplates({});
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(0);
+      if (result.ok) {
+        expect(result.data.length).toBe(0);
+      }
     });
   });
 
@@ -293,7 +316,8 @@ describe('ApprovalTemplateService', () => {
           definition: { nodes: [] },
         },
       });
-      const templateId = createResult.data!.templateId;
+      expect(createResult.ok).toBe(true);
+      const templateId = createResult.ok ? createResult.data.templateId : '';
 
       const template = await service.findById(templateId);
 

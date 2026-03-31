@@ -52,41 +52,46 @@ describe('UserService', () => {
           email: 'test@example.com',
           realName: 'Test User',
           orgId: 'org-1',
+          status: 'ENABLED',
         },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.userId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.userId).toBeDefined();
+      }
     });
 
     it('should not allow duplicate usernames', async () => {
       await service.createUser({
-        user: { username: 'testuser', orgId: 'org-1' },
+        user: { username: 'testuser', orgId: 'org-1', status: 'ENABLED' },
       });
       const result = await service.createUser({
-        user: { username: 'testuser', orgId: 'org-2' },
+        user: { username: 'testuser', orgId: 'org-2', status: 'ENABLED' },
       });
 
       expect(result.ok).toBe(false);
-      expect(result.error?.code).toBe('USERNAME_DUPLICATE');
+      if (!result.ok) {
+        expect(result.error.code).toBe('USERNAME_DUPLICATE');
+      }
     });
 
     it('should create user with default status ENABLED', async () => {
       const result = await service.createUser({
-        user: { username: 'newuser', orgId: 'org-1' },
+        user: { username: 'newuser', orgId: 'org-1', status: 'ENABLED' },
       });
 
       expect(result.ok).toBe(true);
-      // Verify the user was created (would need to query for status)
     });
   });
 
   describe('updateUser', () => {
     it('should update an existing user', async () => {
       const createResult = await service.createUser({
-        user: { username: 'updateuser', orgId: 'org-1' },
+        user: { username: 'updateuser', orgId: 'org-1', status: 'ENABLED' },
       });
-      const userId = createResult.data!.userId;
+      expect(createResult.ok).toBe(true);
+      const userId = createResult.ok ? createResult.data.userId : '';
 
       const result = await service.updateUser({
         user: {
@@ -100,7 +105,9 @@ describe('UserService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should throw USER_NOT_FOUND when updating non-existent user', async () => {
@@ -120,42 +127,59 @@ describe('UserService', () => {
   describe('deleteUser', () => {
     it('should delete an existing user', async () => {
       const createResult = await service.createUser({
-        user: { username: 'deleteuser', orgId: 'org-1' },
+        user: { username: 'deleteuser', orgId: 'org-1', status: 'ENABLED' },
       });
-      const userId = createResult.data!.userId;
+      expect(createResult.ok).toBe(true);
+      const userId = createResult.ok ? createResult.data.userId : '';
 
       const result = await service.deleteUser({ userId });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should be idempotent when deleting non-existent user', async () => {
       const result = await service.deleteUser({ userId: 'non-existent-id' });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
   });
 
   describe('listUsers', () => {
     it('should list users with pagination', async () => {
-      await service.createUser({ user: { username: 'user1', orgId: 'org-1' } });
-      await service.createUser({ user: { username: 'user2', orgId: 'org-1' } });
-      await service.createUser({ user: { username: 'user3', orgId: 'org-1' } });
+      await service.createUser({
+        user: { username: 'user1', orgId: 'org-1', status: 'ENABLED' },
+      });
+      await service.createUser({
+        user: { username: 'user2', orgId: 'org-1', status: 'ENABLED' },
+      });
+      await service.createUser({
+        user: { username: 'user3', orgId: 'org-1', status: 'ENABLED' },
+      });
 
       const result = await service.listUsers({
         page: { page: 1, pageSize: 2 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(2);
-      expect(result.data?.total).toBe(3);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(2);
+        expect(result.data.total).toBe(3);
+      }
     });
 
     it('should filter users by orgId', async () => {
-      await service.createUser({ user: { username: 'user1', orgId: 'org-1' } });
-      await service.createUser({ user: { username: 'user2', orgId: 'org-2' } });
+      await service.createUser({
+        user: { username: 'user1', orgId: 'org-1', status: 'ENABLED' },
+      });
+      await service.createUser({
+        user: { username: 'user2', orgId: 'org-2', status: 'ENABLED' },
+      });
 
       const result = await service.listUsers({
         orgId: 'org-1',
@@ -163,15 +187,27 @@ describe('UserService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(1);
+      if (result.ok) {
+        expect(result.data.items.length).toBe(1);
+      }
     });
 
     it('should filter users by keyword', async () => {
       await service.createUser({
-        user: { username: 'alice', realName: 'Alice Smith', orgId: 'org-1' },
+        user: {
+          username: 'alice',
+          realName: 'Alice Smith',
+          orgId: 'org-1',
+          status: 'ENABLED',
+        },
       });
       await service.createUser({
-        user: { username: 'bob', realName: 'Bob Jones', orgId: 'org-1' },
+        user: {
+          username: 'bob',
+          realName: 'Bob Jones',
+          orgId: 'org-1',
+          status: 'ENABLED',
+        },
       });
 
       const result = await service.listUsers({
@@ -180,8 +216,10 @@ describe('UserService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items.length).toBe(1);
-      expect(result.data?.items[0].username).toBe('alice');
+      if (result.ok) {
+        expect(result.data.items.length).toBe(1);
+        expect(result.data.items[0].username).toBe('alice');
+      }
     });
   });
 
@@ -189,9 +227,10 @@ describe('UserService', () => {
     it('should assign roles to a user', async () => {
       // Create user
       const userResult = await service.createUser({
-        user: { username: 'roleuser', orgId: 'org-1' },
+        user: { username: 'roleuser', orgId: 'org-1', status: 'ENABLED' },
       });
-      const userId = userResult.data!.userId;
+      expect(userResult.ok).toBe(true);
+      const userId = userResult.ok ? userResult.data.userId : '';
 
       // Create roles manually via repository
       const roleRepo = dataSource.getRepository(RoleEntity);
@@ -205,14 +244,17 @@ describe('UserService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should be idempotent when assigning same roles', async () => {
       const userResult = await service.createUser({
-        user: { username: 'idemuser', orgId: 'org-1' },
+        user: { username: 'idemuser', orgId: 'org-1', status: 'ENABLED' },
       });
-      const userId = userResult.data!.userId;
+      expect(userResult.ok).toBe(true);
+      const userId = userResult.ok ? userResult.data.userId : '';
 
       const roleRepo = dataSource.getRepository(RoleEntity);
       const role = roleRepo.create({ name: 'Role', code: 'role' });
@@ -223,7 +265,9 @@ describe('UserService', () => {
       const result = await service.assignRoles({ userId, roleIds: [role.id] });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should throw USER_NOT_FOUND when assigning roles to non-existent user', async () => {
@@ -234,9 +278,10 @@ describe('UserService', () => {
 
     it('should throw ROLE_NOT_FOUND when assigning non-existent roles', async () => {
       const userResult = await service.createUser({
-        user: { username: 'roleuser', orgId: 'org-1' },
+        user: { username: 'roleuser', orgId: 'org-1', status: 'ENABLED' },
       });
-      const userId = userResult.data!.userId;
+      expect(userResult.ok).toBe(true);
+      const userId = userResult.ok ? userResult.data.userId : '';
 
       await expect(
         service.assignRoles({ userId, roleIds: ['non-existent-role'] })

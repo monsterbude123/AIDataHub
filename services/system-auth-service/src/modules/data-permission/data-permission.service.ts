@@ -6,6 +6,7 @@ import {
   type Result,
   type DataPermission,
   type PageResult,
+  type UpsertDataPermissionRequest,
 } from '@ai-datahub/contract';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
 import { DataPermissionEntity } from '../../entities/DataPermission.entity';
@@ -20,9 +21,9 @@ export class DataPermissionService {
     private readonly roleRepo: Repository<RoleEntity>
   ) {}
 
-  async upsertDataPermission(req: {
-    permission: Omit<DataPermission, 'createdAt'> & { id?: string };
-  }): Promise<Result<{ permissionId: string }>> {
+  async upsertDataPermission(
+    req: UpsertDataPermissionRequest
+  ): Promise<Result<{ permissionId: string }>> {
     // Verify role exists
     const role = await this.roleRepo.findOneBy({ id: req.permission.roleId });
     if (!role) {
@@ -71,7 +72,7 @@ export class DataPermissionService {
 
   async listDataPermissions(req: {
     roleId: string;
-    page: { page: number; size: number };
+    page: { page: number; pageSize: number };
   }): Promise<Result<PageResult<DataPermission>>> {
     // Verify role exists
     const role = await this.roleRepo.findOneBy({ id: req.roleId });
@@ -83,8 +84,8 @@ export class DataPermissionService {
       .createQueryBuilder('dataPermission')
       .where('dataPermission.roleId = :roleId', { roleId: req.roleId });
 
-    const skip = (req.page.page - 1) * req.page.size;
-    query.skip(skip).take(req.page.size);
+    const skip = (req.page.page - 1) * req.page.pageSize;
+    query.skip(skip).take(req.page.pageSize);
 
     const [items, total] = await query.getManyAndCount();
 
@@ -92,7 +93,7 @@ export class DataPermissionService {
       items: items.map((p) => p.toDTO()),
       total,
       page: req.page.page,
-      size: req.page.size,
+      pageSize: req.page.pageSize,
     });
   }
 

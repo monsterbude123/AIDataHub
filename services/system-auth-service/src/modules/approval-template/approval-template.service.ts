@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   okResult,
-  errResult,
   type Result,
   type ApprovalTemplate,
+  type UpsertApprovalTemplateRequest,
 } from '@ai-datahub/contract';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
 import { ApprovalTemplateEntity } from '../../entities/ApprovalTemplate.entity';
@@ -31,9 +31,9 @@ export class ApprovalTemplateService {
     return okResult({ templateId: template.id });
   }
 
-  async updateApprovalTemplate(req: {
-    template: ApprovalTemplate;
-  }): Promise<Result<{ success: boolean }>> {
+  async updateApprovalTemplate(
+    req: UpsertApprovalTemplateRequest
+  ): Promise<Result<{ success: boolean }>> {
     const existing = await this.templateRepo.findOneBy({ id: req.template.id });
     if (!existing) {
       throw new SystemAuthException(

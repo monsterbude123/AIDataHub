@@ -18,8 +18,6 @@ export class PermissionService {
   constructor(
     @InjectRepository(PermissionEntity)
     private readonly permRepo: Repository<PermissionEntity>,
-    @InjectRepository(RolePermissionEntity)
-    private readonly rolePermRepo: Repository<RolePermissionEntity>,
     @InjectRepository(RoleEntity)
     private readonly roleRepo: Repository<RoleEntity>,
     @InjectDataSource()
@@ -54,7 +52,7 @@ export class PermissionService {
 
   async listPermissions(req: {
     keyword?: string;
-    page: { page: number; size: number };
+    page: { page: number; pageSize: number };
   }): Promise<Result<PageResult<Permission>>> {
     const query = this.permRepo.createQueryBuilder('permission');
 
@@ -65,8 +63,8 @@ export class PermissionService {
       );
     }
 
-    const skip = (req.page.page - 1) * req.page.size;
-    query.skip(skip).take(req.page.size);
+    const skip = (req.page.page - 1) * req.page.pageSize;
+    query.skip(skip).take(req.page.pageSize);
 
     const [items, total] = await query.getManyAndCount();
 
@@ -74,7 +72,7 @@ export class PermissionService {
       items: items.map((p) => p.toDTO()),
       total,
       page: req.page.page,
-      size: req.page.size,
+      pageSize: req.page.pageSize,
     });
   }
 

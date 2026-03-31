@@ -11,7 +11,6 @@ import { UserEntity } from '../../entities/User.entity';
 import { UserRoleEntity } from '../../entities/UserRole.entity';
 import { OrganizationEntity } from '../../entities/Organization.entity';
 import { DataSource } from 'typeorm';
-import { SystemAuthException } from '../../common/errors/system-auth.exception';
 
 describe('DataPermissionService', () => {
   let service: DataPermissionService;
@@ -70,7 +69,9 @@ describe('DataPermissionService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.permissionId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.permissionId).toBeDefined();
+      }
     });
 
     it('should be idempotent - upserting same role updates existing permission', async () => {
@@ -81,7 +82,8 @@ describe('DataPermissionService', () => {
           scope: { organization: 'org-1' },
         },
       });
-      const permissionId = result1.data!.permissionId;
+      expect(result1.ok).toBe(true);
+      const permissionId = result1.ok ? result1.data.permissionId : '';
 
       // Second upsert for same role - should update existing
       const result2 = await service.upsertDataPermission({
@@ -93,7 +95,9 @@ describe('DataPermissionService', () => {
 
       // Should return same permission id (idempotent)
       expect(result2.ok).toBe(true);
-      expect(result2.data?.permissionId).toBe(permissionId);
+      if (result2.ok) {
+        expect(result2.data.permissionId).toBe(permissionId);
+      }
 
       // Verify scope was updated
       const permRepo = dataSource.getRepository(DataPermissionEntity);
@@ -112,7 +116,8 @@ describe('DataPermissionService', () => {
           scope: { organization: 'org-1' },
         },
       });
-      const permissionId = result1.data!.permissionId;
+      expect(result1.ok).toBe(true);
+      const permissionId = result1.ok ? result1.data.permissionId : '';
 
       // Update with explicit id
       const result2 = await service.upsertDataPermission({
@@ -124,7 +129,9 @@ describe('DataPermissionService', () => {
       });
 
       expect(result2.ok).toBe(true);
-      expect(result2.data?.permissionId).toBe(permissionId);
+      if (result2.ok) {
+        expect(result2.data.permissionId).toBe(permissionId);
+      }
 
       const permRepo = dataSource.getRepository(DataPermissionEntity);
       const perm = await permRepo.findOneBy({ id: permissionId });
@@ -170,8 +177,11 @@ describe('DataPermissionService', () => {
 
       expect(result.ok).toBe(true);
 
+      expect(result.ok).toBe(true);
       const permRepo = dataSource.getRepository(DataPermissionEntity);
-      const perm = await permRepo.findOneBy({ id: result.data!.permissionId });
+      const perm = await permRepo.findOneBy({
+        id: result.ok ? result.data.permissionId : '',
+      });
       expect(perm?.scope).toEqual({
         organization: 'org-1',
         projects: ['proj-1', 'proj-2'],
@@ -207,13 +217,15 @@ describe('DataPermissionService', () => {
 
       const result = await service.listDataPermissions({
         roleId,
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(1);
-      expect(result.data?.total).toBe(1);
-      expect(result.data?.items?.[0].roleId).toBe(roleId);
+      if (result.ok) {
+        expect(result.data.items?.length).toBe(1);
+        expect(result.data.total).toBe(1);
+        expect(result.data.items?.[0].roleId).toBe(roleId);
+      }
     });
 
     it('should support pagination', async () => {
@@ -228,30 +240,34 @@ describe('DataPermissionService', () => {
       // Test pagination for the role with data permission
       const result = await service.listDataPermissions({
         roleId,
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(1);
-      expect(result.data?.total).toBe(1);
+      if (result.ok) {
+        expect(result.data.items?.length).toBe(1);
+        expect(result.data.total).toBe(1);
+      }
     });
 
     it('should return empty result when no permissions exist for role', async () => {
       const result = await service.listDataPermissions({
         roleId,
-        page: { page: 1, size: 10 },
+        page: { page: 1, pageSize: 10 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.items?.length).toBe(0);
-      expect(result.data?.total).toBe(0);
+      if (result.ok) {
+        expect(result.data.items?.length).toBe(0);
+        expect(result.data.total).toBe(0);
+      }
     });
 
     it('should throw ROLE_NOT_FOUND for non-existent role', async () => {
       await expect(
         service.listDataPermissions({
           roleId: 'non-existent-role-id',
-          page: { page: 1, size: 10 },
+          page: { page: 1, pageSize: 10 },
         })
       ).rejects.toThrow('Role not found');
     });
@@ -266,12 +282,14 @@ describe('DataPermissionService', () => {
 
       const result = await service.listDataPermissions({
         roleId,
-        page: { page: 2, size: 5 },
+        page: { page: 2, pageSize: 5 },
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.page).toBe(2);
-      expect(result.data?.size).toBe(5);
+      if (result.ok) {
+        expect(result.data.page).toBe(2);
+        expect(result.data.pageSize).toBe(5);
+      }
     });
   });
 
@@ -296,7 +314,10 @@ describe('DataPermissionService', () => {
           scope: { organization: 'org-1' },
         },
       });
-      const permissionId = createResult.data!.permissionId;
+      expect(createResult.ok).toBe(true);
+      const permissionId = createResult.ok
+        ? createResult.data.permissionId
+        : '';
 
       const permission = await service.findById(permissionId);
 

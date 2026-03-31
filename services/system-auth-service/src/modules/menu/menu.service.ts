@@ -6,6 +6,7 @@ import {
   errResult,
   type Result,
   type MenuNode,
+  type UpsertMenuNodeRequest,
 } from '@ai-datahub/contract';
 import { MenuNodeEntity } from '../../entities/MenuNode.entity';
 
@@ -16,16 +17,16 @@ export class MenuService {
     private readonly menuRepo: Repository<MenuNodeEntity>
   ) {}
 
-  async listMenuTree(req: { meta?: unknown }): Promise<Result<MenuNode[]>> {
+  async listMenuTree(_req: { meta?: unknown }): Promise<Result<MenuNode[]>> {
     const nodes = await this.menuRepo.find({
       order: { sort: 'ASC', createdAt: 'ASC' },
     });
     return okResult(nodes.map((n) => n.toDTO()));
   }
 
-  async upsertMenuNode(req: {
-    node: Omit<MenuNode, 'createdAt' | 'updatedAt'> & { id?: string };
-  }): Promise<Result<{ nodeId: string }>> {
+  async upsertMenuNode(
+    req: UpsertMenuNodeRequest
+  ): Promise<Result<{ nodeId: string }>> {
     let node: MenuNodeEntity;
 
     if (req.node.id) {

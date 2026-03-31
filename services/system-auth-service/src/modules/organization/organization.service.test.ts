@@ -49,43 +49,54 @@ describe('OrganizationService', () => {
       org: {
         name: 'Test Org',
         code: 'test-org',
-        description: 'Test organization',
+        status: 'ENABLED',
       },
     });
 
     expect(result.ok).toBe(true);
-    expect(result.data?.orgId).toBeDefined();
+    if (result.ok) {
+      expect(result.data.orgId).toBeDefined();
+    }
   });
 
   it('should not allow duplicate organization codes', async () => {
     await service.createOrganization({
-      org: { name: 'Test Org', code: 'test-org' },
+      org: { name: 'Test Org', code: 'test-org', status: 'ENABLED' },
     });
     const result = await service.createOrganization({
-      org: { name: 'Test Org', code: 'test-org' },
+      org: { name: 'Test Org', code: 'test-org', status: 'ENABLED' },
     });
 
     expect(result.ok).toBe(false);
-    expect(result.error?.code).toBe('INVALID_ARGUMENT');
+    if (!result.ok) {
+      expect(result.error.code).toBe('INVALID_ARGUMENT');
+    }
   });
 
   it('should list organizations', async () => {
     await service.createOrganization({
-      org: { name: 'Test 1', code: 'test-1' },
+      org: { name: 'Test 1', code: 'test-1', status: 'ENABLED' },
     });
     await service.createOrganization({
-      org: { name: 'Test 2', code: 'test-2' },
+      org: { name: 'Test 2', code: 'test-2', status: 'ENABLED' },
     });
 
     const result = await service.listOrganizations({ keyword: 'Test' });
     expect(result.ok).toBe(true);
-    expect(result.data?.length).toBe(2);
+    if (result.ok) {
+      expect(result.data.length).toBe(2);
+    }
   });
 
   it('should throw ORG_NOT_FOUND when updating non-existent organization', async () => {
     await expect(
       service.updateOrganization({
-        org: { id: 'non-existent-id', name: 'Test', code: 'test' },
+        org: {
+          id: 'non-existent-id',
+          name: 'Test',
+          code: 'test',
+          status: 'ENABLED',
+        },
       })
     ).rejects.toThrow('Organization not found');
   });
@@ -95,6 +106,8 @@ describe('OrganizationService', () => {
       orgId: 'non-existent-id',
     });
     expect(result.ok).toBe(true);
-    expect(result.data?.success).toBe(true);
+    if (result.ok) {
+      expect(result.data.success).toBe(true);
+    }
   });
 });

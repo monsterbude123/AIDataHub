@@ -43,7 +43,9 @@ describe('MenuService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.nodeId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.nodeId).toBeDefined();
+      }
     });
 
     it('should create a menu node with all fields', async () => {
@@ -60,7 +62,9 @@ describe('MenuService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.nodeId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.nodeId).toBeDefined();
+      }
     });
 
     it('should create a child menu node', async () => {
@@ -72,7 +76,8 @@ describe('MenuService', () => {
           enabled: true,
         },
       });
-      const parentId = parentResult.data!.nodeId;
+      expect(parentResult.ok).toBe(true);
+      const parentId = parentResult.ok ? parentResult.data.nodeId : '';
 
       // Create child
       const childResult = await service.upsertMenuNode({
@@ -86,7 +91,9 @@ describe('MenuService', () => {
       });
 
       expect(childResult.ok).toBe(true);
-      expect(childResult.data?.nodeId).toBeDefined();
+      if (childResult.ok) {
+        expect(childResult.data.nodeId).toBeDefined();
+      }
     });
 
     it('should update an existing menu node (idempotent)', async () => {
@@ -98,7 +105,8 @@ describe('MenuService', () => {
           enabled: true,
         },
       });
-      const nodeId = createResult.data!.nodeId;
+      expect(createResult.ok).toBe(true);
+      const nodeId = createResult.ok ? createResult.data.nodeId : '';
 
       // Update with same id
       const updateResult = await service.upsertMenuNode({
@@ -112,15 +120,20 @@ describe('MenuService', () => {
       });
 
       expect(updateResult.ok).toBe(true);
-      expect(updateResult.data?.nodeId).toBe(nodeId);
+      if (updateResult.ok) {
+        expect(updateResult.data.nodeId).toBe(nodeId);
+      }
 
       // Verify update
       const nodes = await service.listMenuTree({});
-      expect(nodes.data?.find((n) => n.id === nodeId)?.name).toBe(
-        'System Management'
-      );
-      expect(nodes.data?.find((n) => n.id === nodeId)?.enabled).toBe(false);
-      expect(nodes.data?.find((n) => n.id === nodeId)?.sort).toBe(10);
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.find((n) => n.id === nodeId)?.name).toBe(
+          'System Management'
+        );
+        expect(nodes.data.find((n) => n.id === nodeId)?.enabled).toBe(false);
+        expect(nodes.data.find((n) => n.id === nodeId)?.sort).toBe(10);
+      }
     });
 
     it('should create button type menu node', async () => {
@@ -134,7 +147,9 @@ describe('MenuService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.nodeId).toBeDefined();
+      if (result.ok) {
+        expect(result.data.nodeId).toBeDefined();
+      }
     });
   });
 
@@ -143,7 +158,9 @@ describe('MenuService', () => {
       const result = await service.listMenuTree({});
 
       expect(result.ok).toBe(true);
-      expect(result.data).toEqual([]);
+      if (result.ok) {
+        expect(result.data).toEqual([]);
+      }
     });
 
     it('should list all menu nodes', async () => {
@@ -157,7 +174,9 @@ describe('MenuService', () => {
       const result = await service.listMenuTree({});
 
       expect(result.ok).toBe(true);
-      expect(result.data?.length).toBe(2);
+      if (result.ok) {
+        expect(result.data.length).toBe(2);
+      }
     });
 
     it('should return menu nodes with correct structure', async () => {
@@ -173,8 +192,14 @@ describe('MenuService', () => {
         },
       });
 
+      expect(createResult.ok).toBe(true);
+      const nodeId = createResult.ok ? createResult.data.nodeId : '';
+
       const result = await service.listMenuTree({});
-      const node = result.data?.find((n) => n.id === createResult.data!.nodeId);
+      expect(result.ok).toBe(true);
+      const node = result.ok
+        ? result.data.find((n) => n.id === nodeId)
+        : undefined;
 
       expect(node).toBeDefined();
       expect(node?.type).toBe('MENU');
@@ -192,7 +217,8 @@ describe('MenuService', () => {
       const parentResult = await service.upsertMenuNode({
         node: { type: 'DIRECTORY', name: 'System', enabled: true },
       });
-      const parentId = parentResult.data!.nodeId;
+      expect(parentResult.ok).toBe(true);
+      const parentId = parentResult.ok ? parentResult.data.nodeId : '';
 
       await service.upsertMenuNode({
         node: {
@@ -205,10 +231,13 @@ describe('MenuService', () => {
       });
 
       const result = await service.listMenuTree({});
-      const childNode = result.data?.find((n) => n.parentId === parentId);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const childNode = result.data.find((n) => n.parentId === parentId);
 
-      expect(childNode).toBeDefined();
-      expect(childNode?.name).toBe('Users');
+        expect(childNode).toBeDefined();
+        expect(childNode?.name).toBe('Users');
+      }
     });
   });
 
@@ -217,16 +246,22 @@ describe('MenuService', () => {
       const createResult = await service.upsertMenuNode({
         node: { type: 'DIRECTORY', name: 'System', enabled: true },
       });
-      const nodeId = createResult.data!.nodeId;
+      expect(createResult.ok).toBe(true);
+      const nodeId = createResult.ok ? createResult.data.nodeId : '';
 
       const result = await service.deleteMenuNode({ nodeId });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
 
       // Verify deletion
       const nodes = await service.listMenuTree({});
-      expect(nodes.data?.find((n) => n.id === nodeId)).toBeUndefined();
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.find((n) => n.id === nodeId)).toBeUndefined();
+      }
     });
 
     it('should be idempotent when deleting non-existent node', async () => {
@@ -235,7 +270,9 @@ describe('MenuService', () => {
       });
 
       expect(result.ok).toBe(true);
-      expect(result.data?.success).toBe(true);
+      if (result.ok) {
+        expect(result.data.success).toBe(true);
+      }
     });
 
     it('should recursively delete child nodes', async () => {
@@ -243,7 +280,8 @@ describe('MenuService', () => {
       const parentResult = await service.upsertMenuNode({
         node: { type: 'DIRECTORY', name: 'System', enabled: true },
       });
-      const parentId = parentResult.data!.nodeId;
+      expect(parentResult.ok).toBe(true);
+      const parentId = parentResult.ok ? parentResult.data.nodeId : '';
 
       // Create children
       const child1Result = await service.upsertMenuNode({
@@ -255,7 +293,8 @@ describe('MenuService', () => {
           enabled: true,
         },
       });
-      const child1Id = child1Result.data!.nodeId;
+      expect(child1Result.ok).toBe(true);
+      const child1Id = child1Result.ok ? child1Result.data.nodeId : '';
 
       // Create grandchild
       const grandchildResult = await service.upsertMenuNode({
@@ -267,7 +306,10 @@ describe('MenuService', () => {
           enabled: true,
         },
       });
-      const grandchildId = grandchildResult.data!.nodeId;
+      expect(grandchildResult.ok).toBe(true);
+      const grandchildId = grandchildResult.ok
+        ? grandchildResult.data.nodeId
+        : '';
 
       // Create another child of parent
       const child2Result = await service.upsertMenuNode({
@@ -279,18 +321,22 @@ describe('MenuService', () => {
           enabled: true,
         },
       });
-      const child2Id = child2Result.data!.nodeId;
+      expect(child2Result.ok).toBe(true);
+      const child2Id = child2Result.ok ? child2Result.data.nodeId : '';
 
       // Delete parent
       await service.deleteMenuNode({ nodeId: parentId });
 
       // Verify all are deleted
       const nodes = await service.listMenuTree({});
-      expect(nodes.data?.find((n) => n.id === parentId)).toBeUndefined();
-      expect(nodes.data?.find((n) => n.id === child1Id)).toBeUndefined();
-      expect(nodes.data?.find((n) => n.id === grandchildId)).toBeUndefined();
-      expect(nodes.data?.find((n) => n.id === child2Id)).toBeUndefined();
-      expect(nodes.data?.length).toBe(0);
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.find((n) => n.id === parentId)).toBeUndefined();
+        expect(nodes.data.find((n) => n.id === child1Id)).toBeUndefined();
+        expect(nodes.data.find((n) => n.id === grandchildId)).toBeUndefined();
+        expect(nodes.data.find((n) => n.id === child2Id)).toBeUndefined();
+        expect(nodes.data.length).toBe(0);
+      }
     });
 
     it('should not delete unrelated nodes when deleting a node', async () => {
@@ -298,18 +344,23 @@ describe('MenuService', () => {
       const tree1Result = await service.upsertMenuNode({
         node: { type: 'DIRECTORY', name: 'System', enabled: true },
       });
+      expect(tree1Result.ok).toBe(true);
+      const tree1Id = tree1Result.ok ? tree1Result.data.nodeId : '';
 
-      const tree2Result = await service.upsertMenuNode({
+      await service.upsertMenuNode({
         node: { type: 'DIRECTORY', name: 'Settings', enabled: true },
       });
 
       // Delete tree1
-      await service.deleteMenuNode({ nodeId: tree1Result.data!.nodeId });
+      await service.deleteMenuNode({ nodeId: tree1Id });
 
       // Verify tree2 still exists
       const nodes = await service.listMenuTree({});
-      expect(nodes.data?.length).toBe(1);
-      expect(nodes.data?.[0].name).toBe('Settings');
+      expect(nodes.ok).toBe(true);
+      if (nodes.ok) {
+        expect(nodes.data.length).toBe(1);
+        expect(nodes.data[0].name).toBe('Settings');
+      }
     });
   });
 });
