@@ -32,7 +32,12 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     }
 
+    // Allow Swagger UI and API docs
     const request = context.switchToHttp().getRequest();
+    const url = request.url;
+    if (url.startsWith('/api/docs') || url.startsWith('/api/docs-json')) {
+      return true;
+    }
 
     // Get token from Authorization header
     const authHeader = request.headers['authorization'];
