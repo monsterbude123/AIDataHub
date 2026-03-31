@@ -6,6 +6,7 @@ export type HttpClientRequest = {
   meta?: RequestMeta;
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
+  headers?: Record<string, string>;
 };
 
 export type HttpClient = {

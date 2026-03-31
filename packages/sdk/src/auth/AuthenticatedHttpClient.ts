@@ -1,5 +1,5 @@
 // packages/sdk/src/auth/AuthenticatedHttpClient.ts
-import type { HttpClient, HttpRequest } from '../http/HttpClient';
+import type { HttpClient, HttpClientRequest, Result } from '../http/HttpClient';
 
 /**
  * HTTP client wrapper that automatically injects Bearer token.
@@ -61,7 +61,7 @@ export class AuthenticatedHttpClient implements HttpClient {
    * @returns The response data
    * @throws Error if no token is set
    */
-  async request<T>(req: HttpRequest): Promise<T> {
+  async request<T>(req: HttpClientRequest): Promise<Result<T>> {
     if (!this.token) {
       throw new Error(
         'No authentication token set. Call setToken() first or provide an initial token.'
