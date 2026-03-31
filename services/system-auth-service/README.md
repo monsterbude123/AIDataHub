@@ -38,6 +38,52 @@ npm run build:check
 
 服务默认监听端口 `3000`，可通过 `PORT` 环境变量配置。
 
+## 认证
+
+### 公开端点
+
+以下端点无需认证：
+
+| 端点               | 说明             |
+| ------------------ | ---------------- |
+| `POST /auth/login` | 用户登录         |
+| `GET /health`      | 服务健康检查     |
+| `GET /api/docs`    | Swagger API 文档 |
+
+### 初始管理员
+
+服务首次启动时会自动创建管理员用户：
+
+- **用户名**: `admin`
+- **密码**: 自动生成（16位，打印到控制台）
+
+密码仅在首次创建时输出到控制台，请妥善保存并在首次登录后修改。
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🔐 Initial Admin Credentials (save this securely!)         │
+├─────────────────────────────────────────────────────────────┤
+│  Username: admin                                             │
+│  Password: xK9#mP2$vL5@nQ8w                                  │
+│                                                             │
+│  ⚠️  Please change the password after first login!          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 使用 Token
+
+所有其他端点需要在请求头中携带 JWT Token：
+
+```bash
+curl -H "Authorization: Bearer <your-token>" http://localhost:3000/users
+```
+
+### 环境变量
+
+| 变量         | 默认值       | 说明                             |
+| ------------ | ------------ | -------------------------------- |
+| `JWT_SECRET` | `dev-secret` | JWT 签名密钥（生产环境必须配置） |
+
 ## API 文档
 
 启动服务后访问 Swagger API 文档: http://localhost:3000/api/docs
@@ -46,21 +92,58 @@ npm run build:check
 
 使用 `@ai-datahub/sdk` 包调用服务：
 
-```typescript
-import { SystemAuthHttpClient, FetchHttpClient } from '@ai-datahub/sdk';
+### 认证流程（推荐）
 
+使用 `AuthenticatedHttpClient` 自动注入 Bearer Token：
+
+```typescript
+import {
+  SystemAuthHttpClient,
+  FetchHttpClient,
+  AuthenticatedHttpClient,
+} from '@ai-datahub/sdk';
+
+// 创建基础 HTTP 客户端
 const http = new FetchHttpClient('http://localhost:3000');
-const client = new SystemAuthHttpClient(http);
+const authClient = new SystemAuthHttpClient(http);
 
 // 用户登录
-const loginResult = await client.login({
+const loginResult = await authClient.login({
   username: 'admin',
   password: 'password123',
 });
 
-// 获取组织列表
-const orgs = await client.listOrganizations({ keyword: 'test' });
+if (!loginResult.ok) {
+  throw new Error(loginResult.error.message);
+}
 
+// 创建认证客户端（自动注入 Bearer Token）
+const authedHttp = new AuthenticatedHttpClient(http, loginResult.data.token);
+const authedClient = new SystemAuthHttpClient(authedHttp);
+
+// 后续所有请求自动携带 Authorization 头
+const orgs = await authedClient.listOrganizations({});
+const users = await authedClient.listUsers({ page: { page: 1, pageSize: 10 } });
+```
+
+### Token 管理
+
+```typescript
+const authedHttp = new AuthenticatedHttpClient(http);
+
+// 设置 token
+authedHttp.setToken('your-jwt-token');
+
+// 获取当前 token
+const token = authedHttp.getToken();
+
+// 清除 token（登出）
+authedHttp.clearToken();
+```
+
+### 基本示例
+
+```typescript
 // 创建用户
 const userResult = await client.createUser({
   user: {

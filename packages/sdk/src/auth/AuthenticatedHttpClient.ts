@@ -1,5 +1,6 @@
 // packages/sdk/src/auth/AuthenticatedHttpClient.ts
-import type { HttpClient, HttpClientRequest, Result } from '../http/HttpClient';
+import type { HttpClient, HttpClientRequest } from '../http/HttpClient';
+import type { Result } from '@ai-datahub/contract';
 
 /**
  * HTTP client wrapper that automatically injects Bearer token.
