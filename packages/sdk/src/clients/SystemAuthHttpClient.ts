@@ -10,6 +10,8 @@ import type {
   DirectoryTreeNode,
   ListMyTodoApprovalsRequest,
   ListUsersRequest,
+  LoginRequest,
+  LoginResponse,
   MenuNode,
   Organization,
   PageResult,
@@ -31,6 +33,16 @@ import type { HttpClient } from '../http/HttpClient';
 
 export class SystemAuthHttpClient implements SystemAuthClient {
   constructor(private readonly http: HttpClient) {}
+
+  // Authentication
+  login(req: LoginRequest): Promise<Result<LoginResponse>> {
+    return this.http.request({
+      path: '/auth/login',
+      method: 'POST',
+      meta: req.meta,
+      body: { username: req.username, password: req.password },
+    });
+  }
 
   // Organization
   listOrganizations(req: {
