@@ -6,6 +6,7 @@ import { RoleModule } from './modules/role/role.module';
 import { PermissionModule } from './modules/permission/permission.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { DirectoryModule } from './modules/directory/directory.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DirectoryModule } from './modules/directory/directory.module';
     PermissionModule,
     MenuModule,
     DirectoryModule,
+    AuthModule,
   ],
   controllers: [HealthController],
 })
