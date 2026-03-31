@@ -16,16 +16,16 @@ export class RoleEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   code!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   description?: string;
 
-  @Column({ default: true })
+  @Column({ type: 'boolean', default: true })
   enabled!: boolean;
 
   @OneToMany(() => UserRoleEntity, (ur) => ur.role)

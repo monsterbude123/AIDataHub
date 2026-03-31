@@ -14,16 +14,16 @@ export class PermissionEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 20 })
   type!: 'URI' | 'PAGE_ELEMENT';
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   code!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   resource!: string;
 
   @OneToMany(() => RolePermissionEntity, (rp) => rp.permission)

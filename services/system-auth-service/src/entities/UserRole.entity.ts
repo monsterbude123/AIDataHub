@@ -8,10 +8,10 @@ export class UserRoleEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   userId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   roleId!: string;
 
   @ManyToOne(() => UserEntity, (u) => u.userRoles)

@@ -17,28 +17,28 @@ export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   username!: string;
 
-  @Column({ select: false })
+  @Column({ type: 'varchar', select: false })
   passwordHash!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   email?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   realName?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   phone?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   level?: number;
 
-  @Column({ default: 'ENABLED' })
+  @Column({ type: 'varchar', default: 'ENABLED' })
   status!: UserStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   orgId!: string;
 
   @ManyToOne(() => OrganizationEntity, (org) => org.users)

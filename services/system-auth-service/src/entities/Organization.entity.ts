@@ -15,22 +15,22 @@ export class OrganizationEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   code!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   parentId?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   sort?: number;
 
-  @Column({ default: 'ENABLED' })
+  @Column({ type: 'varchar', default: 'ENABLED' })
   status!: 'ENABLED' | 'DISABLED';
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   description?: string;
 
   @CreateDateColumn()

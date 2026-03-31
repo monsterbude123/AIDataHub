@@ -8,10 +8,10 @@ export class RolePermissionEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   roleId!: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   permissionId!: string;
 
   @ManyToOne(() => RoleEntity, (r) => r.rolePermissions)
