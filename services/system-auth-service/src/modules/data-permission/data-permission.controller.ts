@@ -4,6 +4,9 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { DataPermissionService } from './data-permission.service';
 import type {
@@ -26,6 +29,22 @@ export class DataPermissionController {
   })
   @ApiResponse({ status: 200, description: '成功设置数据权限' })
   @ApiResponse({ status: 404, description: '角色不存在' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        permission: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', description: '权限ID（更新时必填）' },
+            roleId: { type: 'string', description: '角色ID' },
+            scope: { type: 'object', description: '数据范围定义' },
+          },
+          required: ['roleId', 'scope'],
+        },
+      },
+    },
+  })
   upsertDataPermission(
     @Body()
     body: {
@@ -41,6 +60,9 @@ export class DataPermissionController {
     description: '分页查询指定角色的数据权限',
   })
   @ApiResponse({ status: 200, description: '成功返回数据权限列表' })
+  @ApiParam({ name: 'roleId', description: '角色ID', type: 'string' })
+  @ApiQuery({ name: 'page', description: '页码', required: false })
+  @ApiQuery({ name: 'pageSize', description: '每页数量', required: false })
   listDataPermissions(
     @Param('roleId') roleId: string,
     @Query('page') page?: string,

@@ -4,6 +4,9 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { ApprovalService } from './approval.service';
 import type { Result, Approval, PageResult } from '@ai-datahub/contract';
@@ -18,6 +21,19 @@ export class ApprovalController {
   @ApiOperation({ summary: '创建审批', description: '创建新的审批请求' })
   @ApiResponse({ status: 201, description: '成功创建审批' })
   @ApiResponse({ status: 400, description: '审批模板不存在' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        businessType: { type: 'string', description: '业务类型' },
+        businessId: { type: 'string', description: '业务ID' },
+        title: { type: 'string', description: '审批标题' },
+        applicantId: { type: 'string', description: '申请人ID' },
+        payload: { type: 'object', description: '审批内容' },
+      },
+      required: ['businessType', 'businessId', 'title', 'applicantId'],
+    },
+  })
   createApproval(
     @Body()
     body: {
@@ -39,6 +55,18 @@ export class ApprovalController {
   @ApiResponse({ status: 200, description: '成功执行审批操作' })
   @ApiResponse({ status: 400, description: '审批状态无效' })
   @ApiResponse({ status: 404, description: '审批不存在' })
+  @ApiParam({ name: 'id', description: '审批ID', type: 'string' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['APPROVE', 'REJECT'] },
+        comment: { type: 'string', description: '审批意见' },
+        approverId: { type: 'string', description: '审批人ID' },
+      },
+      required: ['action', 'approverId'],
+    },
+  })
   approve(
     @Param('id') id: string,
     @Body()
@@ -62,6 +90,19 @@ export class ApprovalController {
     description: '获取用户的待办审批列表',
   })
   @ApiResponse({ status: 200, description: '成功返回待办审批列表' })
+  @ApiQuery({ name: 'userId', description: '用户ID', required: true })
+  @ApiQuery({
+    name: 'page',
+    description: '页码',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    description: '每页数量',
+    required: false,
+    type: Number,
+  })
   listMyTodoApprovals(
     @Query('userId') userId: string,
     @Query('page') page?: number,
@@ -79,6 +120,19 @@ export class ApprovalController {
     description: '获取用户的已办审批列表',
   })
   @ApiResponse({ status: 200, description: '成功返回已办审批列表' })
+  @ApiQuery({ name: 'userId', description: '用户ID', required: true })
+  @ApiQuery({
+    name: 'page',
+    description: '页码',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    description: '每页数量',
+    required: false,
+    type: Number,
+  })
   listMyDoneApprovals(
     @Query('userId') userId: string,
     @Query('page') page?: number,
@@ -97,6 +151,15 @@ export class ApprovalController {
   })
   @ApiResponse({ status: 200, description: '成功发送催办' })
   @ApiResponse({ status: 404, description: '审批不存在' })
+  @ApiParam({ name: 'id', description: '审批ID', type: 'string' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: '催办消息' },
+      },
+    },
+  })
   remindApproval(
     @Param('id') id: string,
     @Body() body?: { message?: string }
