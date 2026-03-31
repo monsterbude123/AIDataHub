@@ -13,28 +13,28 @@ export class MenuNodeEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   parentId?: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   type!: 'DIRECTORY' | 'MENU' | 'BUTTON';
 
-  @Column()
+  @Column({ type: 'varchar' })
   name!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   path?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   icon?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   permissionCode?: string;
 
-  @Column({ default: true })
+  @Column({ type: 'boolean', default: true })
   enabled!: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   sort?: number;
 
   @CreateDateColumn()
