@@ -7,6 +7,7 @@ import { PermissionModule } from './modules/permission/permission.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { DirectoryModule } from './modules/directory/directory.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ApprovalTemplateModule } from './modules/approval-template/approval-template.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module';
     MenuModule,
     DirectoryModule,
     AuthModule,
+    ApprovalTemplateModule,
   ],
   controllers: [HealthController],
 })
