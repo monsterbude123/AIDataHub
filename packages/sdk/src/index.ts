@@ -4,3 +4,4 @@ export * from './http/errors';
 
 export * from './clients/DataServiceHttpClient';
 export * from './clients/MetadataHttpClient';
+export * from './clients/SystemAuthHttpClient';
