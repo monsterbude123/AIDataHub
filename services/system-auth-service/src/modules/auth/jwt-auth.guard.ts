@@ -4,8 +4,10 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AuthService } from './auth.service';
-import { AuthenticatedUser } from './auth.service';
+import type { AuthenticatedUser } from './auth.service';
+import { IS_PUBLIC_KEY } from './public.decorator';
 
 declare global {
   interface Request {
@@ -15,9 +17,21 @@ declare global {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly authService: AuthService
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Check if endpoint is marked as public
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest();
 
     // Get token from Authorization header
