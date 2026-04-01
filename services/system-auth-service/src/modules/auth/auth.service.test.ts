@@ -335,6 +335,40 @@ describe('CaslAbilityFactory', () => {
       expect(ability.can(Action.Manage, 'all')).toBe(true);
     });
 
+    it('should grant full access to admin user even without permissions', () => {
+      const user = {
+        id: 'user-id',
+        username: 'admin',
+        orgId: 'org-1',
+        roles: ['admin'],
+        permissions: [], // Empty permissions, but still admin
+      };
+
+      const ability = factory.createForUser(user);
+
+      expect(ability.can(Action.Create, 'users')).toBe(true);
+      expect(ability.can(Action.Read, 'roles')).toBe(true);
+      expect(ability.can(Action.Update, 'permissions')).toBe(true);
+      expect(ability.can(Action.Delete, 'organizations')).toBe(true);
+    });
+
+    it('should NOT grant full access to super-admin role (only admin is checked)', () => {
+      const user = {
+        id: 'user-id',
+        username: 'superadmin',
+        orgId: 'org-1',
+        roles: ['super-admin'],
+        permissions: [],
+      };
+
+      const ability = factory.createForUser(user);
+
+      // super-admin is NOT recognized as admin in current implementation
+      expect(ability.can(Action.Manage, 'all')).toBe(false);
+      // But can still read User by default
+      expect(ability.can(Action.Read, 'User')).toBe(true);
+    });
+
     it('should grant permissions based on permission codes', () => {
       const user = {
         id: 'user-id',
@@ -363,6 +397,135 @@ describe('CaslAbilityFactory', () => {
       const ability = factory.createForUser(user);
 
       expect(ability.can(Action.Read, 'User')).toBe(true);
+    });
+
+    it('should handle all action types', () => {
+      const user = {
+        id: 'user-id',
+        username: 'allactions',
+        orgId: 'org-1',
+        roles: ['user'],
+        permissions: [
+          'manage:all',
+          'create:resource',
+          'read:resource',
+          'update:resource',
+          'delete:resource',
+        ],
+      };
+
+      const ability = factory.createForUser(user);
+
+      expect(ability.can(Action.Manage, 'all')).toBe(true);
+      expect(ability.can(Action.Create, 'resource')).toBe(true);
+      expect(ability.can(Action.Read, 'resource')).toBe(true);
+      expect(ability.can(Action.Update, 'resource')).toBe(true);
+      expect(ability.can(Action.Delete, 'resource')).toBe(true);
+    });
+
+    it('should ignore invalid permission code formats', () => {
+      const user = {
+        id: 'user-id',
+        username: 'invalidperms',
+        orgId: 'org-1',
+        roles: ['user'],
+        permissions: [
+          'invalidformat', // No colon
+          'read:', // Empty subject
+          ':users', // Empty action
+          'unknown:resource', // Unknown action
+          'read:valid', // Valid
+        ],
+      };
+
+      const ability = factory.createForUser(user);
+
+      // Only valid permission should be granted
+      expect(ability.can(Action.Read, 'valid')).toBe(true);
+      // Invalid formats should not crash
+      expect(ability.can(Action.Read, '')).toBe(false);
+    });
+
+    it('should handle case-insensitive actions', () => {
+      const user = {
+        id: 'user-id',
+        username: 'caseuser',
+        orgId: 'org-1',
+        roles: ['user'],
+        permissions: ['READ:users', 'Create:roles', 'UPDATE:permissions'],
+      };
+
+      const ability = factory.createForUser(user);
+
+      expect(ability.can(Action.Read, 'users')).toBe(true);
+      expect(ability.can(Action.Create, 'roles')).toBe(true);
+      expect(ability.can(Action.Update, 'permissions')).toBe(true);
+    });
+
+    it('should grant multiple permissions on same subject', () => {
+      const user = {
+        id: 'user-id',
+        username: 'multiuser',
+        orgId: 'org-1',
+        roles: ['user'],
+        permissions: ['read:users', 'create:users', 'update:users'],
+      };
+
+      const ability = factory.createForUser(user);
+
+      expect(ability.can(Action.Read, 'users')).toBe(true);
+      expect(ability.can(Action.Create, 'users')).toBe(true);
+      expect(ability.can(Action.Update, 'users')).toBe(true);
+      expect(ability.can(Action.Delete, 'users')).toBe(false);
+    });
+
+    it('should handle empty roles array', () => {
+      const user = {
+        id: 'user-id',
+        username: 'norole',
+        orgId: 'org-1',
+        roles: [],
+        permissions: ['read:users'],
+      };
+
+      const ability = factory.createForUser(user);
+
+      expect(ability.can(Action.Read, 'users')).toBe(true);
+      expect(ability.can(Action.Read, 'User')).toBe(true);
+    });
+
+    it('should handle user with both admin role and explicit permissions', () => {
+      const user = {
+        id: 'user-id',
+        username: 'adminwithperms',
+        orgId: 'org-1',
+        roles: ['admin'],
+        permissions: ['read:users', 'create:roles'],
+      };
+
+      const ability = factory.createForUser(user);
+
+      // Admin role grants full access, explicit permissions are ignored
+      expect(ability.can(Action.Manage, 'all')).toBe(true);
+      expect(ability.can(Action.Delete, 'anything')).toBe(true);
+    });
+
+    it('should deny all actions except default for user without permissions', () => {
+      const user = {
+        id: 'user-id',
+        username: 'noperms',
+        orgId: 'org-1',
+        roles: ['guest'],
+        permissions: [],
+      };
+
+      const ability = factory.createForUser(user);
+
+      expect(ability.can(Action.Read, 'User')).toBe(true); // Default
+      expect(ability.can(Action.Read, 'users')).toBe(false);
+      expect(ability.can(Action.Create, 'roles')).toBe(false);
+      expect(ability.can(Action.Update, 'organizations')).toBe(false);
+      expect(ability.can(Action.Delete, 'permissions')).toBe(false);
     });
   });
 });
