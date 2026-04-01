@@ -1,4 +1,9 @@
-# metadata-service（元数据服务）开发计划
+# metadata-service（元数据管理服务）
+
+> **当前状态**：✅ 已实现。
+>
+> - **代码位置**：`services/metadata-service/src/modules/metadata/`
+> - **API 前缀**：`/api/metadata`
 
 ## 1. 职责边界
 

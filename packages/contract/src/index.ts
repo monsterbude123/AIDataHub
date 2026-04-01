@@ -1,6 +1,9 @@
 export * from './types';
 export * from './result';
 
+// DTO classes with Swagger decorators
+export * from './dto';
+
 export * from './modules/cost-management';
 export * from './modules/data-governance-core';
 export * from './modules/data-governance-ops';
@@ -16,4 +19,5 @@ export * from './modules/self-service-analytics';
 export * from './modules/system-admin';
 export * from './modules/system-auth';
 export * from './modules/system-integration';
+export * from './modules/datasource';
 export * from './modules/task-scheduler';

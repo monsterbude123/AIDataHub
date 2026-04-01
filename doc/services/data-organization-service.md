@@ -1,4 +1,10 @@
-# data-organization-service（数据分层组织）开发计划
+# data-organization-service（数据分层组织）
+
+> **当前状态**：规划中，尚未实现。
+>
+> - **优先级**：中
+> - **依赖**：data-integration 模块
+> - **实现方式**：可先作为 data-service-service 的模块实现，后续按需拆分
 
 ## 1. 职责边界
 

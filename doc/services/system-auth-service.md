@@ -1,4 +1,10 @@
-# system-auth-service（统一认证授权与审批框架）开发计划
+# system-auth-service（统一认证授权与审批框架）
+
+> **当前状态**：有完整 README 文档，但无代码实现。
+>
+> - **优先级**：高（其他服务需要认证支持）
+> - **文档位置**：`services/system-auth-service/README.md`
+> - **代码位置**：待实现 `services/system-auth-service/src/`
 
 ## 1. 职责边界
 
@@ -196,6 +202,7 @@ export class DatabaseModule {}
 ```
 
 **决策记录**：
+
 - 保留 NestJS DI 模式便于测试 mock
 - 最小改动方案，风险最低
 
@@ -244,11 +251,11 @@ JWT token 包含：
 
 ### 5.6 环境变量
 
-| Variable     | Default      | Description                       |
-| ------------ | ------------ | --------------------------------- |
-| `JWT_SECRET` | `dev-secret` | Secret key for signing JWT tokens |
-| `PORT`       | `3000`       | Server port                       |
-| `DATABASE_URL` | `file:data/system-auth.db` | SQLite 数据库文件 |
+| Variable       | Default                    | Description                       |
+| -------------- | -------------------------- | --------------------------------- |
+| `JWT_SECRET`   | `dev-secret`               | Secret key for signing JWT tokens |
+| `PORT`         | `3000`                     | Server port                       |
+| `DATABASE_URL` | `file:data/system-auth.db` | SQLite 数据库文件                 |
 
 **重要**：在生产环境设置 `JWT_SECRET` 为安全的随机值。
 

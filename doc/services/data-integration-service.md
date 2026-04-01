@@ -1,4 +1,10 @@
-# data-integration-service（数据接入集成）开发计划
+# data-integration-service（数据接入集成）
+
+> **当前状态**：已作为模块在 `data-service-service` 中实现。
+>
+> - **代码位置**：`services/data-service-service/src/modules/data-integration/`
+> - **规划文档**：本文档保留作为独立服务拆分参考
+> - **拆分条件**：数据接入规模增长、需要独立部署扩展时
 
 ## 1. 职责边界
 
