@@ -2,7 +2,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+import { hashPassword } from '../crypto';
 import { UserEntity } from '../../entities/User.entity';
 import { RoleEntity } from '../../entities/Role.entity';
 import { UserRoleEntity } from '../../entities/UserRole.entity';
@@ -94,7 +94,7 @@ export class InitService implements OnApplicationBootstrap {
 
       // Generate secure password
       const password = generateSecurePassword(16);
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await hashPassword(password);
 
       // Create admin user
       const adminUser = this.userRepo.create({

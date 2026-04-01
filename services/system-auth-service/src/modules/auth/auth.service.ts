@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+import { comparePassword } from '../crypto';
 import { UserEntity } from '../../entities/User.entity';
 import { UserRoleEntity } from '../../entities/UserRole.entity';
 import { RoleEntity } from '../../entities/Role.entity';
@@ -88,7 +88,10 @@ export class AuthService {
       throw new UnauthorizedException('Password not set for this user');
     }
 
-    const passwordMatch = await bcrypt.compare(req.password, user.passwordHash);
+    const passwordMatch = await comparePassword(
+      req.password,
+      user.passwordHash
+    );
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid password');
     }
