@@ -11,12 +11,14 @@ import { ApprovalTemplateModule } from './modules/approval-template/approval-tem
 import { ApprovalModule } from './modules/approval/approval.module';
 import { DataPermissionModule } from './modules/data-permission/data-permission.module';
 import { InitModule } from './modules/init/init.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
     DatabaseModule,
     InitModule,
     OrganizationModule,
+    UserModule,
     RoleModule,
     PermissionModule,
     MenuModule,
