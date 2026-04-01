@@ -11,7 +11,7 @@ import { HealthController } from '../src/controllers/HealthController';
 // Mock guard that always allows access
 @Injectable()
 class MockAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+  canActivate(_context: ExecutionContext): boolean {
     return true;
   }
 }

@@ -1,51 +1,36 @@
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { RoleService } from './role.service';
-import { RoleEntity } from '../../entities/Role.entity';
-import { RolePermissionEntity } from '../../entities/RolePermission.entity';
-import { PermissionEntity } from '../../entities/Permission.entity';
-import { UserEntity } from '../../entities/User.entity';
-import { UserRoleEntity } from '../../entities/UserRole.entity';
-import { OrganizationEntity } from '../../entities/Organization.entity';
-import { DataSource } from 'typeorm';
+import {
+  prisma,
+  setupTestDatabase,
+  resetTestDatabase,
+  teardownTestDatabase,
+} from '../../../test/prisma';
 
 describe('RoleService', () => {
   let service: RoleService;
-  let dataSource: DataSource;
 
   beforeEach(async () => {
+    await setupTestDatabase();
+    await resetTestDatabase();
+
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [
-            RoleEntity,
-            RolePermissionEntity,
-            PermissionEntity,
-            UserEntity,
-            UserRoleEntity,
-            OrganizationEntity,
-          ],
-          synchronize: true,
-          logging: false,
-        }),
-        TypeOrmModule.forFeature([
-          RoleEntity,
-          RolePermissionEntity,
-          PermissionEntity,
-        ]),
+      providers: [
+        RoleService,
+        {
+          provide: 'PRISMA_CLIENT',
+          useValue: prisma,
+        },
       ],
-      providers: [RoleService],
     }).compile();
 
     service = moduleRef.get(RoleService);
-    dataSource = moduleRef.get(DataSource);
+  });
 
-    await dataSource.dropDatabase();
-    await dataSource.synchronize(true);
+  afterAll(async () => {
+    await teardownTestDatabase();
   });
 
   describe('createRole', () => {
@@ -155,17 +140,15 @@ describe('RoleService', () => {
     });
 
     it('should delete role permissions when deleting role', async () => {
-      const permRepo = dataSource.getRepository(PermissionEntity);
-      const rolePermRepo = dataSource.getRepository(RolePermissionEntity);
-
       // Create permission
-      const perm = permRepo.create({
-        type: 'URI',
-        name: 'Test Permission',
-        code: 'test-perm',
-        resource: '/test',
+      const perm = await prisma.permission.create({
+        data: {
+          type: 'URI',
+          name: 'Test Permission',
+          code: 'test-perm',
+          resource: '/test',
+        },
       });
-      await permRepo.save(perm);
 
       // Create role
       const createResult = await service.createRole({
@@ -175,14 +158,17 @@ describe('RoleService', () => {
       const roleId = createResult.ok ? createResult.data.roleId : '';
 
       // Add role permission manually
-      const rolePerm = rolePermRepo.create({ roleId, permissionId: perm.id });
-      await rolePermRepo.save(rolePerm);
+      await prisma.rolePermission.create({
+        data: { roleId, permissionId: perm.id },
+      });
 
       // Delete role
       await service.deleteRole({ roleId });
 
       // Verify role permissions are deleted
-      const remainingRolePerms = await rolePermRepo.find({ where: { roleId } });
+      const remainingRolePerms = await prisma.rolePermission.findMany({
+        where: { roleId },
+      });
       expect(remainingRolePerms.length).toBe(0);
     });
   });
@@ -255,23 +241,23 @@ describe('RoleService', () => {
     });
 
     it('should include permissions in role list', async () => {
-      const permRepo = dataSource.getRepository(PermissionEntity);
-      const rolePermRepo = dataSource.getRepository(RolePermissionEntity);
-
       // Create permissions
-      const perm1 = permRepo.create({
-        type: 'URI',
-        name: 'Read Users',
-        code: 'users:read',
-        resource: '/users',
+      const perm1 = await prisma.permission.create({
+        data: {
+          type: 'URI',
+          name: 'Read Users',
+          code: 'users:read',
+          resource: '/users',
+        },
       });
-      const perm2 = permRepo.create({
-        type: 'URI',
-        name: 'Write Users',
-        code: 'users:write',
-        resource: '/users',
+      const perm2 = await prisma.permission.create({
+        data: {
+          type: 'URI',
+          name: 'Write Users',
+          code: 'users:write',
+          resource: '/users',
+        },
       });
-      await permRepo.save([perm1, perm2]);
 
       // Create role
       const createResult = await service.createRole({
@@ -281,9 +267,12 @@ describe('RoleService', () => {
       const roleId = createResult.ok ? createResult.data.roleId : '';
 
       // Add role permissions
-      const rolePerm1 = rolePermRepo.create({ roleId, permissionId: perm1.id });
-      const rolePerm2 = rolePermRepo.create({ roleId, permissionId: perm2.id });
-      await rolePermRepo.save([rolePerm1, rolePerm2]);
+      await prisma.rolePermission.create({
+        data: { roleId, permissionId: perm1.id },
+      });
+      await prisma.rolePermission.create({
+        data: { roleId, permissionId: perm2.id },
+      });
 
       // List roles
       const result = await service.listRoles({});

@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, Like } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import {
   okResult,
   errResult,
@@ -8,14 +7,10 @@ import {
   type DirectoryTreeNode,
   type UpsertDirectoryNodeRequest,
 } from '@ai-datahub/contract';
-import { DirectoryTreeNodeEntity } from '../../entities/DirectoryTreeNode.entity';
 
 @Injectable()
 export class DirectoryService {
-  constructor(
-    @InjectRepository(DirectoryTreeNodeEntity)
-    private readonly directoryRepo: Repository<DirectoryTreeNodeEntity>
-  ) {}
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {}
 
   /**
    * List directory tree nodes with optional filtering
@@ -27,54 +22,51 @@ export class DirectoryService {
     parentId?: string;
     keyword?: string;
   }): Promise<Result<DirectoryTreeNode[]>> {
-    const whereConditions: Record<string, unknown>[] = [];
-
-    // Build filter conditions
-    if (req.parentId !== undefined) {
-      // If parentId is provided, filter by it (can be null for root nodes)
-      whereConditions.push({ parentId: req.parentId });
-    }
-
     if (req.keyword) {
       // Search by name or code (case-insensitive)
-      const keywordPattern = `%${req.keyword}%`;
-      const keywordConditions =
-        whereConditions.length > 0
-          ? whereConditions.map((cond) => ({
-              ...cond,
-              name: Like(keywordPattern),
-            }))
-          : [{ name: Like(keywordPattern) }];
-
-      // Also search by code
-      const codeConditions =
-        whereConditions.length > 0
-          ? whereConditions.map((cond) => ({
-              ...cond,
-              code: Like(keywordPattern),
-            }))
-          : [{ code: Like(keywordPattern) }];
-
-      // Combine name and code searches
-      const nodes = await this.directoryRepo.find({
-        where: [...keywordConditions, ...codeConditions],
-        order: { createdAt: 'ASC' },
+      const nodes = await this.prisma.directoryTreeNode.findMany({
+        where: {
+          OR: [
+            { name: { contains: req.keyword } },
+            { code: { contains: req.keyword } },
+          ],
+        },
+        orderBy: { createdAt: 'asc' },
       });
 
-      // Remove duplicates based on id
-      const uniqueNodes = Array.from(
-        new Map(nodes.map((n) => [n.id, n])).values()
+      // Remove duplicates based on id (already unique from Prisma)
+      return okResult(
+        nodes.map((n) => ({
+          id: n.id,
+          parentId: n.parentId ?? undefined,
+          name: n.name,
+          code: n.code,
+          attributes: n.attributes ? JSON.parse(n.attributes) : undefined,
+          createdAt: n.createdAt.toISOString(),
+          updatedAt: n.updatedAt.toISOString(),
+        }))
       );
-      return okResult(uniqueNodes.map((n) => n.toDTO()));
     }
 
-    // If only parentId filter (or no filter)
-    const nodes = await this.directoryRepo.find({
-      where: whereConditions.length > 0 ? whereConditions : undefined,
-      order: { createdAt: 'ASC' },
+    // If parentId filter (or no filter)
+    const where = req.parentId !== undefined ? { parentId: req.parentId } : {};
+
+    const nodes = await this.prisma.directoryTreeNode.findMany({
+      where,
+      orderBy: { createdAt: 'asc' },
     });
 
-    return okResult(nodes.map((n) => n.toDTO()));
+    return okResult(
+      nodes.map((n) => ({
+        id: n.id,
+        parentId: n.parentId ?? undefined,
+        name: n.name,
+        code: n.code,
+        attributes: n.attributes ? JSON.parse(n.attributes) : undefined,
+        createdAt: n.createdAt.toISOString(),
+        updatedAt: n.updatedAt.toISOString(),
+      }))
+    );
   }
 
   /**
@@ -85,11 +77,11 @@ export class DirectoryService {
   async upsertDirectoryNode(
     req: UpsertDirectoryNodeRequest
   ): Promise<Result<{ nodeId: string }>> {
-    let node: DirectoryTreeNodeEntity;
-
     if (req.node.id) {
       // Update existing node
-      const existing = await this.directoryRepo.findOneBy({ id: req.node.id });
+      const existing = await this.prisma.directoryTreeNode.findUnique({
+        where: { id: req.node.id },
+      });
       if (!existing) {
         return errResult({
           code: 'DIRECTORY_NOT_FOUND',
@@ -98,36 +90,52 @@ export class DirectoryService {
         });
       }
 
-      // Update fields
-      existing.parentId = req.node.parentId;
-      existing.name = req.node.name;
-      existing.code = req.node.code;
-      existing.attributes = req.node.attributes;
-
-      node = await this.directoryRepo.save(existing);
-    } else {
-      // Check if code already exists (code is unique)
-      const existingByCode = await this.directoryRepo.findOneBy({
-        code: req.node.code,
-      });
-      if (existingByCode) {
-        // Update existing node with same code (idempotent)
-        existingByCode.parentId = req.node.parentId;
-        existingByCode.name = req.node.name;
-        existingByCode.attributes = req.node.attributes;
-        node = await this.directoryRepo.save(existingByCode);
-      } else {
-        // Create new node
-        const newEntity = this.directoryRepo.create({
+      const node = await this.prisma.directoryTreeNode.update({
+        where: { id: req.node.id },
+        data: {
           parentId: req.node.parentId,
           name: req.node.name,
           code: req.node.code,
-          attributes: req.node.attributes,
-        });
+          attributes: req.node.attributes
+            ? JSON.stringify(req.node.attributes)
+            : null,
+        },
+      });
 
-        node = await this.directoryRepo.save(newEntity);
-      }
+      return okResult({ nodeId: node.id });
     }
+
+    // Check if code already exists (code is unique)
+    const existingByCode = await this.prisma.directoryTreeNode.findUnique({
+      where: { code: req.node.code },
+    });
+
+    if (existingByCode) {
+      // Update existing node with same code (idempotent)
+      const node = await this.prisma.directoryTreeNode.update({
+        where: { code: req.node.code },
+        data: {
+          parentId: req.node.parentId,
+          name: req.node.name,
+          attributes: req.node.attributes
+            ? JSON.stringify(req.node.attributes)
+            : null,
+        },
+      });
+      return okResult({ nodeId: node.id });
+    }
+
+    // Create new node
+    const node = await this.prisma.directoryTreeNode.create({
+      data: {
+        parentId: req.node.parentId,
+        name: req.node.name,
+        code: req.node.code,
+        attributes: req.node.attributes
+          ? JSON.stringify(req.node.attributes)
+          : null,
+      },
+    });
 
     return okResult({ nodeId: node.id });
   }
@@ -140,7 +148,9 @@ export class DirectoryService {
     meta?: unknown;
     nodeId: string;
   }): Promise<Result<{ success: boolean }>> {
-    const existing = await this.directoryRepo.findOneBy({ id: req.nodeId });
+    const existing = await this.prisma.directoryTreeNode.findUnique({
+      where: { id: req.nodeId },
+    });
     if (!existing) {
       // Idempotent - already deleted
       return okResult({ success: true });
@@ -151,7 +161,9 @@ export class DirectoryService {
     const allIdsToDelete = [req.nodeId, ...descendantIds];
 
     // Delete all nodes
-    await this.directoryRepo.delete({ id: In(allIdsToDelete) });
+    await this.prisma.directoryTreeNode.deleteMany({
+      where: { id: { in: allIdsToDelete } },
+    });
 
     return okResult({ success: true });
   }
@@ -160,9 +172,9 @@ export class DirectoryService {
    * Find all descendant node IDs recursively
    */
   private async findAllDescendants(nodeId: string): Promise<string[]> {
-    const children = await this.directoryRepo.find({
+    const children = await this.prisma.directoryTreeNode.findMany({
       where: { parentId: nodeId },
-      select: ['id'],
+      select: { id: true },
     });
 
     if (children.length === 0) {

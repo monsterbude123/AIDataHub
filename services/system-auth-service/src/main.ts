@@ -51,6 +51,9 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, '0.0.0.0');
+  // db path
+  const dbPath = process.env.DATABASE_URL;
+  console.log(dbPath);
   // eslint-disable-next-line no-console
   console.log(`system-auth-service listening on port ${port}`);
   // eslint-disable-next-line no-console

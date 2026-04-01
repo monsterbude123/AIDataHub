@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import {
   okResult,
   type Result,
@@ -9,23 +8,18 @@ import {
   type UpsertDataPermissionRequest,
 } from '@ai-datahub/contract';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
-import { DataPermissionEntity } from '../../entities/DataPermission.entity';
-import { RoleEntity } from '../../entities/Role.entity';
 
 @Injectable()
 export class DataPermissionService {
-  constructor(
-    @InjectRepository(DataPermissionEntity)
-    private readonly dataPermRepo: Repository<DataPermissionEntity>,
-    @InjectRepository(RoleEntity)
-    private readonly roleRepo: Repository<RoleEntity>
-  ) {}
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {}
 
   async upsertDataPermission(
     req: UpsertDataPermissionRequest
   ): Promise<Result<{ permissionId: string }>> {
     // Verify role exists
-    const role = await this.roleRepo.findOneBy({ id: req.permission.roleId });
+    const role = await this.prisma.role.findUnique({
+      where: { id: req.permission.roleId },
+    });
     if (!role) {
       throw new SystemAuthException('ROLE_NOT_FOUND', 'Role not found');
     }
@@ -33,8 +27,8 @@ export class DataPermissionService {
     // Idempotent upsert: if id provided, update; otherwise check if exists for roleId
     if (req.permission.id) {
       // Update existing permission
-      const existing = await this.dataPermRepo.findOneBy({
-        id: req.permission.id,
+      const existing = await this.prisma.dataPermission.findUnique({
+        where: { id: req.permission.id },
       });
       if (!existing) {
         throw new SystemAuthException(
@@ -43,30 +37,41 @@ export class DataPermissionService {
         );
       }
 
-      existing.roleId = req.permission.roleId;
-      existing.scope = req.permission.scope;
-      await this.dataPermRepo.save(existing);
+      await this.prisma.dataPermission.update({
+        where: { id: req.permission.id },
+        data: {
+          roleId: req.permission.roleId,
+          scope: JSON.stringify(req.permission.scope),
+        },
+      });
+
       return okResult({ permissionId: existing.id });
     }
 
     // Check if a permission already exists for this role (idempotent behavior)
-    const existingForRole = await this.dataPermRepo.findOneBy({
-      roleId: req.permission.roleId,
+    const existingForRole = await this.prisma.dataPermission.findFirst({
+      where: { roleId: req.permission.roleId },
     });
+
     if (existingForRole) {
       // Update existing permission for this role
-      existingForRole.scope = req.permission.scope;
-      await this.dataPermRepo.save(existingForRole);
+      await this.prisma.dataPermission.update({
+        where: { id: existingForRole.id },
+        data: {
+          scope: JSON.stringify(req.permission.scope),
+        },
+      });
       return okResult({ permissionId: existingForRole.id });
     }
 
     // Create new permission
-    const permission = this.dataPermRepo.create({
-      roleId: req.permission.roleId,
-      scope: req.permission.scope,
+    const permission = await this.prisma.dataPermission.create({
+      data: {
+        roleId: req.permission.roleId,
+        scope: JSON.stringify(req.permission.scope),
+      },
     });
 
-    await this.dataPermRepo.save(permission);
     return okResult({ permissionId: permission.id });
   }
 
@@ -75,29 +80,38 @@ export class DataPermissionService {
     page: { page: number; pageSize: number };
   }): Promise<Result<PageResult<DataPermission>>> {
     // Verify role exists
-    const role = await this.roleRepo.findOneBy({ id: req.roleId });
+    const role = await this.prisma.role.findUnique({
+      where: { id: req.roleId },
+    });
     if (!role) {
       throw new SystemAuthException('ROLE_NOT_FOUND', 'Role not found');
     }
 
-    const query = this.dataPermRepo
-      .createQueryBuilder('dataPermission')
-      .where('dataPermission.roleId = :roleId', { roleId: req.roleId });
-
     const skip = (req.page.page - 1) * req.page.pageSize;
-    query.skip(skip).take(req.page.pageSize);
 
-    const [items, total] = await query.getManyAndCount();
+    const [items, total] = await Promise.all([
+      this.prisma.dataPermission.findMany({
+        where: { roleId: req.roleId },
+        skip,
+        take: req.page.pageSize,
+      }),
+      this.prisma.dataPermission.count({ where: { roleId: req.roleId } }),
+    ]);
 
     return okResult({
-      items: items.map((p) => p.toDTO()),
+      items: items.map((p) => ({
+        id: p.id,
+        roleId: p.roleId,
+        scope: JSON.parse(p.scope),
+        createdAt: p.createdAt.toISOString(),
+      })),
       total,
       page: req.page.page,
       pageSize: req.page.pageSize,
     });
   }
 
-  async findById(id: string): Promise<DataPermissionEntity | null> {
-    return this.dataPermRepo.findOneBy({ id });
+  async findById(id: string) {
+    return this.prisma.dataPermission.findUnique({ where: { id } });
   }
 }

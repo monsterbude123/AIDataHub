@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import {
   okResult,
   errResult,
@@ -8,23 +7,18 @@ import {
   type Role,
 } from '@ai-datahub/contract';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
-import { RoleEntity } from '../../entities/Role.entity';
-import { RolePermissionEntity } from '../../entities/RolePermission.entity';
 
 @Injectable()
 export class RoleService {
-  constructor(
-    @InjectRepository(RoleEntity)
-    private readonly roleRepo: Repository<RoleEntity>,
-    @InjectRepository(RolePermissionEntity)
-    private readonly rolePermRepo: Repository<RolePermissionEntity>
-  ) {}
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {}
 
   async createRole(req: {
     role: Omit<Role, 'id'>;
   }): Promise<Result<{ roleId: string }>> {
     // Check for duplicate code (non-idempotent)
-    const existing = await this.roleRepo.findOneBy({ code: req.role.code });
+    const existing = await this.prisma.role.findUnique({
+      where: { code: req.role.code },
+    });
     if (existing) {
       return errResult({
         code: 'INVALID_ARGUMENT',
@@ -33,65 +27,96 @@ export class RoleService {
       });
     }
 
-    const role = this.roleRepo.create({
-      name: req.role.name,
-      code: req.role.code,
-      description: req.role.description,
-      enabled: true,
+    const role = await this.prisma.role.create({
+      data: {
+        name: req.role.name,
+        code: req.role.code,
+        description: req.role.description,
+        enabled: true,
+      },
     });
 
-    await this.roleRepo.save(role);
     return okResult({ roleId: role.id });
   }
 
   async updateRole(req: { role: Role }): Promise<Result<{ success: boolean }>> {
-    const existing = await this.roleRepo.findOneBy({ id: req.role.id });
+    const existing = await this.prisma.role.findUnique({
+      where: { id: req.role.id },
+    });
     if (!existing) {
       throw new SystemAuthException('ROLE_NOT_FOUND', 'Role not found');
     }
 
     // Update fields
-    existing.name = req.role.name;
-    existing.code = req.role.code;
-    existing.description = req.role.description;
+    await this.prisma.role.update({
+      where: { id: req.role.id },
+      data: {
+        name: req.role.name,
+        code: req.role.code,
+        description: req.role.description,
+      },
+    });
 
-    await this.roleRepo.save(existing);
     return okResult({ success: true });
   }
 
   async deleteRole(req: {
     roleId: string;
   }): Promise<Result<{ success: boolean }>> {
-    const existing = await this.roleRepo.findOneBy({ id: req.roleId });
+    const existing = await this.prisma.role.findUnique({
+      where: { id: req.roleId },
+    });
     if (!existing) {
       return okResult({ success: true }); // idempotent - already deleted
     }
 
-    // Delete role permissions first
-    await this.rolePermRepo.delete({ roleId: req.roleId });
+    // Manually delete related records (handles both FK and non-FK databases)
+    await this.prisma.rolePermission.deleteMany({
+      where: { roleId: req.roleId },
+    });
+    await this.prisma.userRole.deleteMany({
+      where: { roleId: req.roleId },
+    });
 
     // Delete role
-    await this.roleRepo.remove(existing);
+    await this.prisma.role.delete({
+      where: { id: req.roleId },
+    });
+
     return okResult({ success: true });
   }
 
   async listRoles(req: { keyword?: string }): Promise<Result<Role[]>> {
-    const query = this.roleRepo
-      .createQueryBuilder('role')
-      .leftJoinAndSelect('role.rolePermissions', 'rp')
-      .leftJoinAndSelect('rp.permission', 'perm');
+    const where = req.keyword
+      ? {
+          OR: [
+            { name: { contains: req.keyword } },
+            { code: { contains: req.keyword } },
+          ],
+        }
+      : undefined;
 
-    if (req.keyword) {
-      query.where('role.name LIKE :keyword OR role.code LIKE :keyword', {
-        keyword: `%${req.keyword}%`,
-      });
-    }
+    const roles = await this.prisma.role.findMany({
+      where,
+      include: {
+        rolePermissions: {
+          include: { permission: true },
+        },
+      },
+    });
 
-    const roles = await query.getMany();
-    return okResult(roles.map((r) => r.toDTO()));
+    return okResult(
+      roles.map((r) => ({
+        id: r.id,
+        name: r.name,
+        code: r.code,
+        description: r.description ?? undefined,
+        permissions: r.rolePermissions.map((rp) => rp.permission.code),
+      }))
+    );
   }
 
-  async findById(id: string): Promise<RoleEntity | null> {
-    return this.roleRepo.findOneBy({ id });
+  async findById(id: string) {
+    return this.prisma.role.findUnique({ where: { id } });
   }
 }

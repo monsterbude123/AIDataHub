@@ -1,51 +1,36 @@
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { PermissionService } from './permission.service';
-import { PermissionEntity } from '../../entities/Permission.entity';
-import { RolePermissionEntity } from '../../entities/RolePermission.entity';
-import { RoleEntity } from '../../entities/Role.entity';
-import { UserEntity } from '../../entities/User.entity';
-import { UserRoleEntity } from '../../entities/UserRole.entity';
-import { OrganizationEntity } from '../../entities/Organization.entity';
-import { DataSource } from 'typeorm';
+import {
+  prisma,
+  setupTestDatabase,
+  resetTestDatabase,
+  teardownTestDatabase,
+} from '../../../test/prisma';
 
 describe('PermissionService', () => {
   let service: PermissionService;
-  let dataSource: DataSource;
 
   beforeEach(async () => {
+    await setupTestDatabase();
+    await resetTestDatabase();
+
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [
-            PermissionEntity,
-            RolePermissionEntity,
-            RoleEntity,
-            UserEntity,
-            UserRoleEntity,
-            OrganizationEntity,
-          ],
-          synchronize: true,
-          logging: false,
-        }),
-        TypeOrmModule.forFeature([
-          PermissionEntity,
-          RolePermissionEntity,
-          RoleEntity,
-        ]),
+      providers: [
+        PermissionService,
+        {
+          provide: 'PRISMA_CLIENT',
+          useValue: prisma,
+        },
       ],
-      providers: [PermissionService],
     }).compile();
 
     service = moduleRef.get(PermissionService);
-    dataSource = moduleRef.get(DataSource);
+  });
 
-    await dataSource.dropDatabase();
-    await dataSource.synchronize(true);
+  afterAll(async () => {
+    await teardownTestDatabase();
   });
 
   describe('createPermission', () => {
@@ -268,13 +253,13 @@ describe('PermissionService', () => {
     let permId2: string;
 
     beforeEach(async () => {
-      const roleRepo = dataSource.getRepository(RoleEntity);
-      const role = roleRepo.create({
-        name: 'Test Role',
-        code: 'test-role',
-        enabled: true,
+      const role = await prisma.role.create({
+        data: {
+          name: 'Test Role',
+          code: 'test-role',
+          enabled: true,
+        },
       });
-      await roleRepo.save(role);
       roleId = role.id;
 
       const permResult1 = await service.createPermission({
@@ -374,8 +359,9 @@ describe('PermissionService', () => {
       });
 
       // Verify only permId3 is bound
-      const rolePermRepo = dataSource.getRepository(RolePermissionEntity);
-      const bindings = await rolePermRepo.find({ where: { roleId } });
+      const bindings = await prisma.rolePermission.findMany({
+        where: { roleId },
+      });
       expect(bindings.length).toBe(1);
       expect(bindings[0].permissionId).toBe(permId3);
     });
@@ -395,8 +381,9 @@ describe('PermissionService', () => {
 
       expect(result.ok).toBe(true);
 
-      const rolePermRepo = dataSource.getRepository(RolePermissionEntity);
-      const bindings = await rolePermRepo.find({ where: { roleId } });
+      const bindings = await prisma.rolePermission.findMany({
+        where: { roleId },
+      });
       expect(bindings.length).toBe(0);
     });
   });

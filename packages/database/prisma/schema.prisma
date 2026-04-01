@@ -1,0 +1,196 @@
+// Prisma Schema for AI DataHub
+// Generated from TypeORM entities
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== Organization ====================
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  parentId    String?
+  sort        Int?
+  status      String   @default("ENABLED")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+
+  @@map("organizations")
+}
+
+// ==================== User ====================
+model User {
+  id           String       @id @default(uuid())
+  username     String       @unique
+  passwordHash String?
+  email        String?
+  realName     String?
+  phone        String?
+  level        Int?
+  status       String       @default("ENABLED")
+  orgId        String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  organization Organization  @relation(fields: [orgId], references: [id])
+  userRoles    UserRole[]
+
+  @@index([orgId])
+  @@map("users")
+}
+
+// ==================== Role ====================
+model Role {
+  id              String           @id @default(uuid())
+  name            String
+  code            String           @unique
+  description     String?
+  enabled         Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+// ==================== Permission ====================
+model Permission {
+  id              String           @id @default(uuid())
+  type            String           // 'URI' | 'PAGE_ELEMENT'
+  name            String
+  code            String           @unique
+  resource        String
+  createdAt       DateTime         @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+// ==================== UserRole (Junction) ====================
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ==================== RolePermission (Junction) ====================
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// ==================== MenuNode (Self-referential) ====================
+model MenuNode {
+  id             String   @id @default(uuid())
+  parentId       String?
+  type           String   // 'DIRECTORY' | 'MENU' | 'BUTTON'
+  name           String
+  path           String?
+  icon           String?
+  permissionCode String?
+  enabled        Boolean  @default(true)
+  sort           Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  parent  MenuNode?  @relation("MenuTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children MenuNode[] @relation("MenuTree")
+
+  @@index([parentId])
+  @@map("menu_nodes")
+}
+
+// ==================== DirectoryTreeNode (Self-referential) ====================
+model DirectoryTreeNode {
+  id         String   @id @default(uuid())
+  parentId   String?
+  name       String
+  code       String   @unique
+  attributes String?  // JSON stored as string
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  parent  DirectoryTreeNode?  @relation("DirectoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children DirectoryTreeNode[] @relation("DirectoryTree")
+
+  @@index([parentId])
+  @@map("directory_nodes")
+}
+
+// ==================== ApprovalTemplate ====================
+model ApprovalTemplate {
+  id           String   @id @default(uuid())
+  businessType String
+  name         String
+  definition   String   // JSON stored as string
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  approvals Approval[]
+
+  @@index([businessType])
+  @@map("approval_templates")
+}
+
+// ==================== Approval ====================
+model Approval {
+  id            String   @id @default(uuid())
+  businessType  String
+  businessId    String
+  title         String
+  applicantId   String
+  currentNode   Int?
+  payload       String?  // JSON stored as string
+  templateId    String
+  status        String   // 'PENDING' | 'APPROVED' | 'REJECTED'
+  history       String?  // JSON stored as string
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  template ApprovalTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([applicantId])
+  @@index([templateId])
+  @@index([status])
+  @@map("approvals")
+}
+
+// ==================== DataPermission ====================
+model DataPermission {
+  id        String   @id @default(uuid())
+  roleId    String
+  scope     String   // JSON stored as string
+  createdAt DateTime @default(now())
+
+  @@index([roleId])
+  @@map("data_permissions")
+}

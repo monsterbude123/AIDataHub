@@ -1,35 +1,36 @@
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApprovalTemplateService } from './approval-template.service';
-import { ApprovalTemplateEntity } from '../../entities/ApprovalTemplate.entity';
-import { DataSource } from 'typeorm';
+import {
+  prisma,
+  setupTestDatabase,
+  resetTestDatabase,
+  teardownTestDatabase,
+} from '../../../test/prisma';
 
 describe('ApprovalTemplateService', () => {
   let service: ApprovalTemplateService;
-  let dataSource: DataSource;
 
   beforeEach(async () => {
+    await setupTestDatabase();
+    await resetTestDatabase();
+
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [ApprovalTemplateEntity],
-          synchronize: true,
-          logging: false,
-        }),
-        TypeOrmModule.forFeature([ApprovalTemplateEntity]),
+      providers: [
+        ApprovalTemplateService,
+        {
+          provide: 'PRISMA_CLIENT',
+          useValue: prisma,
+        },
       ],
-      providers: [ApprovalTemplateService],
     }).compile();
 
     service = moduleRef.get(ApprovalTemplateService);
-    dataSource = moduleRef.get(DataSource);
+  });
 
-    await dataSource.dropDatabase();
-    await dataSource.synchronize(true);
+  afterAll(async () => {
+    await teardownTestDatabase();
   });
 
   describe('createApprovalTemplate', () => {

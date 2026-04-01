@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import {
   okResult,
   type Result,
@@ -9,17 +8,10 @@ import {
   type ApprovalStatus,
 } from '@ai-datahub/contract';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
-import { ApprovalEntity } from '../../entities/Approval.entity';
-import { ApprovalTemplateEntity } from '../../entities/ApprovalTemplate.entity';
 
 @Injectable()
 export class ApprovalService {
-  constructor(
-    @InjectRepository(ApprovalEntity)
-    private readonly approvalRepo: Repository<ApprovalEntity>,
-    @InjectRepository(ApprovalTemplateEntity)
-    private readonly templateRepo: Repository<ApprovalTemplateEntity>
-  ) {}
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {}
 
   async createApproval(req: {
     businessType: string;
@@ -29,8 +21,8 @@ export class ApprovalService {
     payload?: Record<string, unknown>;
   }): Promise<Result<{ approvalId: string }>> {
     // Find a template for this business type
-    const template = await this.templateRepo.findOneBy({
-      businessType: req.businessType,
+    const template = await this.prisma.approvalTemplate.findFirst({
+      where: { businessType: req.businessType },
     });
 
     if (!template) {
@@ -41,18 +33,19 @@ export class ApprovalService {
     }
 
     // Create approval with PENDING status
-    const approval = this.approvalRepo.create({
-      businessType: req.businessType,
-      businessId: req.businessId,
-      title: req.title,
-      applicantId: req.applicantId,
-      payload: req.payload,
-      templateId: template.id,
-      status: 'PENDING' as ApprovalStatus,
-      history: [],
+    const approval = await this.prisma.approval.create({
+      data: {
+        businessType: req.businessType,
+        businessId: req.businessId,
+        title: req.title,
+        applicantId: req.applicantId,
+        payload: req.payload ? JSON.stringify(req.payload) : undefined,
+        templateId: template.id,
+        status: 'PENDING',
+        history: '[]',
+      },
     });
 
-    await this.approvalRepo.save(approval);
     return okResult({ approvalId: approval.id });
   }
 
@@ -62,7 +55,9 @@ export class ApprovalService {
     comment?: string;
     approverId: string;
   }): Promise<Result<{ success: boolean }>> {
-    const approval = await this.approvalRepo.findOneBy({ id: req.approvalId });
+    const approval = await this.prisma.approval.findUnique({
+      where: { id: req.approvalId },
+    });
 
     if (!approval) {
       throw new SystemAuthException('APPROVAL_NOT_FOUND', 'Approval not found');
@@ -76,10 +71,16 @@ export class ApprovalService {
       );
     }
 
+    // Parse history
+    const history = JSON.parse(approval.history || '[]') as Array<{
+      approverId: string;
+      action: string;
+      comment?: string;
+      createdAt: string;
+    }>;
+
     // Check if this approver has already acted (idempotent check)
-    const existingAction = approval.history?.find(
-      (h) => h.approverId === req.approverId
-    );
+    const existingAction = history.find((h) => h.approverId === req.approverId);
 
     if (existingAction) {
       // Idempotent: same action by same approver is fine
@@ -101,10 +102,18 @@ export class ApprovalService {
       createdAt: new Date().toISOString(),
     };
 
-    approval.history = [...(approval.history || []), historyEntry];
-    approval.status = req.action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+    const newHistory = [...history, historyEntry];
+    const newStatus: ApprovalStatus =
+      req.action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
 
-    await this.approvalRepo.save(approval);
+    await this.prisma.approval.update({
+      where: { id: req.approvalId },
+      data: {
+        history: JSON.stringify(newHistory),
+        status: newStatus,
+      },
+    });
+
     return okResult({ success: true });
   }
 
@@ -112,26 +121,23 @@ export class ApprovalService {
     userId: string;
     page: { page: number; pageSize: number };
   }): Promise<Result<PageResult<Approval>>> {
-    // For MVP: list all PENDING approvals
-    // In a more sophisticated system, we'd filter by user's approval authority
-    const query = this.approvalRepo
-      .createQueryBuilder('approval')
-      .where('approval.status = :status', { status: 'PENDING' });
-
-    // Get total count
-    const total = await query.getCount();
-
-    // Apply pagination
     const skip = (req.page.page - 1) * req.page.pageSize;
-    query.skip(skip).take(req.page.pageSize);
 
-    const approvals = await query.getMany();
+    // For MVP: list all PENDING approvals
+    const [approvals, total] = await Promise.all([
+      this.prisma.approval.findMany({
+        where: { status: 'PENDING' },
+        skip,
+        take: req.page.pageSize,
+      }),
+      this.prisma.approval.count({ where: { status: 'PENDING' } }),
+    ]);
 
     return okResult({
       page: req.page.page,
       pageSize: req.page.pageSize,
       total,
-      items: approvals.map((a) => a.toDTO()),
+      items: approvals.map((a) => this.toDTO(a)),
     });
   }
 
@@ -140,20 +146,16 @@ export class ApprovalService {
     page: { page: number; pageSize: number };
   }): Promise<Result<PageResult<Approval>>> {
     // List APPROVED/REJECTED approvals where userId appears in history
-    // Using JSON query for SQLite compatibility
-    const query = this.approvalRepo
-      .createQueryBuilder('approval')
-      .where('approval.status IN (:...statuses)', {
-        statuses: ['APPROVED', 'REJECTED'],
-      });
-
-    // Get all and filter in memory for JSON field
-    // This is not ideal for large datasets but works for MVP
-    const allApprovals = await query.getMany();
+    const allApprovals = await this.prisma.approval.findMany({
+      where: { status: { in: ['APPROVED', 'REJECTED'] } },
+    });
 
     // Filter approvals where user is in history
     const filteredApprovals = allApprovals.filter((approval) => {
-      return approval.history?.some((h) => h.approverId === req.userId);
+      const history = JSON.parse(approval.history || '[]') as Array<{
+        approverId: string;
+      }>;
+      return history.some((h) => h.approverId === req.userId);
     });
 
     const total = filteredApprovals.length;
@@ -169,7 +171,7 @@ export class ApprovalService {
       page: req.page.page,
       pageSize: req.page.pageSize,
       total,
-      items: paginatedApprovals.map((a) => a.toDTO()),
+      items: paginatedApprovals.map((a) => this.toDTO(a)),
     });
   }
 
@@ -177,7 +179,9 @@ export class ApprovalService {
     approvalId: string;
     message?: string;
   }): Promise<Result<{ success: boolean }>> {
-    const approval = await this.approvalRepo.findOneBy({ id: req.approvalId });
+    const approval = await this.prisma.approval.findUnique({
+      where: { id: req.approvalId },
+    });
 
     if (!approval) {
       throw new SystemAuthException('APPROVAL_NOT_FOUND', 'Approval not found');
@@ -191,14 +195,41 @@ export class ApprovalService {
       );
     }
 
-    // MVP: Just return success - in real implementation, this would send
-    // a notification (email, push, etc.) to the approvers
-    // The idempotency is implicit since this is a notification action
-
+    // MVP: Just return success - in real implementation, this would send notifications
     return okResult({ success: true });
   }
 
-  async findById(id: string): Promise<ApprovalEntity | null> {
-    return this.approvalRepo.findOneBy({ id });
+  async findById(id: string) {
+    return this.prisma.approval.findUnique({ where: { id } });
+  }
+
+  private toDTO(a: {
+    id: string;
+    businessType: string;
+    businessId: string;
+    title: string;
+    applicantId: string;
+    currentNode: number | null;
+    payload: string | null;
+    templateId: string;
+    status: string;
+    history: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Approval {
+    return {
+      id: a.id,
+      businessType: a.businessType,
+      businessId: a.businessId,
+      title: a.title,
+      applicantId: a.applicantId,
+      currentNode: a.currentNode ?? undefined,
+      payload: a.payload ? JSON.parse(a.payload) : undefined,
+      templateId: a.templateId,
+      status: a.status as ApprovalStatus,
+      history: a.history ? JSON.parse(a.history) : [],
+      createdAt: a.createdAt.toISOString(),
+      updatedAt: a.updatedAt.toISOString(),
+    };
   }
 }

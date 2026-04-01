@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import {
   okResult,
   type Result,
@@ -8,33 +7,32 @@ import {
   type UpsertApprovalTemplateRequest,
 } from '@ai-datahub/contract';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
-import { ApprovalTemplateEntity } from '../../entities/ApprovalTemplate.entity';
 
 @Injectable()
 export class ApprovalTemplateService {
-  constructor(
-    @InjectRepository(ApprovalTemplateEntity)
-    private readonly templateRepo: Repository<ApprovalTemplateEntity>
-  ) {}
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {}
 
   async createApprovalTemplate(req: {
     template: Omit<ApprovalTemplate, 'id' | 'createdAt' | 'updatedAt'>;
   }): Promise<Result<{ templateId: string }>> {
     // Non-idempotent - create new template each time
-    const template = this.templateRepo.create({
-      businessType: req.template.businessType,
-      name: req.template.name,
-      definition: req.template.definition,
+    const template = await this.prisma.approvalTemplate.create({
+      data: {
+        businessType: req.template.businessType,
+        name: req.template.name,
+        definition: JSON.stringify(req.template.definition),
+      },
     });
 
-    await this.templateRepo.save(template);
     return okResult({ templateId: template.id });
   }
 
   async updateApprovalTemplate(
     req: UpsertApprovalTemplateRequest
   ): Promise<Result<{ success: boolean }>> {
-    const existing = await this.templateRepo.findOneBy({ id: req.template.id });
+    const existing = await this.prisma.approvalTemplate.findUnique({
+      where: { id: req.template.id },
+    });
     if (!existing) {
       throw new SystemAuthException(
         'APPROVAL_TEMPLATE_NOT_FOUND',
@@ -43,42 +41,55 @@ export class ApprovalTemplateService {
     }
 
     // Update fields
-    existing.businessType = req.template.businessType;
-    existing.name = req.template.name;
-    existing.definition = req.template.definition;
+    await this.prisma.approvalTemplate.update({
+      where: { id: req.template.id },
+      data: {
+        businessType: req.template.businessType,
+        name: req.template.name,
+        definition: JSON.stringify(req.template.definition),
+      },
+    });
 
-    await this.templateRepo.save(existing);
     return okResult({ success: true });
   }
 
   async deleteApprovalTemplate(req: {
     templateId: string;
   }): Promise<Result<{ success: boolean }>> {
-    const existing = await this.templateRepo.findOneBy({ id: req.templateId });
+    const existing = await this.prisma.approvalTemplate.findUnique({
+      where: { id: req.templateId },
+    });
     if (!existing) {
       return okResult({ success: true }); // idempotent - already deleted
     }
 
-    await this.templateRepo.remove(existing);
+    await this.prisma.approvalTemplate.delete({
+      where: { id: req.templateId },
+    });
+
     return okResult({ success: true });
   }
 
   async listApprovalTemplates(req: {
     businessType?: string;
   }): Promise<Result<ApprovalTemplate[]>> {
-    const query = this.templateRepo.createQueryBuilder('template');
+    const templates = await this.prisma.approvalTemplate.findMany({
+      where: req.businessType ? { businessType: req.businessType } : undefined,
+    });
 
-    if (req.businessType) {
-      query.where('template.businessType = :businessType', {
-        businessType: req.businessType,
-      });
-    }
-
-    const templates = await query.getMany();
-    return okResult(templates.map((t) => t.toDTO()));
+    return okResult(
+      templates.map((t) => ({
+        id: t.id,
+        businessType: t.businessType,
+        name: t.name,
+        definition: JSON.parse(t.definition),
+        createdAt: t.createdAt.toISOString(),
+        updatedAt: t.updatedAt.toISOString(),
+      }))
+    );
   }
 
-  async findById(id: string): Promise<ApprovalTemplateEntity | null> {
-    return this.templateRepo.findOneBy({ id });
+  async findById(id: string) {
+    return this.prisma.approvalTemplate.findUnique({ where: { id } });
   }
 }

@@ -1,47 +1,36 @@
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserService } from './user.service';
-import { UserEntity } from '../../entities/User.entity';
-import { UserRoleEntity } from '../../entities/UserRole.entity';
-import { RoleEntity } from '../../entities/Role.entity';
-import { OrganizationEntity } from '../../entities/Organization.entity';
-import { RolePermissionEntity } from '../../entities/RolePermission.entity';
-import { PermissionEntity } from '../../entities/Permission.entity';
-import { DataSource } from 'typeorm';
+import {
+  prisma,
+  setupTestDatabase,
+  resetTestDatabase,
+  teardownTestDatabase,
+} from '../../../test/prisma';
 
 describe('UserService', () => {
   let service: UserService;
-  let dataSource: DataSource;
 
   beforeEach(async () => {
+    await setupTestDatabase();
+    await resetTestDatabase();
+
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [
-            UserEntity,
-            UserRoleEntity,
-            RoleEntity,
-            OrganizationEntity,
-            RolePermissionEntity,
-            PermissionEntity,
-          ],
-          synchronize: true,
-          logging: false,
-        }),
-        TypeOrmModule.forFeature([UserEntity, UserRoleEntity, RoleEntity]),
+      providers: [
+        UserService,
+        {
+          provide: 'PRISMA_CLIENT',
+          useValue: prisma,
+        },
       ],
-      providers: [UserService],
     }).compile();
 
     service = moduleRef.get(UserService);
-    dataSource = moduleRef.get(DataSource);
+  });
 
-    await dataSource.dropDatabase();
-    await dataSource.synchronize(true);
+  afterAll(async () => {
+    await teardownTestDatabase();
   });
 
   describe('createUser', () => {
@@ -232,11 +221,13 @@ describe('UserService', () => {
       expect(userResult.ok).toBe(true);
       const userId = userResult.ok ? userResult.data.userId : '';
 
-      // Create roles manually via repository
-      const roleRepo = dataSource.getRepository(RoleEntity);
-      const role1 = roleRepo.create({ name: 'Role 1', code: 'role-1' });
-      const role2 = roleRepo.create({ name: 'Role 2', code: 'role-2' });
-      await roleRepo.save([role1, role2]);
+      // Create roles manually via prisma
+      const role1 = await prisma.role.create({
+        data: { name: 'Role 1', code: 'role-1', enabled: true },
+      });
+      const role2 = await prisma.role.create({
+        data: { name: 'Role 2', code: 'role-2', enabled: true },
+      });
 
       const result = await service.assignRoles({
         userId,
@@ -256,9 +247,9 @@ describe('UserService', () => {
       expect(userResult.ok).toBe(true);
       const userId = userResult.ok ? userResult.data.userId : '';
 
-      const roleRepo = dataSource.getRepository(RoleEntity);
-      const role = roleRepo.create({ name: 'Role', code: 'role' });
-      await roleRepo.save(role);
+      const role = await prisma.role.create({
+        data: { name: 'Role', code: 'role', enabled: true },
+      });
 
       // Assign twice
       await service.assignRoles({ userId, roleIds: [role.id] });

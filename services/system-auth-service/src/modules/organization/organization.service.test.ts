@@ -1,47 +1,36 @@
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationService } from './organization.service';
-import { OrganizationEntity } from '../../entities/Organization.entity';
-import { UserEntity } from '../../entities/User.entity';
-import { UserRoleEntity } from '../../entities/UserRole.entity';
-import { RoleEntity } from '../../entities/Role.entity';
-import { RolePermissionEntity } from '../../entities/RolePermission.entity';
-import { PermissionEntity } from '../../entities/Permission.entity';
-import { DataSource } from 'typeorm';
+import {
+  prisma,
+  setupTestDatabase,
+  resetTestDatabase,
+  teardownTestDatabase,
+} from '../../../test/prisma';
 
 describe('OrganizationService', () => {
   let service: OrganizationService;
-  let dataSource: DataSource;
 
   beforeEach(async () => {
+    await setupTestDatabase();
+    await resetTestDatabase();
+
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [
-            OrganizationEntity,
-            UserEntity,
-            UserRoleEntity,
-            RoleEntity,
-            RolePermissionEntity,
-            PermissionEntity,
-          ],
-          synchronize: true,
-          logging: false,
-        }),
-        TypeOrmModule.forFeature([OrganizationEntity]),
+      providers: [
+        OrganizationService,
+        {
+          provide: 'PRISMA_CLIENT',
+          useValue: prisma,
+        },
       ],
-      providers: [OrganizationService],
     }).compile();
 
     service = moduleRef.get(OrganizationService);
-    dataSource = moduleRef.get(DataSource);
+  });
 
-    await dataSource.dropDatabase();
-    await dataSource.synchronize(true);
+  afterAll(async () => {
+    await teardownTestDatabase();
   });
 
   it('should create an organization', async () => {

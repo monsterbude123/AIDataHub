@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DirectoryTreeNodeEntity } from '../../entities/DirectoryTreeNode.entity';
+import { DatabaseModule } from '../../common/database/database.module';
 import { DirectoryController } from './directory.controller';
 import { DirectoryService } from './directory.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DirectoryTreeNodeEntity])],
+  imports: [DatabaseModule],
   controllers: [DirectoryController],
   providers: [DirectoryService],
   exports: [DirectoryService],

@@ -9,8 +9,6 @@ import {
   afterEach,
 } from 'vitest';
 import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 
 import { OrganizationService } from '../src/modules/organization/organization.service';
@@ -25,20 +23,14 @@ import { ApprovalService } from '../src/modules/approval/approval.service';
 import { DataPermissionService } from '../src/modules/data-permission/data-permission.service';
 import { CaslAbilityFactory } from '../src/modules/auth/casl-ability.factory';
 
-import { OrganizationEntity } from '../src/entities/Organization.entity';
-import { UserEntity } from '../src/entities/User.entity';
-import { RoleEntity } from '../src/entities/Role.entity';
-import { PermissionEntity } from '../src/entities/Permission.entity';
-import { UserRoleEntity } from '../src/entities/UserRole.entity';
-import { RolePermissionEntity } from '../src/entities/RolePermission.entity';
-import { MenuNodeEntity } from '../src/entities/MenuNode.entity';
-import { DirectoryTreeNodeEntity } from '../src/entities/DirectoryTreeNode.entity';
-import { ApprovalTemplateEntity } from '../src/entities/ApprovalTemplate.entity';
-import { ApprovalEntity } from '../src/entities/Approval.entity';
-import { DataPermissionEntity } from '../src/entities/DataPermission.entity';
+import {
+  prisma,
+  setupTestDatabase,
+  resetTestDatabase,
+  teardownTestDatabase,
+} from './prisma';
 
 describe('system-auth-service E2E tests', () => {
-  let dataSource: DataSource;
   let organizationService: OrganizationService;
   let userService: UserService;
   let roleService: RoleService;
@@ -54,33 +46,12 @@ describe('system-auth-service E2E tests', () => {
   let testUserId: string;
   let testRoleId: string;
   let testPermissionId: string;
-
-  const entities = [
-    OrganizationEntity,
-    UserEntity,
-    RoleEntity,
-    PermissionEntity,
-    UserRoleEntity,
-    RolePermissionEntity,
-    MenuNodeEntity,
-    DirectoryTreeNodeEntity,
-    ApprovalTemplateEntity,
-    ApprovalEntity,
-    DataPermissionEntity,
-  ];
+  let testBusinessType: string;
 
   beforeAll(async () => {
+    await setupTestDatabase();
+
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities,
-          synchronize: true,
-          logging: false,
-        }),
-        TypeOrmModule.forFeature(entities),
-      ],
       providers: [
         OrganizationService,
         UserService,
@@ -93,10 +64,13 @@ describe('system-auth-service E2E tests', () => {
         ApprovalService,
         DataPermissionService,
         CaslAbilityFactory,
+        {
+          provide: 'PRISMA_CLIENT',
+          useValue: prisma,
+        },
       ],
     }).compile();
 
-    dataSource = moduleRef.get(DataSource);
     organizationService = moduleRef.get(OrganizationService);
     userService = moduleRef.get(UserService);
     roleService = moduleRef.get(RoleService);
@@ -110,71 +84,71 @@ describe('system-auth-service E2E tests', () => {
   });
 
   afterAll(async () => {
-    if (dataSource) {
-      await dataSource.destroy();
-    }
+    await teardownTestDatabase();
   });
 
   const cleanDatabase = async () => {
-    await dataSource.dropDatabase();
-    await dataSource.synchronize(true);
+    await resetTestDatabase();
   };
 
   const seedBasicData = async () => {
-    const orgRepo = dataSource.getRepository(OrganizationEntity);
-    const org = orgRepo.create({
-      name: 'Test Organization',
-      code: 'test-org',
-      status: 'ENABLED',
+    // Use unique codes to avoid conflicts with other test files
+    const timestamp = Date.now();
+    const org = await prisma.organization.create({
+      data: {
+        name: 'Test Organization',
+        code: `test-org-${timestamp}`,
+        status: 'ENABLED',
+      },
     });
-    await orgRepo.save(org);
     testOrgId = org.id;
 
-    const roleRepo = dataSource.getRepository(RoleEntity);
-    const role = roleRepo.create({
-      name: 'Test Role',
-      code: 'test-role',
-      enabled: true,
+    const role = await prisma.role.create({
+      data: {
+        name: 'Test Role',
+        code: `test-role-${timestamp}`,
+        enabled: true,
+      },
     });
-    await roleRepo.save(role);
     testRoleId = role.id;
 
-    const permRepo = dataSource.getRepository(PermissionEntity);
-    const perm = permRepo.create({
-      type: 'URI',
-      name: 'Test Permission',
-      code: 'test-perm',
-      resource: '/api/test',
+    const perm = await prisma.permission.create({
+      data: {
+        type: 'URI',
+        name: 'Test Permission',
+        code: `test-perm-${timestamp}`,
+        resource: '/api/test',
+      },
     });
-    await permRepo.save(perm);
     testPermissionId = perm.id;
 
-    const userRepo = dataSource.getRepository(UserEntity);
     const passwordHash = await bcrypt.hash('password123', 10);
-    const user = userRepo.create({
-      username: 'testuser',
-      passwordHash,
-      realName: 'Test User',
-      orgId: testOrgId,
-      status: 'ENABLED',
+    const user = await prisma.user.create({
+      data: {
+        username: `testuser-${timestamp}`,
+        passwordHash,
+        realName: 'Test User',
+        orgId: testOrgId,
+        status: 'ENABLED',
+      },
     });
-    await userRepo.save(user);
     testUserId = user.id;
 
-    const userRoleRepo = dataSource.getRepository(UserRoleEntity);
-    const userRole = userRoleRepo.create({
-      userId: testUserId,
-      roleId: testRoleId,
+    await prisma.userRole.create({
+      data: {
+        userId: testUserId,
+        roleId: testRoleId,
+      },
     });
-    await userRoleRepo.save(userRole);
 
-    const templateRepo = dataSource.getRepository(ApprovalTemplateEntity);
-    const template = templateRepo.create({
-      businessType: 'test-business',
-      name: 'Test Approval Template',
-      definition: { nodes: [{ approverRole: 'test-role' }] },
+    await prisma.approvalTemplate.create({
+      data: {
+        businessType: `test-business-${timestamp}`,
+        name: 'Test Approval Template',
+        definition: JSON.stringify({ nodes: [{ approverRole: 'test-role' }] }),
+      },
     });
-    await templateRepo.save(template);
+    testBusinessType = `test-business-${timestamp}`;
   };
 
   describe('Organizations', () => {
@@ -552,7 +526,7 @@ describe('system-auth-service E2E tests', () => {
 
     it('should create an approval', async () => {
       const result = await approvalService.createApproval({
-        businessType: 'test-business',
+        businessType: testBusinessType,
         businessId: 'biz-1',
         title: 'Test',
         applicantId: testUserId,
@@ -573,7 +547,7 @@ describe('system-auth-service E2E tests', () => {
 
     it('should list pending approvals', async () => {
       await approvalService.createApproval({
-        businessType: 'test-business',
+        businessType: testBusinessType,
         businessId: 'biz-1',
         title: 'Test',
         applicantId: testUserId,
@@ -590,7 +564,7 @@ describe('system-auth-service E2E tests', () => {
 
     it('should approve', async () => {
       const createRes = await approvalService.createApproval({
-        businessType: 'test-business',
+        businessType: testBusinessType,
         businessId: 'biz-1',
         title: 'Test',
         applicantId: testUserId,
@@ -608,7 +582,7 @@ describe('system-auth-service E2E tests', () => {
 
     it('should send reminder', async () => {
       const createRes = await approvalService.createApproval({
-        businessType: 'test-business',
+        businessType: testBusinessType,
         businessId: 'biz-1',
         title: 'Test',
         applicantId: testUserId,

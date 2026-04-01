@@ -1,12 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { comparePassword } from '../crypto';
-import { UserEntity } from '../../entities/User.entity';
-import { UserRoleEntity } from '../../entities/UserRole.entity';
-import { RoleEntity } from '../../entities/Role.entity';
-import { RolePermissionEntity } from '../../entities/RolePermission.entity';
 
 export interface LoginRequest {
   username: string;
@@ -45,34 +40,15 @@ export interface AuthenticatedUser {
 export class AuthService {
   private readonly jwtSecret: string;
 
-  constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepo: Repository<UserEntity>,
-    @InjectRepository(UserRoleEntity)
-    private readonly userRoleRepo: Repository<UserRoleEntity>,
-    @InjectRepository(RoleEntity)
-    private readonly roleRepo: Repository<RoleEntity>,
-    @InjectRepository(RolePermissionEntity)
-    private readonly rolePermissionRepo: Repository<RolePermissionEntity>
-  ) {
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {
     this.jwtSecret = process.env.JWT_SECRET || 'dev-secret';
   }
 
   async login(req: LoginRequest): Promise<LoginResponse> {
     // Find user by username with passwordHash
-    const user = await this.userRepo
-      .createQueryBuilder('user')
-      .select([
-        'user.id',
-        'user.username',
-        'user.email',
-        'user.realName',
-        'user.orgId',
-        'user.status',
-        'user.passwordHash',
-      ])
-      .where('user.username = :username', { username: req.username })
-      .getOne();
+    const user = await this.prisma.user.findUnique({
+      where: { username: req.username },
+    });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -97,16 +73,14 @@ export class AuthService {
     }
 
     // Get user roles
-    const userRoles = await this.userRoleRepo.find({
+    const userRoles = await this.prisma.userRole.findMany({
       where: { userId: user.id },
+      include: { role: true },
     });
 
-    const roleIds = userRoles.map((ur) => ur.roleId);
-    const roles = await this.roleRepo.find({
-      where: { id: In(roleIds), enabled: true },
-    });
-
-    const roleCodes = roles.map((r) => r.code);
+    const roleCodes = userRoles
+      .filter((ur) => ur.role.enabled)
+      .map((ur) => ur.role.code);
 
     // Generate JWT token
     const payload: JwtPayload = {
@@ -124,8 +98,8 @@ export class AuthService {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email,
-        realName: user.realName,
+        email: user.email ?? undefined,
+        realName: user.realName ?? undefined,
         orgId: user.orgId,
       },
       roles: roleCodes,
@@ -137,38 +111,39 @@ export class AuthService {
       const payload = jwt.verify(token, this.jwtSecret) as JwtPayload;
 
       // Get user details
-      const user = await this.userRepo.findOneBy({ id: payload.userId });
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.userId },
+      });
       if (!user || user.status !== 'ENABLED') {
         return null;
       }
 
       // Get user roles and permissions
-      const userRoles = await this.userRoleRepo.find({
+      const userRoles = await this.prisma.userRole.findMany({
         where: { userId: user.id },
+        include: { role: true },
       });
 
       const roleIds = userRoles.map((ur) => ur.roleId);
-      const roles = await this.roleRepo.find({
-        where: { id: In(roleIds), enabled: true },
-      });
-
-      const roleCodes = roles.map((r) => r.code);
+      const roleCodes = userRoles
+        .filter((ur) => ur.role.enabled)
+        .map((ur) => ur.role.code);
 
       // Get permissions for all roles
-      const rolePermissions = await this.rolePermissionRepo.find({
-        where: { roleId: In(roleIds) },
-        relations: ['permission'],
+      const rolePermissions = await this.prisma.rolePermission.findMany({
+        where: { roleId: { in: roleIds } },
+        include: { permission: true },
       });
 
       const permissionCodes = rolePermissions
         .map((rp) => rp.permission?.code)
-        .filter((code) => code !== undefined);
+        .filter((code): code is string => code !== undefined);
 
       return {
         id: user.id,
         username: user.username,
-        email: user.email,
-        realName: user.realName,
+        email: user.email ?? undefined,
+        realName: user.realName ?? undefined,
         orgId: user.orgId,
         roles: roleCodes,
         permissions: permissionCodes,
@@ -179,7 +154,7 @@ export class AuthService {
   }
 
   async getPermissionsForUser(userId: string): Promise<string[]> {
-    const userRoles = await this.userRoleRepo.find({
+    const userRoles = await this.prisma.userRole.findMany({
       where: { userId },
     });
 
@@ -189,13 +164,13 @@ export class AuthService {
       return [];
     }
 
-    const rolePermissions = await this.rolePermissionRepo.find({
-      where: { roleId: In(roleIds) },
-      relations: ['permission'],
+    const rolePermissions = await this.prisma.rolePermission.findMany({
+      where: { roleId: { in: roleIds } },
+      include: { permission: true },
     });
 
     return rolePermissions
       .map((rp) => rp.permission?.code)
-      .filter((code) => code !== undefined);
+      .filter((code): code is string => code !== undefined);
   }
 }

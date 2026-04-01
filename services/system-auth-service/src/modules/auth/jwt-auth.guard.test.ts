@@ -28,7 +28,7 @@ describe('JwtAuthGuard', () => {
       url,
       headers,
       user: undefined,
-    } as Request & { user?: AuthenticatedUser };
+    } as unknown as Request & { user?: AuthenticatedUser };
 
     return {
       switchToHttp: () => ({

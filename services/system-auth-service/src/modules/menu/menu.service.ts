@@ -1,37 +1,48 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import {
   okResult,
   errResult,
   type Result,
   type MenuNode,
+  type MenuNodeType,
   type UpsertMenuNodeRequest,
 } from '@ai-datahub/contract';
-import { MenuNodeEntity } from '../../entities/MenuNode.entity';
 
 @Injectable()
 export class MenuService {
-  constructor(
-    @InjectRepository(MenuNodeEntity)
-    private readonly menuRepo: Repository<MenuNodeEntity>
-  ) {}
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {}
 
   async listMenuTree(_req: { meta?: unknown }): Promise<Result<MenuNode[]>> {
-    const nodes = await this.menuRepo.find({
-      order: { sort: 'ASC', createdAt: 'ASC' },
+    const nodes = await this.prisma.menuNode.findMany({
+      orderBy: [{ sort: 'asc' }, { createdAt: 'asc' }],
     });
-    return okResult(nodes.map((n) => n.toDTO()));
+
+    return okResult(
+      nodes.map((n) => ({
+        id: n.id,
+        parentId: n.parentId ?? undefined,
+        type: n.type as MenuNodeType,
+        name: n.name,
+        path: n.path ?? undefined,
+        icon: n.icon ?? undefined,
+        permissionCode: n.permissionCode ?? undefined,
+        enabled: n.enabled,
+        sort: n.sort ?? undefined,
+        createdAt: n.createdAt.toISOString(),
+        updatedAt: n.updatedAt.toISOString(),
+      }))
+    );
   }
 
   async upsertMenuNode(
     req: UpsertMenuNodeRequest
   ): Promise<Result<{ nodeId: string }>> {
-    let node: MenuNodeEntity;
-
     if (req.node.id) {
       // Update existing node
-      const existing = await this.menuRepo.findOneBy({ id: req.node.id });
+      const existing = await this.prisma.menuNode.findUnique({
+        where: { id: req.node.id },
+      });
       if (!existing) {
         return errResult({
           code: 'INVALID_ARGUMENT',
@@ -40,20 +51,26 @@ export class MenuService {
         });
       }
 
-      // Update fields
-      existing.parentId = req.node.parentId;
-      existing.type = req.node.type;
-      existing.name = req.node.name;
-      existing.path = req.node.path;
-      existing.icon = req.node.icon;
-      existing.permissionCode = req.node.permissionCode;
-      existing.enabled = req.node.enabled;
-      existing.sort = req.node.sort;
+      const node = await this.prisma.menuNode.update({
+        where: { id: req.node.id },
+        data: {
+          parentId: req.node.parentId,
+          type: req.node.type,
+          name: req.node.name,
+          path: req.node.path,
+          icon: req.node.icon,
+          permissionCode: req.node.permissionCode,
+          enabled: req.node.enabled,
+          sort: req.node.sort,
+        },
+      });
 
-      node = await this.menuRepo.save(existing);
-    } else {
-      // Create new node
-      const newEntity = this.menuRepo.create({
+      return okResult({ nodeId: node.id });
+    }
+
+    // Create new node
+    const node = await this.prisma.menuNode.create({
+      data: {
         parentId: req.node.parentId,
         type: req.node.type,
         name: req.node.name,
@@ -62,10 +79,8 @@ export class MenuService {
         permissionCode: req.node.permissionCode,
         enabled: req.node.enabled,
         sort: req.node.sort,
-      });
-
-      node = await this.menuRepo.save(newEntity);
-    }
+      },
+    });
 
     return okResult({ nodeId: node.id });
   }
@@ -73,7 +88,9 @@ export class MenuService {
   async deleteMenuNode(req: {
     nodeId: string;
   }): Promise<Result<{ success: boolean }>> {
-    const existing = await this.menuRepo.findOneBy({ id: req.nodeId });
+    const existing = await this.prisma.menuNode.findUnique({
+      where: { id: req.nodeId },
+    });
     if (!existing) {
       // Idempotent - already deleted
       return okResult({ success: true });
@@ -83,8 +100,10 @@ export class MenuService {
     const descendantIds = await this.findAllDescendants(req.nodeId);
     const allIdsToDelete = [req.nodeId, ...descendantIds];
 
-    // Delete all nodes (parent first, then descendants are deleted by cascade or manually)
-    await this.menuRepo.delete({ id: In(allIdsToDelete) });
+    // Delete all nodes
+    await this.prisma.menuNode.deleteMany({
+      where: { id: { in: allIdsToDelete } },
+    });
 
     return okResult({ success: true });
   }
@@ -93,9 +112,9 @@ export class MenuService {
    * Find all descendant node IDs recursively
    */
   private async findAllDescendants(nodeId: string): Promise<string[]> {
-    const children = await this.menuRepo.find({
+    const children = await this.prisma.menuNode.findMany({
       where: { parentId: nodeId },
-      select: ['id'],
+      select: { id: true },
     });
 
     if (children.length === 0) {

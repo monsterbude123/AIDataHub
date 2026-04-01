@@ -1,41 +1,52 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import {
   okResult,
   errResult,
   type Result,
   type Organization,
+  type OrganizationStatus,
 } from '@ai-datahub/contract';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
-import { OrganizationEntity } from '../../entities/Organization.entity';
 
 @Injectable()
 export class OrganizationService {
-  constructor(
-    @InjectRepository(OrganizationEntity)
-    private readonly repo: Repository<OrganizationEntity>
-  ) {}
+  constructor(@Inject('PRISMA_CLIENT') private readonly prisma: PrismaClient) {}
 
   async listOrganizations(req: {
     keyword?: string;
   }): Promise<Result<Organization[]>> {
-    const query = this.repo.createQueryBuilder('org');
+    const where = req.keyword
+      ? {
+          OR: [
+            { name: { contains: req.keyword } },
+            { code: { contains: req.keyword } },
+          ],
+        }
+      : undefined;
 
-    if (req.keyword) {
-      query.where('org.name LIKE :keyword OR org.code LIKE :keyword', {
-        keyword: `%${req.keyword}%`,
-      });
-    }
+    const orgs = await this.prisma.organization.findMany({ where });
 
-    const orgs = await query.getMany();
-    return okResult(orgs.map((o) => o.toDTO()));
+    return okResult(
+      orgs.map((o) => ({
+        id: o.id,
+        name: o.name,
+        code: o.code,
+        status: o.status as OrganizationStatus,
+        parentId: o.parentId ?? undefined,
+        sort: o.sort ?? undefined,
+        createdAt: o.createdAt.toISOString(),
+        updatedAt: o.updatedAt.toISOString(),
+      }))
+    );
   }
 
   async createOrganization(req: {
     org: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>;
   }): Promise<Result<{ orgId: string }>> {
-    const existing = await this.repo.findOneBy({ code: req.org.code });
+    const existing = await this.prisma.organization.findUnique({
+      where: { code: req.org.code },
+    });
     if (existing) {
       return errResult({
         code: 'INVALID_ARGUMENT',
@@ -44,32 +55,39 @@ export class OrganizationService {
       });
     }
 
-    const org = this.repo.create({
-      name: req.org.name,
-      code: req.org.code,
-      status: req.org.status,
-      parentId: req.org.parentId,
-      sort: req.org.sort,
+    const org = await this.prisma.organization.create({
+      data: {
+        name: req.org.name,
+        code: req.org.code,
+        status: req.org.status,
+        parentId: req.org.parentId,
+        sort: req.org.sort,
+      },
     });
 
-    await this.repo.save(org);
     return okResult({ orgId: org.id });
   }
 
   async updateOrganization(req: {
     org: Organization;
   }): Promise<Result<{ success: boolean }>> {
-    const existing = await this.repo.findOneBy({ id: req.org.id });
+    const existing = await this.prisma.organization.findUnique({
+      where: { id: req.org.id },
+    });
     if (!existing) {
       throw new SystemAuthException('ORG_NOT_FOUND', 'Organization not found');
     }
 
-    existing.name = req.org.name;
-    existing.code = req.org.code;
-    existing.status = req.org.status;
-    existing.parentId = req.org.parentId;
-    existing.sort = req.org.sort;
-    await this.repo.save(existing);
+    await this.prisma.organization.update({
+      where: { id: req.org.id },
+      data: {
+        name: req.org.name,
+        code: req.org.code,
+        status: req.org.status,
+        parentId: req.org.parentId,
+        sort: req.org.sort,
+      },
+    });
 
     return okResult({ success: true });
   }
@@ -77,16 +95,21 @@ export class OrganizationService {
   async deleteOrganization(req: {
     orgId: string;
   }): Promise<Result<{ success: boolean }>> {
-    const existing = await this.repo.findOneBy({ id: req.orgId });
+    const existing = await this.prisma.organization.findUnique({
+      where: { id: req.orgId },
+    });
     if (!existing) {
       return okResult({ success: true }); // idempotent - already deleted
     }
 
-    await this.repo.remove(existing);
+    await this.prisma.organization.delete({
+      where: { id: req.orgId },
+    });
+
     return okResult({ success: true });
   }
 
-  async findById(id: string): Promise<OrganizationEntity | null> {
-    return this.repo.findOneBy({ id });
+  async findById(id: string) {
+    return this.prisma.organization.findUnique({ where: { id } });
   }
 }
