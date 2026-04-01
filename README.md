@@ -85,6 +85,8 @@ AI DataHub 是一个面向企业的数据中台开发 SDK，采用 DDD 领域驱
 - Package Manager: npm (workspaces monorepo)
 - Build Tool: tsup
 - Testing: Vitest
+- ORM: Prisma
+- Database: SQLite (dev) / PostgreSQL (prod)
 - Code Quality: ESLint + Prettier + husky + lint-staged
 - Versioning: changesets
 - Validation: Zod
@@ -94,6 +96,9 @@ AI DataHub 是一个面向企业的数据中台开发 SDK，采用 DDD 领域驱
 ```
   # 安装依赖
   npm install
+
+  # 初始化数据库（首次运行）
+  cd packages/database && npx prisma db push && cd ..
 
   # 构建所有包
   npm run build
@@ -111,6 +116,9 @@ AI DataHub 是一个面向企业的数据中台开发 SDK，采用 DDD 领域驱
 
   # 安装基础设施工具包
   npm install @ai-datahub/shared
+
+  # 安装共享数据库包
+  npm install @ai-datahub/database
 ```
 
 许可证 - MIT

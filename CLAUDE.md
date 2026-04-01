@@ -44,6 +44,7 @@ This is a **monorepo** using npm workspaces for a modular enterprise data platfo
   - `contract/` - All interface contracts and DTO definitions for 16 bounded contexts. This is the single source of truth for all APIs.
   - `sdk/` - HTTP client SDK for consuming the services
   - `shared/` - Shared utilities and base types used across all modules
+  - `database/` - Shared Prisma schema and client singleton for all services
 
 - **`services/`** - NestJS microservice implementations (one per bounded context)
   - Each service is independently deployable
@@ -69,7 +70,7 @@ This is a **monorepo** using npm workspaces for a modular enterprise data platfo
 - Build: tsup (esbuild-based)
 - Test: Vitest
 - Backend Services: NestJS + Fastify
-- ORM: TypeORM
+- ORM: Prisma
 - Database (MVP): SQLite
 - Validation: Zod
 - Versioning: changesets
