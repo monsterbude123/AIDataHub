@@ -26,6 +26,24 @@ export type SystemAuthErrorCode =
   | 'APPROVAL_STATE_INVALID'
   | 'REMIND_FAILED';
 
+export type LoginRequest = {
+  meta?: RequestMeta;
+  username: string;
+  password: string;
+};
+
+export type LoginResponse = {
+  token: string;
+  user: {
+    id: ID;
+    username: string;
+    email?: string;
+    realName?: string;
+    orgId: ID;
+  };
+  roles: string[];
+};
+
 export type CreateUserRequest = {
   meta?: RequestMeta;
   user: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'status'> & {
@@ -78,7 +96,7 @@ export type MenuNode = {
 
 export type UpsertMenuNodeRequest = {
   meta?: RequestMeta;
-  node: Omit<MenuNode, 'createdAt' | 'updatedAt'> & { id?: ID };
+  node: Omit<MenuNode, 'createdAt' | 'updatedAt' | 'id'> & { id?: ID };
 };
 
 export type DeleteMenuNodeRequest = { meta?: RequestMeta; nodeId: ID };
@@ -96,7 +114,7 @@ export type DirectoryTreeNode = {
 
 export type UpsertDirectoryNodeRequest = {
   meta?: RequestMeta;
-  node: Omit<DirectoryTreeNode, 'createdAt' | 'updatedAt'> & { id?: ID };
+  node: Omit<DirectoryTreeNode, 'createdAt' | 'updatedAt' | 'id'> & { id?: ID };
 };
 
 export type DeleteDirectoryNodeRequest = { meta?: RequestMeta; nodeId: ID };
@@ -111,7 +129,7 @@ export type DataPermission = {
 
 export type UpsertDataPermissionRequest = {
   meta?: RequestMeta;
-  permission: Omit<DataPermission, 'createdAt'> & { id?: ID };
+  permission: Omit<DataPermission, 'createdAt' | 'id'> & { id?: ID };
 };
 
 export type ApprovalReminderRequest = {
@@ -133,6 +151,14 @@ export type ApprovalTemplate = {
 export type CreateApprovalTemplateRequest = {
   meta?: RequestMeta;
   template: Omit<ApprovalTemplate, 'id' | 'createdAt' | 'updatedAt'>;
+};
+
+export type UpsertApprovalTemplateRequest = {
+  meta?: RequestMeta;
+  template: Omit<ApprovalTemplate, 'createdAt' | 'updatedAt'> & {
+    createdAt?: ISODateTime;
+    updatedAt?: ISODateTime;
+  };
 };
 
 export type CreateApprovalRequest = {
@@ -158,6 +184,9 @@ export type ListMyTodoApprovalsRequest = {
 };
 
 export interface SystemAuthClient {
+  // Authentication
+  login(req: LoginRequest): Promise<Result<LoginResponse>>;
+
   // Organization
   listOrganizations(req: {
     meta?: RequestMeta;
@@ -231,10 +260,9 @@ export interface SystemAuthClient {
   createApprovalTemplate(
     req: CreateApprovalTemplateRequest
   ): Promise<Result<{ templateId: ID }>>;
-  updateApprovalTemplate(req: {
-    meta?: RequestMeta;
-    template: ApprovalTemplate;
-  }): Promise<Result<{ success: boolean }>>;
+  updateApprovalTemplate(
+    req: UpsertApprovalTemplateRequest
+  ): Promise<Result<{ success: boolean }>>;
   deleteApprovalTemplate(req: {
     meta?: RequestMeta;
     templateId: ID;

@@ -168,6 +168,12 @@ export type TaskExecution = {
 };
 
 export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED';
+export type ApprovalHistoryEntry = {
+  approverId: ID;
+  action: 'APPROVE' | 'REJECT';
+  comment?: string;
+  createdAt: ISODateTime;
+};
 export type Approval = {
   id: ID;
   businessType: string;
@@ -175,7 +181,10 @@ export type Approval = {
   title: string;
   applicantId: ID;
   currentNode?: number;
+  payload?: Record<string, unknown>;
+  templateId: ID;
   status: ApprovalStatus;
+  history: ApprovalHistoryEntry[];
   createdAt: ISODateTime;
   updatedAt: ISODateTime;
 };

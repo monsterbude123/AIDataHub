@@ -319,9 +319,22 @@ export interface SystemAuthClient {
 
 ## 6) 幂等性要求
 
-- 创建类：默认非幂等，建议支持 `idempotencyKey`。\n- `updateUser` / `assignRoles` / `approve`：幂等（同动作重复提交不产生额外副作用）。\n- 查询类：幂等。
-- `update*` / `delete*` / `bindPermissionsToRole` / `upsert*` / `remindApproval`：幂等。\n- 查询类：幂等。\n- 创建类：默认非幂等，建议支持 `idempotencyKey`。
+- 创建类：默认非幂等，建议支持 `idempotencyKey`。
+- `updateUser` / `assignRoles` / `approve`：幂等（同动作重复提交不产生额外副作用）。
+- 查询类：幂等。
+- `update*` / `delete*` / `bindPermissionsToRole` / `upsert*` / `remindApproval`：幂等。
+- 查询类：幂等。
+- 创建类：默认非幂等，建议支持 `idempotencyKey`。
 
 ## 7) Mock 服务规则
 
-- `createUser`\n - 默认：返回 `userId="u_1"`\n - 可模拟异常：`USERNAME_DUPLICATE`\n- `listUsers`\n - 默认：分页返回 10 个用户\n- `createApproval`\n - 默认：返回 `approvalId="ap_1"`\n- `approve`\n - 默认：`{ success: true }`\n - 可模拟异常：`APPROVAL_STATE_INVALID`
+- `createUser`
+  - 默认：返回 `userId="u_1"`
+  - 可模拟异常：`USERNAME_DUPLICATE`
+- `listUsers`
+  - 默认：分页返回 10 个用户
+- `createApproval`
+  - 默认：返回 `approvalId="ap_1"`
+- `approve`
+  - 默认：`{ success: true }`
+  - 可模拟异常：`APPROVAL_STATE_INVALID`
