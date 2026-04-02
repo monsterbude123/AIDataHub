@@ -355,3 +355,143 @@ export function archiveProject(id: string): Project | undefined {
 
   return project;
 }
+
+/**
+ * Mock 项目成员列表
+ */
+export const mockProjectMembers: Record<string, import("@/types/project").ProjectMember[]> = {
+  "proj-001": [
+    { id: "mem-001", userId: "user-002", userName: "张三", role: "manager", joinedAt: "2024-01-01" },
+    { id: "mem-002", userId: "user-003", userName: "李四", role: "member", joinedAt: "2024-01-05" },
+    { id: "mem-003", userId: "user-004", userName: "王五", role: "member", joinedAt: "2024-01-10" },
+    { id: "mem-004", userId: "user-005", userName: "赵六", role: "member", joinedAt: "2024-02-01" },
+    { id: "mem-005", userId: "user-006", userName: "孙七", role: "viewer", joinedAt: "2024-02-15" },
+  ],
+  "proj-002": [
+    { id: "mem-006", userId: "user-003", userName: "李四", role: "manager", joinedAt: "2024-02-15" },
+    { id: "mem-007", userId: "user-007", userName: "周八", role: "member", joinedAt: "2024-02-20" },
+    { id: "mem-008", userId: "user-008", userName: "吴九", role: "member", joinedAt: "2024-03-01" },
+  ],
+  "proj-003": [
+    { id: "mem-009", userId: "user-004", userName: "王五", role: "manager", joinedAt: "2023-10-01" },
+    { id: "mem-010", userId: "user-002", userName: "张三", role: "member", joinedAt: "2023-10-05" },
+    { id: "mem-011", userId: "user-006", userName: "孙七", role: "member", joinedAt: "2023-10-15" },
+    { id: "mem-012", userId: "user-003", userName: "李四", role: "viewer", joinedAt: "2023-11-01" },
+  ],
+};
+
+/**
+ * Mock 项目动态列表
+ */
+export const mockProjectActivities: Record<string, import("@/types/project").ProjectActivity[]> = {
+  "proj-001": [
+    { id: "act-001", projectId: "proj-001", type: "phase_change", description: "项目阶段从规划推进到执行", operator: "张三", createdAt: "2024-03-15 10:30:00" },
+    { id: "act-002", projectId: "proj-001", type: "task_association", description: "关联任务: 数据质量评估", operator: "李四", createdAt: "2024-03-12 14:20:00" },
+    { id: "act-003", projectId: "proj-001", type: "milestone_complete", description: "完成里程碑: 数据采集完成", operator: "王五", createdAt: "2024-03-10 09:00:00" },
+    { id: "act-004", projectId: "proj-001", type: "document_upload", description: "上传文档: 数据治理方案.docx", operator: "赵六", createdAt: "2024-03-08 16:45:00" },
+    { id: "act-005", projectId: "proj-001", type: "member_change", description: "新成员孙七加入项目", operator: "张三", createdAt: "2024-02-15 11:00:00" },
+    { id: "act-006", projectId: "proj-001", type: "phase_change", description: "项目阶段从立项推进到规划", operator: "张三", createdAt: "2024-01-20 09:30:00" },
+    { id: "act-007", projectId: "proj-001", type: "member_change", description: "新成员赵六加入项目", operator: "张三", createdAt: "2024-02-01 10:00:00" },
+  ],
+  "proj-002": [
+    { id: "act-008", projectId: "proj-002", type: "phase_change", description: "项目阶段从立项推进到规划", operator: "李四", createdAt: "2024-02-28 10:00:00" },
+    { id: "act-009", projectId: "proj-002", type: "member_change", description: "新成员吴九加入项目", operator: "李四", createdAt: "2024-03-01 09:00:00" },
+  ],
+};
+
+/**
+ * Mock 项目里程碑列表
+ */
+export const mockProjectMilestones: Record<string, import("@/types/project").ProjectMilestone[]> = {
+  "proj-001": [
+    { id: "mile-001", projectId: "proj-001", name: "数据采集完成", description: "完成客户数据的采集工作", status: "completed", plannedDate: "2024-03-10", actualDate: "2024-03-08", createdAt: "2024-01-15" },
+    { id: "mile-002", projectId: "proj-001", name: "数据质量评估", description: "完成数据质量评估报告", status: "in_progress", plannedDate: "2024-04-15", createdAt: "2024-01-20" },
+    { id: "mile-003", projectId: "proj-001", name: "治理方案实施", description: "实施治理方案并验证效果", status: "pending", plannedDate: "2024-05-30", createdAt: "2024-02-01" },
+    { id: "mile-004", projectId: "proj-001", name: "项目验收", description: "完成项目验收并交付", status: "pending", plannedDate: "2024-06-30", createdAt: "2024-02-15" },
+  ],
+  "proj-002": [
+    { id: "mile-005", projectId: "proj-002", name: "数据源接入", description: "完成各渠道数据源接入", status: "in_progress", plannedDate: "2024-04-01", createdAt: "2024-02-20" },
+    { id: "mile-006", projectId: "proj-002", name: "数据整合", description: "完成数据整合工作", status: "pending", plannedDate: "2024-06-01", createdAt: "2024-02-25" },
+    { id: "mile-007", projectId: "proj-002", name: "数据仓库上线", description: "数据仓库正式上线", status: "pending", plannedDate: "2024-08-15", createdAt: "2024-03-01" },
+  ],
+};
+
+/**
+ * 获取项目成员列表
+ */
+export function getProjectMembers(projectId: string): import("@/types/project").ProjectMember[] {
+  return mockProjectMembers[projectId] || [];
+}
+
+/**
+ * 获取项目动态列表
+ */
+export function getProjectActivities(projectId: string): import("@/types/project").ProjectActivity[] {
+  return (mockProjectActivities[projectId] || []).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+/**
+ * 获取项目里程碑列表
+ */
+export function getProjectMilestones(projectId: string): import("@/types/project").ProjectMilestone[] {
+  return mockProjectMilestones[projectId] || [];
+}
+
+/**
+ * 获取项目详情统计信息
+ */
+export function getProjectDetailStatistics(projectId: string): import("@/types/project").ProjectDetailStatistics {
+  const project = getProjectById(projectId);
+  const milestones = getProjectMilestones(projectId);
+  const members = getProjectMembers(projectId);
+
+  return {
+    totalTasks: project?.totalTasks || 0,
+    completedTasks: project?.completedTasks || 0,
+    totalMilestones: milestones.length,
+    completedMilestones: milestones.filter((m) => m.status === "completed").length,
+    totalDocuments: Math.floor(Math.random() * 20) + 5, // Mock data
+    totalMembers: members.length,
+  };
+}
+
+/**
+ * 阶段推进
+ */
+export function advanceProjectPhase(id: string): Project | undefined {
+  const project = mockProjects.find((p) => p.id === id);
+  if (!project) return undefined;
+
+  const phaseOrder: ProjectPhase[] = ["initiation", "planning", "execution", "acceptance", "closed"];
+  const currentIndex = phaseOrder.indexOf(project.phase);
+
+  if (currentIndex < phaseOrder.length - 1) {
+    project.phase = phaseOrder[currentIndex + 1];
+    project.progress = Math.min(100, project.progress + 20);
+    project.updatedAt = new Date().toISOString().split("T")[0];
+  }
+
+  return project;
+}
+
+/**
+ * 阶段回退
+ */
+export function revertProjectPhase(id: string, reason: string): Project | undefined {
+  const project = mockProjects.find((p) => p.id === id);
+  if (!project) return undefined;
+
+  const phaseOrder: ProjectPhase[] = ["initiation", "planning", "execution", "acceptance", "closed"];
+  const currentIndex = phaseOrder.indexOf(project.phase);
+
+  if (currentIndex > 0) {
+    project.phase = phaseOrder[currentIndex - 1];
+    project.progress = Math.max(0, project.progress - 20);
+    project.updatedAt = new Date().toISOString().split("T")[0];
+    console.log(`Phase revert reason: ${reason}`);
+  }
+
+  return project;
+}

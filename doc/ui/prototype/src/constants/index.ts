@@ -44,6 +44,12 @@ export const ROUTES = {
 
   // 数据项目
   PROJECT: "/project",
+  PROJECT_DETAIL: "/project/[id]",
+  PROJECT_TASKS: "/project/[id]/tasks",
+  PROJECT_MILESTONES: "/project/[id]/milestones",
+  PROJECT_DOCS: "/project/[id]/docs",
+  PROJECT_STATS: "/project/[id]/stats",
+  PROJECT_MEMBERS: "/project/[id]/members",
 
   // 数据集成
   DATA_INTEGRATION: "/integration",

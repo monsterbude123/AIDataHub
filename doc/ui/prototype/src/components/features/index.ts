@@ -4,3 +4,4 @@
 
 export { DataSourceFormModal } from "./DataSourceFormModal";
 export { ProjectFormModal } from "./ProjectFormModal";
+export { ProjectPhaseProgress } from "./ProjectPhaseProgress";

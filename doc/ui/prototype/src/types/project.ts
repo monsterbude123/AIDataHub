@@ -143,3 +143,149 @@ export interface ProjectStatistics {
   /** 已归档项目数 */
   archived: number;
 }
+
+/**
+ * 项目成员角色类型
+ */
+export type ProjectMemberRole = "manager" | "member" | "viewer";
+
+/**
+ * 项目成员角色标签映射
+ */
+export const PROJECT_MEMBER_ROLE_LABELS: Record<ProjectMemberRole, string> = {
+  manager: "项目经理",
+  member: "项目成员",
+  viewer: "只读者",
+};
+
+/**
+ * 项目成员信息
+ */
+export interface ProjectMember {
+  /** 成员ID */
+  id: string;
+  /** 用户ID */
+  userId: string;
+  /** 用户名 */
+  userName: string;
+  /** 用户头像 */
+  userAvatar?: string;
+  /** 角色 */
+  role: ProjectMemberRole;
+  /** 加入时间 */
+  joinedAt: string;
+}
+
+/**
+ * 项目动态类型
+ */
+export type ProjectActivityType =
+  | "phase_change"
+  | "task_association"
+  | "milestone_complete"
+  | "document_upload"
+  | "member_change";
+
+/**
+ * 项目动态类型标签映射
+ */
+export const PROJECT_ACTIVITY_TYPE_LABELS: Record<ProjectActivityType, string> = {
+  phase_change: "阶段变更",
+  task_association: "任务关联",
+  milestone_complete: "里程碑完成",
+  document_upload: "文档上传",
+  member_change: "成员变更",
+};
+
+/**
+ * 项目动态信息
+ */
+export interface ProjectActivity {
+  /** 动态ID */
+  id: string;
+  /** 项目ID */
+  projectId: string;
+  /** 动态类型 */
+  type: ProjectActivityType;
+  /** 动态描述 */
+  description: string;
+  /** 操作人 */
+  operator: string;
+  /** 操作时间 */
+  createdAt: string;
+}
+
+/**
+ * 里程碑状态类型
+ */
+export type MilestoneStatus = "pending" | "in_progress" | "completed" | "delayed";
+
+/**
+ * 里程碑状态标签映射
+ */
+export const MILESTONE_STATUS_LABELS: Record<MilestoneStatus, string> = {
+  pending: "待开始",
+  in_progress: "进行中",
+  completed: "已完成",
+  delayed: "已延期",
+};
+
+/**
+ * 里程碑信息
+ */
+export interface ProjectMilestone {
+  /** 里程碑ID */
+  id: string;
+  /** 项目ID */
+  projectId: string;
+  /** 里程碑名称 */
+  name: string;
+  /** 里程碑描述 */
+  description?: string;
+  /** 状态 */
+  status: MilestoneStatus;
+  /** 计划完成时间 */
+  plannedDate: string;
+  /** 实际完成时间 */
+  actualDate?: string;
+  /** 创建时间 */
+  createdAt: string;
+}
+
+/**
+ * 项目文档信息
+ */
+export interface ProjectDocument {
+  /** 文档ID */
+  id: string;
+  /** 项目ID */
+  projectId: string;
+  /** 文档名称 */
+  name: string;
+  /** 文档类型 */
+  type: string;
+  /** 文档大小 */
+  size: number;
+  /** 上传者 */
+  uploader: string;
+  /** 上传时间 */
+  uploadedAt: string;
+}
+
+/**
+ * 项目详情统计
+ */
+export interface ProjectDetailStatistics {
+  /** 任务总数 */
+  totalTasks: number;
+  /** 已完成任务 */
+  completedTasks: number;
+  /** 里程碑总数 */
+  totalMilestones: number;
+  /** 已完成里程碑 */
+  completedMilestones: number;
+  /** 文档数 */
+  totalDocuments: number;
+  /** 成员数 */
+  totalMembers: number;
+}
