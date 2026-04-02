@@ -16,7 +16,7 @@ export const mockNotifications: Notification[] = [
     level: "error",
     status: "unread",
     createdAt: "2024-01-15 10:30:00",
-    link: "/data-integration/sources",
+    link: "/integration/sources",
   },
   {
     id: "2",

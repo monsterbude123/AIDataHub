@@ -43,28 +43,28 @@ export const ROUTES = {
   PROFILE: "/profile",
 
   // 数据集成
-  DATA_INTEGRATION: "/data-integration",
-  DATA_SOURCES: "/data-integration/sources",
-  DATA_SOURCE_CONFIG: "/data-integration/config",
-  DATA_PROFILING: "/data-integration/profiling",
-  DATA_STANDARDIZATION: "/data-integration/standardization",
-  SQL_DEV: "/data-integration/sql-dev",
+  DATA_INTEGRATION: "/integration",
+  DATA_SOURCES: "/integration/sources",
+  DATA_SOURCE_CONFIG: "/integration/config",
+  DATA_PROFILING: "/integration/profiling",
+  DATA_STANDARDIZATION: "/integration/standardization",
+  SQL_DEV: "/integration/sql-dev",
 
   // 数据服务
-  DATA_SERVICE: "/data-service",
-  SERVICE_CATALOG: "/data-service/catalog",
-  SERVICE_CONFIG: "/data-service/config",
-  SERVICE_AUTHORIZATION: "/data-service/authorization",
-  SERVICE_MONITORING: "/data-service/monitoring",
+  DATA_SERVICE: "/service",
+  SERVICE_CATALOG: "/service/catalog",
+  SERVICE_CONFIG: "/service/config",
+  SERVICE_AUTHORIZATION: "/service/authorization",
+  SERVICE_MONITORING: "/service/monitoring",
 
   // 元数据管理
   METADATA: "/metadata/list",
   METADATA_DETAIL: "/metadata/detail",
 
   // 数据组织
-  DATA_ORGANIZATION: "/data-organization",
-  RESOURCE_CATALOG: "/data-organization/catalog",
-  DATA_MAPPING: "/data-organization/mapping",
+  DATA_ORGANIZATION: "/organization",
+  RESOURCE_CATALOG: "/organization/catalog",
+  DATA_MAPPING: "/organization/mapping",
 
   // 数据治理
   GOVERNANCE: "/governance",

@@ -76,7 +76,7 @@ const menuItems: MenuProps["items"] = [
     label: <Link href={ROUTES.HOME}>首页</Link>,
   },
   {
-    key: "data-integration",
+    key: "integration",
     icon: <Database size={16} />,
     label: "数据集成",
     children: [
@@ -87,7 +87,7 @@ const menuItems: MenuProps["items"] = [
     ],
   },
   {
-    key: "data-service",
+    key: "service",
     icon: <Share2 size={16} />,
     label: "数据服务",
     children: [
@@ -104,7 +104,7 @@ const menuItems: MenuProps["items"] = [
     ],
   },
   {
-    key: "data-organization",
+    key: "organization",
     icon: <FolderTree size={16} />,
     label: "数据组织",
     children: [
