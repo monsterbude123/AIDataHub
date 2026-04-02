@@ -9,3 +9,4 @@ export * from "./scheduler";
 export * from "./data-asset";
 export * from "./notification";
 export * from "./project";
+export * from "./infrastructure";
