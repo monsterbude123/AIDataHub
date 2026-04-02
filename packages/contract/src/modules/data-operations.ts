@@ -205,6 +205,9 @@ export interface DataOperationsClient {
     req: UpdateAlertRuleRequest
   ): Promise<Result<{ success: boolean }>>;
   listAlertRules(req: { meta?: RequestMeta }): Promise<Result<AlertRule[]>>;
+  searchAlertRules(
+    req: SearchAlertRulesRequest
+  ): Promise<Result<PageResult<AlertRule>>>;
   listAlertChannelConfigs(req: {
     meta?: RequestMeta;
   }): Promise<Result<AlertChannelConfig[]>>;
@@ -277,3 +280,11 @@ export interface DataOperationsClient {
     req: PublishDatasetVersionRequest
   ): Promise<Result<{ success: boolean }>>;
 }
+
+export type SearchAlertRulesRequest = {
+  meta?: RequestMeta;
+  keyword?: string;
+  enabled?: boolean;
+  type?: AlertRule['type'];
+  page: PageRequest;
+};

@@ -3,6 +3,8 @@
 > **当前状态**：已作为模块在 `data-service-service` 中实现。
 >
 > - **代码位置**：`services/data-service-service/src/modules/data-integration/`
+> - **Contract 来源**：`@ai-datahub/contract/DataIntegrationClient`
+> - **网关路由**：`/api/data/integration/*`（通过 data-service-service 代理）
 > - **规划文档**：本文档保留作为独立服务拆分参考
 > - **拆分条件**：数据接入规模增长、需要独立部署扩展时
 

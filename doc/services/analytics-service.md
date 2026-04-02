@@ -6,12 +6,12 @@
 
 ## 服务信息
 
-| 项目     | 值                 |
-| -------- | ------------------ |
-| 服务名称 | analytics-service  |
-| 端口     | 3005               |
-| 网关前缀 | `/api/analytics/*` |
-| 实现状态 | 📋 规划中          |
+| 项目     | 值                   |
+| -------- | -------------------- |
+| 服务名称 | analytics-service    |
+| 端口     | 3005                 |
+| 网关前缀 | `/api/analytics/*`   |
+| 实现状态 | 🟡 部分已实现（MVP） |
 
 ## 包含模块
 
@@ -129,6 +129,13 @@
 | system-auth-service  | 用户认证、权限校验 |
 | metadata-service     | 数据资产元数据查询 |
 | data-service-service | 数据访问执行       |
+
+## 当前实现补充（统一安全基线）
+
+- 已接入共享鉴权与审计模板（`@ai-datahub/shared`）
+- 除 `GET /health` 外，所有接口要求 `Authorization: Bearer <token>`
+- 写操作（`POST/PUT/DELETE`）自动记录审计日志（含 traceId/userId/耗时）
+- 已补充行为级 E2E：强制 `x-require-auth: true` 且缺少 token 返回 `401`
 
 ## 目录结构
 

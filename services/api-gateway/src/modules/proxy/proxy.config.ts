@@ -62,5 +62,59 @@ export function loadRouteConfig(): RouteConfig[] {
     });
   }
 
+  // Ops domain service - /api/ops/* -> backend/*
+  if (process.env.OPS_SERVICE_URL) {
+    routes.push({
+      prefix: '/api/ops',
+      target: process.env.OPS_SERVICE_URL,
+      stripPrefix: true,
+    });
+  }
+
+  // Integration domain service - /api/integration/* -> backend/*
+  if (process.env.INTEGRATION_SERVICE_URL) {
+    routes.push({
+      prefix: '/api/integration',
+      target: process.env.INTEGRATION_SERVICE_URL,
+      stripPrefix: true,
+    });
+  }
+
+  // Admin domain service - /api/admin/* -> backend/*
+  if (process.env.ADMIN_SERVICE_URL) {
+    routes.push({
+      prefix: '/api/admin',
+      target: process.env.ADMIN_SERVICE_URL,
+      stripPrefix: true,
+    });
+  }
+
+  // Sharing domain service - /api/sharing/* -> backend/*
+  if (process.env.SHARING_SERVICE_URL) {
+    routes.push({
+      prefix: '/api/sharing',
+      target: process.env.SHARING_SERVICE_URL,
+      stripPrefix: true,
+    });
+  }
+
+  // Analytics domain service - /api/analytics/* -> backend/*
+  if (process.env.ANALYTICS_SERVICE_URL) {
+    routes.push({
+      prefix: '/api/analytics',
+      target: process.env.ANALYTICS_SERVICE_URL,
+      stripPrefix: true,
+    });
+  }
+
+  // Security domain service - /api/security/* -> backend/*
+  if (process.env.SECURITY_SERVICE_URL) {
+    routes.push({
+      prefix: '/api/security',
+      target: process.env.SECURITY_SERVICE_URL,
+      stripPrefix: true,
+    });
+  }
+
   return routes;
 }

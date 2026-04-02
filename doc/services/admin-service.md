@@ -6,12 +6,12 @@
 
 ## 服务信息
 
-| 项目     | 值             |
-| -------- | -------------- |
-| 服务名称 | admin-service  |
-| 端口     | 3003           |
-| 网关前缀 | `/api/admin/*` |
-| 实现状态 | 📋 规划中      |
+| 项目     | 值                   |
+| -------- | -------------------- |
+| 服务名称 | admin-service        |
+| 端口     | 3003                 |
+| 网关前缀 | `/api/admin/*`       |
+| 实现状态 | 🟡 部分已实现（MVP） |
 
 ## 包含模块
 
@@ -29,7 +29,7 @@
 | PUT    | `/api/admin/projects`     | 更新项目         |
 | DELETE | `/api/admin/projects/:id` | 删除项目         |
 | GET    | `/api/admin/projects`     | 列出项目（分页） |
-| GET    | `/api/admin/projects/:id` | 获取项目详情     |
+| GET    | `/api/admin/projects/:id` | 获取项目详情 ✅  |
 
 ### 项目分组 (`/api/admin/project-groups/*`)
 
@@ -70,23 +70,30 @@
 
 ### 操作日志 (`/api/admin/logs/*`)
 
-| 方法 | 端点              | 功能                 |
-| ---- | ----------------- | -------------------- |
-| GET  | `/api/admin/logs` | 列出操作日志（分页） |
+| 方法 | 端点              | 功能                    |
+| ---- | ----------------- | ----------------------- |
+| GET  | `/api/admin/logs` | 列出操作日志（分页） ✅ |
 
 ### 工单管理 (`/api/admin/tickets/*`)
 
-| 方法 | 端点                     | 功能                 |
-| ---- | ------------------------ | -------------------- |
-| GET  | `/api/admin/tickets`     | 列出我的工单（分页） |
-| GET  | `/api/admin/tickets/:id` | 获取工单详情         |
-| PUT  | `/api/admin/tickets/:id` | 更新工单状态         |
+| 方法 | 端点                     | 功能                    |
+| ---- | ------------------------ | ----------------------- |
+| GET  | `/api/admin/tickets`     | 列出我的工单（分页） ✅ |
+| GET  | `/api/admin/tickets/:id` | 获取工单详情 ✅         |
+| PUT  | `/api/admin/tickets/:id` | 更新工单状态 ✅         |
 
 ## 依赖服务
 
 | 服务                | 依赖原因                         |
 | ------------------- | -------------------------------- |
 | system-auth-service | 用户认证、权限校验、用户信息查询 |
+
+## 当前实现补充（统一安全基线）
+
+- 已接入共享鉴权与审计模板（`@ai-datahub/shared`）
+- 除 `GET /health` 外，所有接口要求 `Authorization: Bearer <token>`
+- 写操作（`POST/PUT/DELETE`）自动记录审计日志（含 traceId/userId/耗时）
+- 已补充行为级 E2E：强制 `x-require-auth: true` 且缺少 token 返回 `401`
 
 ## 目录结构
 

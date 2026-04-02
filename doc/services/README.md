@@ -216,17 +216,17 @@ services/
 
 ## 文档索引
 
-| 服务                 | 文档路径                                             | 实现状态  |
-| -------------------- | ---------------------------------------------------- | --------- |
-| system-auth-service  | [system-auth-service.md](./system-auth-service.md)   | ✅ 已实现 |
-| metadata-service     | [metadata-service.md](./metadata-service.md)         | ✅ 已实现 |
-| data-service-service | [data-service-service.md](./data-service-service.md) | ✅ 已实现 |
-| ops-service          | [ops-service.md](./ops-service.md)                   | 📋 规划中 |
-| integration-service  | [integration-service.md](./integration-service.md)   | 📋 规划中 |
-| admin-service        | [admin-service.md](./admin-service.md)               | 📋 规划中 |
-| sharing-service      | [sharing-service.md](./sharing-service.md)           | 📋 规划中 |
-| analytics-service    | [analytics-service.md](./analytics-service.md)       | 📋 规划中 |
-| security-service     | [security-service.md](./security-service.md)         | 📋 规划中 |
+| 服务                 | 文档路径                                             | 实现状态             |
+| -------------------- | ---------------------------------------------------- | -------------------- |
+| system-auth-service  | [system-auth-service.md](./system-auth-service.md)   | ✅ 已实现            |
+| metadata-service     | [metadata-service.md](./metadata-service.md)         | ✅ 已实现            |
+| data-service-service | [data-service-service.md](./data-service-service.md) | ✅ 已实现            |
+| ops-service          | [ops-service.md](./ops-service.md)                   | 🟡 部分已实现（MVP） |
+| integration-service  | [integration-service.md](./integration-service.md)   | 🟡 部分已实现（MVP） |
+| admin-service        | [admin-service.md](./admin-service.md)               | 🟡 部分已实现（MVP） |
+| sharing-service      | [sharing-service.md](./sharing-service.md)           | 🟡 部分已实现（MVP） |
+| analytics-service    | [analytics-service.md](./analytics-service.md)       | 🟡 部分已实现（MVP） |
+| security-service     | [security-service.md](./security-service.md)         | 🟡 部分已实现（MVP） |
 
 ---
 
@@ -236,3 +236,12 @@ services/
 - 架构决策：`doc/DECISIONS.md`
 - 设计手册：`doc/design/sdk/README.md`
 - 领域服务计划：`doc/plans/2026-04-02-domain-services-plan.md`
+- 规划文档索引：`doc/plans/README.md`
+- SDK 开发计划：`doc/plans/2026-04-02-sdk-development-plan.md`
+
+## 统一安全基线（2026-04-02）
+
+- `ops-service`、`admin-service`、`integration-service`、`sharing-service`、`analytics-service` 已统一接入共享鉴权/审计模板（`@ai-datahub/shared`）。
+- 除 `GET /health` 外均要求 `Authorization: Bearer <token>`。
+- 写接口统一输出审计日志（成功/失败、traceId、userId、耗时）。
+- 五个服务均已补充行为级 401 未授权 E2E（`x-require-auth: true`）。

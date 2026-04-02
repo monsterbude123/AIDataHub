@@ -111,3 +111,5 @@
 - 架构全景：`doc/ARCHITECTURE.md`
 - 服务规划：`doc/services/README.md`
 - 领域服务计划：`doc/plans/2026-04-02-domain-services-plan.md`
+- SDK 开发计划：`doc/plans/2026-04-02-sdk-development-plan.md`
+- 前端接入交付物：`doc/plans/2026-04-02-frontend-integration-deliverables.md`

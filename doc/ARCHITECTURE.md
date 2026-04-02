@@ -191,3 +191,5 @@ Next.js UI
 - 服务规划：`doc/services/README.md`
 - 设计手册入口：`doc/design/sdk/README.md`
 - 领域服务计划：`doc/plans/2026-04-02-domain-services-plan.md`
+- 规划文档索引：`doc/plans/README.md`
+- SDK 开发计划：`doc/plans/2026-04-02-sdk-development-plan.md`

@@ -6,11 +6,12 @@
 
 ## 归属服务
 
-| 项目     | 值                     |
-| -------- | ---------------------- |
-| 所属服务 | task-scheduler-service |
-| 网关前缀 | `/api/tasks/*`         |
-| 实现状态 | ✅ 已实现              |
+| 项目     | 值                                                |
+| -------- | ------------------------------------------------- |
+| 所属服务 | **ops-service**（规划中）                         |
+| 当前实现 | `services/task-scheduler-service/`                |
+| 网关前缀 | `/api/tasks/*` → 将迁移至 `/api/ops/scheduler/*`  |
+| 实现状态 | ✅ 已实现（独立服务） → 📋 规划迁移到 ops-service |
 
 ## 实现位置
 
@@ -23,15 +24,21 @@ services/task-scheduler-service/src/modules/scheduler/
 └── repositories/
 ```
 
-## Wave 0（归属冲突修正）
+## Wave 0（归属迁移计划）
 
-**问题**：历史上 `data-service-service/src/modules/task-scheduler/` 与独立的 `services/task-scheduler-service/` 同时存在，导致调度能力重复实现、边界不清晰。
+**决策**：将 `task-scheduler` 能力聚合到 `ops-service`，形成统一的运维调度中心。
 
-**处理**：
+**原因**：
 
-1. ✅ 从 `data-service-service` 移除 `TaskSchedulerModule` 注册
-2. ✅ 删除 `data-service-service/src/modules/task-scheduler/` 目录下的实现代码
-3. ✅ 统一调度能力归口到 `task-scheduler-service`（由 API Gateway 通过 `/api/tasks/*` 转发）
+- `data-operations`（告警、执行运维）与 `task-scheduler`（DAG 调度）同属运维领域
+- 避免调度能力碎片化，统一入口便于监控和运维
+
+**迁移计划**：
+
+1. 📋 在 `ops-service` 中创建 `task-scheduler` 模块
+2. 📋 迁移现有调度逻辑到 `ops-service/src/modules/task-scheduler/`
+3. 📋 更新 API Gateway 路由：`/api/tasks/*` → `/api/ops/scheduler/*`
+4. 📋 保留原 `task-scheduler-service` 作为过渡，完成后下线
 
 ## 职责边界
 

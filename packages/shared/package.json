@@ -28,7 +28,10 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
-    "@ai-datahub/contract": "0.1.0"
+    "@ai-datahub/contract": "0.1.0",
+    "@nestjs/common": "^11.1.17",
+    "@nestjs/core": "^11.1.17",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

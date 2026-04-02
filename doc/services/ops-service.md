@@ -6,12 +6,12 @@
 
 ## 服务信息
 
-| 项目     | 值           |
-| -------- | ------------ |
-| 服务名称 | ops-service  |
-| 端口     | 3001         |
-| 网关前缀 | `/api/ops/*` |
-| 实现状态 | 📋 规划中    |
+| 项目     | 值                   |
+| -------- | -------------------- |
+| 服务名称 | ops-service          |
+| 端口     | 3001                 |
+| 网关前缀 | `/api/ops/*`         |
+| 实现状态 | 🟡 部分已实现（MVP） |
 
 ## 包含模块
 
@@ -24,13 +24,15 @@
 
 ### 告警管理 (`/api/ops/alerts/*`)
 
-| 方法 | 端点                       | 功能             |
-| ---- | -------------------------- | ---------------- |
-| POST | `/api/ops/alerts/rules`    | 创建告警规则     |
-| PUT  | `/api/ops/alerts/rules`    | 更新告警规则     |
-| GET  | `/api/ops/alerts/rules`    | 列出告警规则     |
-| GET  | `/api/ops/alerts/channels` | 列出告警渠道配置 |
-| POST | `/api/ops/alerts/channels` | 更新告警渠道配置 |
+| 方法   | 端点                           | 功能                      |
+| ------ | ------------------------------ | ------------------------- |
+| POST   | `/api/ops/alerts/rules`        | 创建告警规则              |
+| PUT    | `/api/ops/alerts/rules`        | 更新告警规则              |
+| DELETE | `/api/ops/alerts/rules/:id`    | 删除告警规则              |
+| GET    | `/api/ops/alerts/rules`        | 列出告警规则（数组）      |
+| GET    | `/api/ops/alerts/rules/search` | 查询告警规则（分页/过滤） |
+| GET    | `/api/ops/alerts/channels`     | 列出告警渠道配置          |
+| POST   | `/api/ops/alerts/channels`     | 更新告警渠道配置          |
 
 ### 执行运维 (`/api/ops/executions/*`)
 
@@ -47,32 +49,32 @@
 
 ### 运营报表 (`/api/ops/report/*`)
 
-| 方法 | 端点              | 功能         |
-| ---- | ----------------- | ------------ |
-| GET  | `/api/ops/report` | 获取运营报表 |
+| 方法 | 端点              | 功能            |
+| ---- | ----------------- | --------------- |
+| GET  | `/api/ops/report` | 获取运营报表 ✅ |
 
 ### 数据源健康 (`/api/ops/health/*`)
 
-| 方法 | 端点              | 功能               |
-| ---- | ----------------- | ------------------ |
-| GET  | `/api/ops/health` | 列出数据源健康状态 |
+| 方法 | 端点              | 功能                          |
+| ---- | ----------------- | ----------------------------- |
+| GET  | `/api/ops/health` | 列出数据源健康状态（分页） ✅ |
 
 ### ETL 连接管理 (`/api/ops/etl/*`)
 
-| 方法   | 端点                           | 功能                |
-| ------ | ------------------------------ | ------------------- |
-| POST   | `/api/ops/etl/connections`     | 创建ETL连接         |
-| PUT    | `/api/ops/etl/connections`     | 更新ETL连接         |
-| DELETE | `/api/ops/etl/connections/:id` | 删除ETL连接         |
-| GET    | `/api/ops/etl/connections`     | 列出ETL连接（分页） |
+| 方法   | 端点                           | 功能                   |
+| ------ | ------------------------------ | ---------------------- |
+| POST   | `/api/ops/etl/connections`     | 创建ETL连接 ✅         |
+| PUT    | `/api/ops/etl/connections`     | 更新ETL连接 ✅         |
+| DELETE | `/api/ops/etl/connections/:id` | 删除ETL连接 ✅         |
+| GET    | `/api/ops/etl/connections`     | 列出ETL连接（分页） ✅ |
 
 ### 数据集同步监控 (`/api/ops/sync/*`)
 
-| 方法 | 端点                                | 功能                |
-| ---- | ----------------------------------- | ------------------- |
-| GET  | `/api/ops/sync/records`             | 列出数据集同步记录  |
-| POST | `/api/ops/sync/records/:id/compare` | 比较数据集版本      |
-| POST | `/api/ops/sync/records/:id/publish` | 发布/回滚数据集版本 |
+| 方法 | 端点                                | 功能                          |
+| ---- | ----------------------------------- | ----------------------------- |
+| GET  | `/api/ops/sync/records`             | 列出数据集同步记录（分页） ✅ |
+| POST | `/api/ops/sync/records/:id/compare` | 比较数据集版本                |
+| POST | `/api/ops/sync/records/:id/publish` | 发布/回滚数据集版本           |
 
 ### 任务调度 (`/api/ops/scheduler/*`)
 
@@ -100,6 +102,13 @@
 | system-auth-service | 用户认证、权限校验 |
 | metadata-service    | 数据源元数据查询   |
 | integration-service | 告警通知发送       |
+
+## 当前实现补充（统一安全基线）
+
+- 已接入共享鉴权与审计模板（`@ai-datahub/shared`）
+- 除 `GET /health` 外，所有接口要求 `Authorization: Bearer <token>`
+- 写操作（`POST/PUT/DELETE`）自动记录审计日志（含 traceId/userId/耗时）
+- 已补充行为级 E2E：强制 `x-require-auth: true` 且缺少 token 返回 `401`
 
 ## 目录结构
 

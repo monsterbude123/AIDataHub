@@ -5,6 +5,7 @@ import {
   Res,
   Logger,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { ProxyService } from './proxy.service';
 import { Public } from '@ai-datahub/shared';
@@ -26,7 +27,9 @@ declare module 'fastify' {
 export class ProxyController {
   private readonly logger = new Logger(ProxyController.name);
 
-  constructor(private readonly proxyService: ProxyService) {}
+  constructor(
+    @Inject(ProxyService) private readonly proxyService: ProxyService
+  ) {}
 
   @Public()
   @All('*')

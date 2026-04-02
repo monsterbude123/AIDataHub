@@ -1,10 +1,10 @@
 # data-organization-service（数据分层组织）
 
-> **当前状态**：规划中，尚未实现。
+> **当前状态**：已作为模块在 `data-service-service` 中实现。
 >
-> - **优先级**：中
-> - **依赖**：data-integration 模块
-> - **实现方式**：可先作为 data-service-service 的模块实现，后续按需拆分
+> - **代码位置**：`services/data-service-service/src/modules/data-organization/`
+> - **Contract 来源**：`@ai-datahub/contract/DataOrganizationClient`
+> - **网关路由**：`/api/data/organization/*`（通过 data-service-service 代理）
 
 ## 1. 职责边界
 

@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest } from 'fastify';
+import type { ServerResponse } from 'http';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -16,7 +17,7 @@ declare module 'fastify' {
  */
 @Injectable()
 export class TraceIdMiddleware implements NestMiddleware {
-  use(req: FastifyRequest, res: FastifyReply, next: () => void): void {
+  use(req: FastifyRequest, res: ServerResponse, next: () => void): void {
     // Get traceId from request header or generate a new one
     const traceId = (req.headers['x-trace-id'] as string) || randomUUID();
 
@@ -24,7 +25,7 @@ export class TraceIdMiddleware implements NestMiddleware {
     req.traceId = traceId;
 
     // Add traceId to response headers
-    res.header('x-trace-id', traceId);
+    res.setHeader('x-trace-id', traceId);
 
     next();
   }

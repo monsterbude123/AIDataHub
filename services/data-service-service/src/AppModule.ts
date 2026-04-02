@@ -6,7 +6,6 @@ import { DataGovernanceCoreModule } from './modules/data-governance-core/data-go
 import { DataGovernanceOpsModule } from './modules/data-governance-ops/data-governance-ops.module';
 import { DataIntegrationModule } from './modules/data-integration/data-integration.module';
 import { DataOrganizationModule } from './modules/data-organization/data-organization.module';
-import { TaskSchedulerModule } from './modules/task-scheduler/task-scheduler.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { TaskSchedulerModule } from './modules/task-scheduler/task-scheduler.mod
     DataGovernanceOpsModule,
     DataIntegrationModule,
     DataOrganizationModule,
-    TaskSchedulerModule,
   ],
   controllers: [HealthController],
 })

@@ -28,4 +28,24 @@ describe('data-service-service health', () => {
 
     await app.close();
   });
+
+  it('should NOT expose task-scheduler APIs (migrated to task-scheduler-service)', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    const app = moduleRef.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter()
+    );
+    await app.init();
+    await app.getHttpAdapter().getInstance().ready();
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/scheduler/dag/list',
+      payload: { meta: { traceId: 'test' } },
+    });
+    expect(res.statusCode).toBe(404);
+
+    await app.close();
+  });
 });
