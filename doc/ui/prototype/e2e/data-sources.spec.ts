@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
  */
 test.describe("数据源管理", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/data-integration/sources");
+    await page.goto("/integration/sources");
   });
 
   test("应该显示页面标题", async ({ page }) => {

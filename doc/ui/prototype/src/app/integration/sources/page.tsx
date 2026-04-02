@@ -2,7 +2,7 @@
 
 /**
  * 数据源列表页
- * 页面路径: /data-integration/sources
+ * 页面路径: /integration/sources
  */
 
 import { useState, useMemo } from "react";

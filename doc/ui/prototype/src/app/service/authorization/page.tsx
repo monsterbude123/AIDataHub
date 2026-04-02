@@ -2,7 +2,7 @@
 
 /**
  * 服务授权页
- * 页面路径: /data-service/authorization
+ * 页面路径: /service/authorization
  */
 
 import { useState, useMemo } from "react";

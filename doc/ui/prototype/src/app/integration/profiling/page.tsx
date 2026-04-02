@@ -2,7 +2,7 @@
 
 /**
  * 数据探查页
- * 页面路径: /data-integration/profiling
+ * 页面路径: /integration/profiling
  */
 
 import { useState, useMemo } from "react";

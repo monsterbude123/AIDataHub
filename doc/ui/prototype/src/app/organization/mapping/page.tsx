@@ -2,7 +2,7 @@
 
 /**
  * 数据入库映射配置页
- * 页面路径: /data-organization/mapping
+ * 页面路径: /organization/mapping
  */
 
 import { useState, useMemo } from "react";
@@ -17,7 +17,7 @@ import { ROUTES } from "@/constants";
  * 面包屑配置
  */
 const BREADCRUMB_ITEMS = [
-  { title: "数据组织", href: "/data-organization" },
+  { title: "数据组织", href: "/organization" },
   { title: "数据入库映射" },
 ];
 

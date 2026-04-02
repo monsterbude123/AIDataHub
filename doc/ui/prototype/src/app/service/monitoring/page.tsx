@@ -2,7 +2,7 @@
 
 /**
  * 服务监控仪表盘
- * 页面路径: /data-service/monitoring
+ * 页面路径: /service/monitoring
  */
 
 import { useState, useMemo } from "react";

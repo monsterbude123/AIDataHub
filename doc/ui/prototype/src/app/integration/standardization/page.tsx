@@ -2,7 +2,7 @@
 
 /**
  * 数据标准化配置页
- * 页面路径: /data-integration/standardization
+ * 页面路径: /integration/standardization
  */
 
 import { useState, useMemo } from "react";

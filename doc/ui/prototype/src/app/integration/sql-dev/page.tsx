@@ -2,7 +2,7 @@
 
 /**
  * Spark SQL 开发页
- * 页面路径: /data-integration/sql-dev
+ * 页面路径: /integration/sql-dev
  */
 
 import { useState, useMemo, useCallback } from "react";

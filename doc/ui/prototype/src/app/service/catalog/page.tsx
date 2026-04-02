@@ -2,7 +2,7 @@
 
 /**
  * 数据服务目录页
- * 页面路径: /data-service/catalog
+ * 页面路径: /service/catalog
  */
 
 import { useState, useMemo } from "react";

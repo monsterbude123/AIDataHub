@@ -2,7 +2,7 @@
 
 /**
  * 资源目录浏览页
- * 页面路径: /data-organization/catalog
+ * 页面路径: /organization/catalog
  */
 
 import { useState, useMemo } from "react";
@@ -19,7 +19,7 @@ import type { DirectoryTreeNode, CardGridItem } from "@/components/ui";
  * 面包屑配置
  */
 const BREADCRUMB_ITEMS = [
-  { title: "数据组织", href: "/data-organization" },
+  { title: "数据组织", href: "/organization" },
   { title: "资源目录" },
 ];
 

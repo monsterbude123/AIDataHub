@@ -2,7 +2,7 @@
 
 /**
  * 数据服务配置页 - 分步表单
- * 页面路径: /data-service/config
+ * 页面路径: /service/config
  */
 
 import { useState } from "react";

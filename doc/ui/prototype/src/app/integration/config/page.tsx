@@ -2,7 +2,7 @@
 
 /**
  * 数据源配置页 - 分步表单
- * 页面路径: /data-integration/config
+ * 页面路径: /integration/config
  */
 
 import { useState } from "react";

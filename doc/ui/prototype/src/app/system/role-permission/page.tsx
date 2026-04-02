@@ -25,12 +25,12 @@ const mockRoles = [
 ];
 
 const mockMenuTree = [
-  { title: "数据集成", key: "data-integration", children: [
+  { title: "数据集成", key: "integration", children: [
     { title: "数据源管理", key: "sources" },
     { title: "数据探查", key: "profiling" },
     { title: "数据标准化", key: "standardization" },
   ]},
-  { title: "数据服务", key: "data-service", children: [
+  { title: "数据服务", key: "service", children: [
     { title: "服务目录", key: "catalog" },
     { title: "服务配置", key: "config" },
     { title: "服务授权", key: "authorization" },
