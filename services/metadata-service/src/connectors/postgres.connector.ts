@@ -132,11 +132,13 @@ export class PostgreSQLConnector implements DatabaseConnector {
       config.database ? [config.database] : []
     );
 
-    return result.rows.map((row) => ({
-      name: row.datname,
-      charset: row.encoding,
-      collation: row.collate,
-    }));
+    return result.rows.map(
+      (row: { datname: string; encoding: string; collate: string }) => ({
+        name: row.datname,
+        charset: row.encoding,
+        collation: row.collate,
+      })
+    );
   }
 
   private async collectTables(
@@ -170,14 +172,23 @@ export class PostgreSQLConnector implements DatabaseConnector {
       [schema]
     );
 
-    return result.rows.map((row) => ({
-      name: row.table_name,
-      database: config.database ?? 'postgres',
-      schema: row.table_schema,
-      type: this.mapTableType(row.table_type),
-      rowCount: row.row_count ?? undefined,
-      comment: row.table_comment ?? undefined,
-    }));
+    return result.rows.map(
+      (row: {
+        table_schema: string;
+        table_name: string;
+        table_type: string;
+        row_count: number | null;
+        table_size: string | null;
+        table_comment: string | null;
+      }) => ({
+        name: row.table_name,
+        database: config.database ?? 'postgres',
+        schema: row.table_schema,
+        type: this.mapTableType(row.table_type),
+        rowCount: row.row_count ?? undefined,
+        comment: row.table_comment ?? undefined,
+      })
+    );
   }
 
   private mapTableType(pgType: string): 'TABLE' | 'VIEW' | 'MATERIALIZED_VIEW' {
@@ -254,38 +265,55 @@ export class PostgreSQLConnector implements DatabaseConnector {
     );
 
     const primaryKeys = new Set(
-      pkResult.rows.map((r) => `${r.table_name}.${r.column_name}`)
+      pkResult.rows.map(
+        (r: { table_name: string; column_name: string }) =>
+          `${r.table_name}.${r.column_name}`
+      )
     );
 
-    return result.rows.map((row) => {
-      let type = row.data_type;
-      if (row.character_maximum_length) {
-        type = `${type}(${row.character_maximum_length})`;
-      } else if (row.numeric_precision && row.numeric_scale) {
-        type = `${type}(${row.numeric_precision},${row.numeric_scale})`;
-      } else if (row.numeric_precision) {
-        type = `${type}(${row.numeric_precision})`;
+    return result.rows.map(
+      (row: {
+        table_schema: string;
+        table_name: string;
+        column_name: string;
+        data_type: string;
+        is_nullable: string;
+        column_default: string | null;
+        ordinal_position: number;
+        character_maximum_length: number | null;
+        numeric_precision: number | null;
+        numeric_scale: number | null;
+        column_comment: string | null;
+      }) => {
+        let type = row.data_type;
+        if (row.character_maximum_length) {
+          type = `${type}(${row.character_maximum_length})`;
+        } else if (row.numeric_precision && row.numeric_scale) {
+          type = `${type}(${row.numeric_precision},${row.numeric_scale})`;
+        } else if (row.numeric_precision) {
+          type = `${type}(${row.numeric_precision})`;
+        }
+
+        const key = `${row.table_name}.${row.column_name}`;
+
+        return {
+          name: row.column_name,
+          tableName: row.table_name,
+          database: config.database ?? 'postgres',
+          schema: row.table_schema,
+          type,
+          nullable: row.is_nullable === 'YES',
+          primaryKey: primaryKeys.has(key),
+          autoIncrement:
+            row.column_default?.includes('nextval') ??
+            row.column_default?.includes('serial') ??
+            false,
+          defaultValue: row.column_default,
+          comment: row.column_comment ?? undefined,
+          ordinalPosition: row.ordinal_position,
+        };
       }
-
-      const key = `${row.table_name}.${row.column_name}`;
-
-      return {
-        name: row.column_name,
-        tableName: row.table_name,
-        database: config.database ?? 'postgres',
-        schema: row.table_schema,
-        type,
-        nullable: row.is_nullable === 'YES',
-        primaryKey: primaryKeys.has(key),
-        autoIncrement:
-          row.column_default?.includes('nextval') ??
-          row.column_default?.includes('serial') ??
-          false,
-        defaultValue: row.column_default,
-        comment: row.column_comment ?? undefined,
-        ordinalPosition: row.ordinal_position,
-      };
-    });
+    );
   }
 
   private async collectIndexes(
@@ -312,22 +340,31 @@ export class PostgreSQLConnector implements DatabaseConnector {
       [schema]
     );
 
-    return result.rows.map((row) => {
-      const isUnique = row.indexdef.includes(' UNIQUE ');
-      const columnsMatch = row.indexdef.match(/\(([^)]+)\)/);
-      const columns = columnsMatch
-        ? columnsMatch[1].split(',').map((c) => c.trim().replace(/"/g, ''))
-        : [];
+    return result.rows.map(
+      (row: {
+        schemaname: string;
+        tablename: string;
+        indexname: string;
+        indexdef: string;
+      }) => {
+        const isUnique = row.indexdef.includes(' UNIQUE ');
+        const columnsMatch = row.indexdef.match(/\(([^)]+)\)/);
+        const columns = columnsMatch
+          ? columnsMatch[1]
+              .split(',')
+              .map((c: string) => c.trim().replace(/"/g, ''))
+          : [];
 
-      return {
-        name: row.indexname,
-        tableName: row.tablename,
-        database: config.database ?? 'postgres',
-        columns,
-        unique: isUnique,
-        type: 'btree',
-      };
-    });
+        return {
+          name: row.indexname,
+          tableName: row.tablename,
+          database: config.database ?? 'postgres',
+          columns,
+          unique: isUnique,
+          type: 'btree',
+        };
+      }
+    );
   }
 
   private async collectPartitions(
@@ -356,12 +393,18 @@ export class PostgreSQLConnector implements DatabaseConnector {
         [schema]
       );
 
-      return result.rows.map((row) => ({
-        name: row.partition_name,
-        tableName: row.parent_table,
-        database: config.database ?? 'postgres',
-        value: row.expression ?? undefined,
-      }));
+      return result.rows.map(
+        (row: {
+          parent_table: string;
+          partition_name: string;
+          expression: string | null;
+        }) => ({
+          name: row.partition_name,
+          tableName: row.parent_table,
+          database: config.database ?? 'postgres',
+          value: row.expression ?? undefined,
+        })
+      );
     } catch {
       // 分区表可能不存在或权限不足
       return [];

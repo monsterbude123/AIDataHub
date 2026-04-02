@@ -1,4 +1,5 @@
 import { Controller, Post, Body } from '@nestjs/common';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import type {
   Result,
   QualityApprovalSwitch,
@@ -22,9 +23,11 @@ import type {
   ID,
   ISODateTime,
 } from '@ai-datahub/contract';
+import type { RequestMeta } from '@ai-datahub/contract';
 
 import { DataGovernanceOpsService } from './data-governance-ops.service';
 
+@ApiTags('DataGovernanceOps')
 @Controller('api/governance-ops')
 export class DataGovernanceOpsController {
   constructor(private readonly service: DataGovernanceOpsService) {}
@@ -34,140 +37,244 @@ export class DataGovernanceOpsController {
   // -------------------------
 
   @Post('get-quality-approval-switch')
-  async getQualityApprovalSwitch(): Promise<Result<QualityApprovalSwitch>> {
-    return this.service.getQualityApprovalSwitch();
+  @ApiBody({})
+  async getQualityApprovalSwitch(
+    @Body() body: { meta?: RequestMeta }
+  ): Promise<Result<QualityApprovalSwitch>> {
+    return this.service.getQualityApprovalSwitch({
+      meta: body.meta,
+    });
   }
 
   @Post('set-quality-approval-switch')
+  @ApiBody({})
   async setQualityApprovalSwitch(
     @Body()
     body: {
+      meta?: RequestMeta;
       ruleApprovalEnabled?: boolean;
       taskApprovalEnabled?: boolean;
     }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.setQualityApprovalSwitch(body);
+    return this.service.setQualityApprovalSwitch({
+      meta: body.meta,
+      ruleApprovalEnabled: body.ruleApprovalEnabled,
+      taskApprovalEnabled: body.taskApprovalEnabled,
+    });
   }
 
   @Post('create-quality-rule')
+  @ApiBody({})
   async createQualityRule(
-    @Body() body: { rule: Omit<QualityRule, 'id' | 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      rule: Omit<QualityRule, 'id' | 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ ruleId: ID }>> {
-    return this.service.createQualityRule(body);
+    return this.service.createQualityRule({
+      meta: body.meta,
+      rule: body.rule,
+    });
   }
 
   @Post('update-quality-rule')
+  @ApiBody({})
   async updateQualityRule(
-    @Body() body: { rule: Omit<QualityRule, 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      rule: Omit<QualityRule, 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateQualityRule(body);
+    return this.service.updateQualityRule({
+      meta: body.meta,
+      rule: body.rule,
+    });
   }
 
   @Post('delete-quality-rule')
+  @ApiBody({})
   async deleteQualityRule(
-    @Body() body: { ruleId: ID }
+    @Body() body: { meta?: RequestMeta; ruleId: ID }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteQualityRule(body);
+    return this.service.deleteQualityRule({
+      meta: body.meta,
+      ruleId: body.ruleId,
+    });
   }
 
   @Post('list-quality-rules')
+  @ApiBody({})
   async listQualityRules(
-    @Body() body: { keyword?: string; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; keyword?: string; page: PageRequest }
   ): Promise<Result<PageResult<QualityRule>>> {
-    return this.service.listQualityRules(body);
+    return this.service.listQualityRules({
+      meta: body.meta,
+      keyword: body.keyword,
+      page: body.page,
+    });
   }
 
   @Post('create-quality-task')
+  @ApiBody({})
   async createQualityTask(
-    @Body() body: { task: Omit<QualityTask, 'id' | 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      task: Omit<QualityTask, 'id' | 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ taskId: ID }>> {
-    return this.service.createQualityTask(body);
+    return this.service.createQualityTask({
+      meta: body.meta,
+      task: body.task,
+    });
   }
 
   @Post('update-quality-task')
+  @ApiBody({})
   async updateQualityTask(
-    @Body() body: { task: Omit<QualityTask, 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      task: Omit<QualityTask, 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateQualityTask(body);
+    return this.service.updateQualityTask({
+      meta: body.meta,
+      task: body.task,
+    });
   }
 
   @Post('delete-quality-task')
+  @ApiBody({})
   async deleteQualityTask(
-    @Body() body: { taskId: ID }
+    @Body() body: { meta?: RequestMeta; taskId: ID }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteQualityTask(body);
+    return this.service.deleteQualityTask({
+      meta: body.meta,
+      taskId: body.taskId,
+    });
   }
 
   @Post('run-quality-task')
+  @ApiBody({})
   async runQualityTask(
-    @Body() body: { taskId: ID }
+    @Body() body: { meta?: RequestMeta; taskId: ID }
   ): Promise<Result<{ executionId: ID }>> {
-    return this.service.runQualityTask(body);
+    return this.service.runQualityTask({
+      meta: body.meta,
+      taskId: body.taskId,
+    });
   }
 
   @Post('list-quality-tasks')
+  @ApiBody({})
   async listQualityTasks(
-    @Body() body: { page: PageRequest }
+    @Body() body: { meta?: RequestMeta; page: PageRequest }
   ): Promise<Result<PageResult<QualityTask>>> {
-    return this.service.listQualityTasks(body);
+    return this.service.listQualityTasks({
+      meta: body.meta,
+      page: body.page,
+    });
   }
 
   @Post('get-quality-report')
+  @ApiBody({})
   async getQualityReport(
-    @Body() body: { reportId: ID }
+    @Body() body: { meta?: RequestMeta; reportId: ID }
   ): Promise<Result<QualityReport>> {
-    return this.service.getQualityReport(body);
+    return this.service.getQualityReport({
+      meta: body.meta,
+      reportId: body.reportId,
+    });
   }
 
   @Post('list-quality-reports')
+  @ApiBody({})
   async listQualityReports(
-    @Body() body: { taskId: ID; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; taskId: ID; page: PageRequest }
   ): Promise<Result<PageResult<QualityReport>>> {
-    return this.service.listQualityReports(body);
+    return this.service.listQualityReports({
+      meta: body.meta,
+      taskId: body.taskId,
+      page: body.page,
+    });
   }
 
   @Post('preview-quality-issues')
+  @ApiBody({})
   async previewQualityIssues(
-    @Body() body: { reportId: ID; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; reportId: ID; page: PageRequest }
   ): Promise<Result<PageResult<QualityIssue>>> {
-    return this.service.previewQualityIssues(body);
+    return this.service.previewQualityIssues({
+      meta: body.meta,
+      reportId: body.reportId,
+      page: body.page,
+    });
   }
 
   @Post('create-quality-ticket')
+  @ApiBody({})
   async createQualityTicket(
     @Body()
     body: {
+      meta?: RequestMeta;
       reportId: ID;
       assigneeUserId: ID;
       title: string;
       description?: string;
     }
   ): Promise<Result<{ ticketId: ID }>> {
-    return this.service.createQualityTicket(body);
+    return this.service.createQualityTicket({
+      meta: body.meta,
+      reportId: body.reportId,
+      assigneeUserId: body.assigneeUserId,
+      title: body.title,
+      description: body.description,
+    });
   }
 
   @Post('update-quality-ticket')
+  @ApiBody({})
   async updateQualityTicket(
     @Body()
     body: {
+      meta?: RequestMeta;
       ticketId: ID;
       status?: QualityTicket['status'];
       description?: string;
     }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateQualityTicket(body);
+    return this.service.updateQualityTicket({
+      meta: body.meta,
+      ticketId: body.ticketId,
+      status: body.status,
+      description: body.description,
+    });
   }
 
   @Post('list-my-quality-tickets')
+  @ApiBody({})
   async listMyQualityTickets(
-    @Body() body: { assigneeUserId: ID; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; assigneeUserId: ID; page: PageRequest }
   ): Promise<Result<PageResult<QualityTicket>>> {
-    return this.service.listMyQualityTickets(body);
+    return this.service.listMyQualityTickets({
+      meta: body.meta,
+      assigneeUserId: body.assigneeUserId,
+      page: body.page,
+    });
   }
 
   @Post('get-quality-stats')
+  @ApiBody({})
   async getQualityStats(
-    @Body() body: { startAt: ISODateTime; endAt: ISODateTime }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      startAt: ISODateTime;
+      endAt: ISODateTime;
+    }
   ): Promise<
     Result<{
       totalAssets?: number;
@@ -176,7 +283,11 @@ export class DataGovernanceOpsController {
       problemRatio?: number;
     }>
   > {
-    return this.service.getQualityStats(body);
+    return this.service.getQualityStats({
+      meta: body.meta,
+      startAt: body.startAt,
+      endAt: body.endAt,
+    });
   }
 
   // -------------------------
@@ -184,161 +295,274 @@ export class DataGovernanceOpsController {
   // -------------------------
 
   @Post('list-tag-categories')
+  @ApiBody({})
   async listTagCategories(
-    @Body() body: { parentId?: ID }
+    @Body() body: { meta?: RequestMeta; parentId?: ID }
   ): Promise<Result<TagCategoryNode[]>> {
-    return this.service.listTagCategories(body);
+    return this.service.listTagCategories({
+      meta: body.meta,
+      parentId: body.parentId,
+    });
   }
 
   @Post('create-tag-category')
+  @ApiBody({})
   async createTagCategory(
     @Body()
     body: {
+      meta?: RequestMeta;
       node: Omit<TagCategoryNode, 'id' | 'createdAt' | 'updatedAt'>;
     }
   ): Promise<Result<{ categoryId: ID }>> {
-    return this.service.createTagCategory(body);
+    return this.service.createTagCategory({
+      meta: body.meta,
+      node: body.node,
+    });
   }
 
   @Post('update-tag-category')
+  @ApiBody({})
   async updateTagCategory(
-    @Body() body: { node: Omit<TagCategoryNode, 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      node: Omit<TagCategoryNode, 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateTagCategory(body);
+    return this.service.updateTagCategory({
+      meta: body.meta,
+      node: body.node,
+    });
   }
 
   @Post('delete-tag-category')
+  @ApiBody({})
   async deleteTagCategory(
-    @Body() body: { categoryId: ID }
+    @Body() body: { meta?: RequestMeta; categoryId: ID }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteTagCategory(body);
+    return this.service.deleteTagCategory({
+      meta: body.meta,
+      categoryId: body.categoryId,
+    });
   }
 
   @Post('create-tag')
+  @ApiBody({})
   async createTag(
-    @Body() body: { tag: Omit<Tag, 'id' | 'createdAt'> }
+    @Body() body: { meta?: RequestMeta; tag: Omit<Tag, 'id' | 'createdAt'> }
   ): Promise<Result<{ tagId: ID }>> {
-    return this.service.createTag(body);
+    return this.service.createTag({
+      meta: body.meta,
+      tag: body.tag,
+    });
   }
 
   @Post('update-tag')
+  @ApiBody({})
   async updateTag(
-    @Body() body: { tag: Omit<Tag, 'createdAt'> }
+    @Body() body: { meta?: RequestMeta; tag: Omit<Tag, 'createdAt'> }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateTag(body);
+    return this.service.updateTag({
+      meta: body.meta,
+      tag: body.tag,
+    });
   }
 
   @Post('delete-tag')
+  @ApiBody({})
   async deleteTag(
-    @Body() body: { tagId: ID }
+    @Body() body: { meta?: RequestMeta; tagId: ID }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteTag(body);
+    return this.service.deleteTag({
+      meta: body.meta,
+      tagId: body.tagId,
+    });
   }
 
   @Post('query-tags')
+  @ApiBody({})
   async queryTags(
-    @Body() body: { keyword?: string; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; keyword?: string; page: PageRequest }
   ): Promise<Result<PageResult<Tag>>> {
-    return this.service.queryTags(body);
+    return this.service.queryTags({
+      meta: body.meta,
+      keyword: body.keyword,
+      page: body.page,
+    });
   }
 
   @Post('create-tag-rule')
+  @ApiBody({})
   async createTagRule(
-    @Body() body: { rule: Omit<TagRule, 'id' | 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      rule: Omit<TagRule, 'id' | 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ ruleId: ID }>> {
-    return this.service.createTagRule(body);
+    return this.service.createTagRule({
+      meta: body.meta,
+      rule: body.rule,
+    });
   }
 
   @Post('update-tag-rule')
+  @ApiBody({})
   async updateTagRule(
-    @Body() body: { rule: Omit<TagRule, 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      rule: Omit<TagRule, 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateTagRule(body);
+    return this.service.updateTagRule({
+      meta: body.meta,
+      rule: body.rule,
+    });
   }
 
   @Post('delete-tag-rule')
+  @ApiBody({})
   async deleteTagRule(
-    @Body() body: { ruleId: ID }
+    @Body() body: { meta?: RequestMeta; ruleId: ID }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteTagRule(body);
+    return this.service.deleteTagRule({
+      meta: body.meta,
+      ruleId: body.ruleId,
+    });
   }
 
   @Post('list-tag-rules')
+  @ApiBody({})
   async listTagRules(
-    @Body() body: { tagId?: ID; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; tagId?: ID; page: PageRequest }
   ): Promise<Result<PageResult<TagRule>>> {
-    return this.service.listTagRules(body);
+    return this.service.listTagRules({
+      meta: body.meta,
+      tagId: body.tagId,
+      page: body.page,
+    });
   }
 
   @Post('create-tag-task')
+  @ApiBody({})
   async createTagTask(
-    @Body() body: { task: Omit<TagTask, 'id' | 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      task: Omit<TagTask, 'id' | 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ taskId: ID }>> {
-    return this.service.createTagTask(body);
+    return this.service.createTagTask({
+      meta: body.meta,
+      task: body.task,
+    });
   }
 
   @Post('update-tag-task')
+  @ApiBody({})
   async updateTagTask(
-    @Body() body: { task: Omit<TagTask, 'createdAt' | 'updatedAt'> }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      task: Omit<TagTask, 'createdAt' | 'updatedAt'>;
+    }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateTagTask(body);
+    return this.service.updateTagTask({
+      meta: body.meta,
+      task: body.task,
+    });
   }
 
   @Post('delete-tag-task')
+  @ApiBody({})
   async deleteTagTask(
-    @Body() body: { taskId: ID }
+    @Body() body: { meta?: RequestMeta; taskId: ID }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteTagTask(body);
+    return this.service.deleteTagTask({
+      meta: body.meta,
+      taskId: body.taskId,
+    });
   }
 
   @Post('run-tag-task')
+  @ApiBody({})
   async runTagTask(
-    @Body() body: { taskId: ID }
+    @Body() body: { meta?: RequestMeta; taskId: ID }
   ): Promise<Result<{ executionId: ID }>> {
-    return this.service.runTagTask(body);
+    return this.service.runTagTask({
+      meta: body.meta,
+      taskId: body.taskId,
+    });
   }
 
   @Post('list-tag-tasks')
+  @ApiBody({})
   async listTagTasks(
-    @Body() body: { tagId?: ID; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; tagId?: ID; page: PageRequest }
   ): Promise<Result<PageResult<TagTask>>> {
-    return this.service.listTagTasks(body);
+    return this.service.listTagTasks({
+      meta: body.meta,
+      tagId: body.tagId,
+      page: body.page,
+    });
   }
 
   @Post('query-tag-data')
+  @ApiBody({})
   async queryTagData(
-    @Body() body: { query: TagQuery; page: PageRequest }
+    @Body() body: { meta?: RequestMeta; query: TagQuery; page: PageRequest }
   ): Promise<Result<PageResult<TagQueryResultItem>>> {
-    return this.service.queryTagData(body);
+    return this.service.queryTagData({
+      meta: body.meta,
+      query: body.query,
+      page: body.page,
+    });
   }
 
   @Post('upsert-tag-subject')
+  @ApiBody({})
   async upsertTagSubject(
     @Body()
     body: {
+      meta?: RequestMeta;
       subject: Omit<TagSubject, 'createdAt' | 'updatedAt'> & { id?: ID };
     }
   ): Promise<Result<{ subjectId: ID }>> {
-    return this.service.upsertTagSubject(body);
+    return this.service.upsertTagSubject({
+      meta: body.meta,
+      subject: body.subject,
+    });
   }
 
   @Post('list-tag-subjects')
+  @ApiBody({})
   async listTagSubjects(
     @Body()
     body: {
+      meta?: RequestMeta;
       keyword?: string;
       type?: TagSubject['type'];
       page: PageRequest;
     }
   ): Promise<Result<PageResult<TagSubject>>> {
-    return this.service.listTagSubjects(body);
+    return this.service.listTagSubjects({
+      meta: body.meta,
+      keyword: body.keyword,
+      type: body.type,
+      page: body.page,
+    });
   }
 
   @Post('get-subject-tags')
+  @ApiBody({})
   async getSubjectTags(
-    @Body() body: { subjectId: ID }
+    @Body() body: { meta?: RequestMeta; subjectId: ID }
   ): Promise<Result<{ tagIds: ID[] }>> {
-    return this.service.getSubjectTags(body);
+    return this.service.getSubjectTags({
+      meta: body.meta,
+      subjectId: body.subjectId,
+    });
   }
 
   // -------------------------
@@ -346,44 +570,75 @@ export class DataGovernanceOpsController {
   // -------------------------
 
   @Post('collect-lineage')
+  @ApiBody({})
   async collectLineage(
-    @Body() body: { scope: 'ETL' | 'SQL' | 'SERVICE'; since?: ISODateTime }
+    @Body()
+    body: {
+      meta?: RequestMeta;
+      scope: 'ETL' | 'SQL' | 'SERVICE';
+      since?: ISODateTime;
+    }
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.collectLineage(body);
+    return this.service.collectLineage({
+      meta: body.meta,
+      scope: body.scope,
+      since: body.since,
+    });
   }
 
   @Post('get-lineage-graph')
+  @ApiBody({})
   async getLineageGraph(
-    @Body() body: { dataAssetId: ID }
+    @Body() body: { meta?: RequestMeta; dataAssetId: ID }
   ): Promise<Result<LineageGraph>> {
-    return this.service.getLineageGraph(body);
+    return this.service.getLineageGraph({
+      meta: body.meta,
+      dataAssetId: body.dataAssetId,
+    });
   }
 
   @Post('get-field-lineage-graph')
+  @ApiBody({})
   async getFieldLineageGraph(
-    @Body() body: { dataAssetId: ID; fieldName: string }
+    @Body() body: { meta?: RequestMeta; dataAssetId: ID; fieldName: string }
   ): Promise<Result<LineageGraph>> {
-    return this.service.getFieldLineageGraph(body);
+    return this.service.getFieldLineageGraph({
+      meta: body.meta,
+      dataAssetId: body.dataAssetId,
+      fieldName: body.fieldName,
+    });
   }
 
   @Post('impact-analysis')
+  @ApiBody({})
   async impactAnalysis(
-    @Body() body: { dataAssetId: ID }
+    @Body() body: { meta?: RequestMeta; dataAssetId: ID }
   ): Promise<Result<{ items: ImpactAnalysisItem[] }>> {
-    return this.service.impactAnalysis(body);
+    return this.service.impactAnalysis({
+      meta: body.meta,
+      dataAssetId: body.dataAssetId,
+    });
   }
 
   @Post('export-impact-analysis')
+  @ApiBody({})
   async exportImpactAnalysis(
-    @Body() body: { dataAssetId: ID }
+    @Body() body: { meta?: RequestMeta; dataAssetId: ID }
   ): Promise<Result<{ downloadUrl: string }>> {
-    return this.service.exportImpactAnalysis(body);
+    return this.service.exportImpactAnalysis({
+      meta: body.meta,
+      dataAssetId: body.dataAssetId,
+    });
   }
 
   @Post('get-execution')
+  @ApiBody({})
   async getExecution(
-    @Body() body: { executionId: ID }
+    @Body() body: { meta?: RequestMeta; executionId: ID }
   ): Promise<Result<TaskExecution>> {
-    return this.service.getExecution(body);
+    return this.service.getExecution({
+      meta: body.meta,
+      executionId: body.executionId,
+    });
   }
 }

@@ -5,6 +5,8 @@ import { CostManagementModule } from './modules/cost-management/cost-management.
 import { DataGovernanceCoreModule } from './modules/data-governance-core/data-governance-core.module';
 import { DataGovernanceOpsModule } from './modules/data-governance-ops/data-governance-ops.module';
 import { DataIntegrationModule } from './modules/data-integration/data-integration.module';
+import { DataOrganizationModule } from './modules/data-organization/data-organization.module';
+import { TaskSchedulerModule } from './modules/task-scheduler/task-scheduler.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { DataIntegrationModule } from './modules/data-integration/data-integrati
     DataGovernanceCoreModule,
     DataGovernanceOpsModule,
     DataIntegrationModule,
+    DataOrganizationModule,
+    TaskSchedulerModule,
   ],
   controllers: [HealthController],
 })

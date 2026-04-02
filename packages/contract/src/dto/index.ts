@@ -5,3 +5,4 @@ export * from './common.dto';
 export * from './cost-management.dto';
 export * from './data-governance-core.dto';
 export * from './data-integration.dto';
+export * from './data-organization.dto';

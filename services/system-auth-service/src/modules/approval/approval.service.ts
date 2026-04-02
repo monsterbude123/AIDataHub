@@ -1,9 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, type Approval } from '@prisma/client';
 import {
   okResult,
   type Result,
-  type Approval,
+  type Approval as ApprovalDTO,
   type PageResult,
   type ApprovalStatus,
 } from '@ai-datahub/contract';
@@ -120,7 +120,7 @@ export class ApprovalService {
   async listMyTodoApprovals(req: {
     userId: string;
     page: { page: number; pageSize: number };
-  }): Promise<Result<PageResult<Approval>>> {
+  }): Promise<Result<PageResult<ApprovalDTO>>> {
     const skip = (req.page.page - 1) * req.page.pageSize;
 
     // For MVP: list all PENDING approvals
@@ -137,25 +137,27 @@ export class ApprovalService {
       page: req.page.page,
       pageSize: req.page.pageSize,
       total,
-      items: approvals.map((a) => this.toDTO(a)),
+      items: approvals.map((a: Approval) => this.toDTO(a)),
     });
   }
 
   async listMyDoneApprovals(req: {
     userId: string;
     page: { page: number; pageSize: number };
-  }): Promise<Result<PageResult<Approval>>> {
+  }): Promise<Result<PageResult<ApprovalDTO>>> {
     // List APPROVED/REJECTED approvals where userId appears in history
     const allApprovals = await this.prisma.approval.findMany({
       where: { status: { in: ['APPROVED', 'REJECTED'] } },
     });
 
     // Filter approvals where user is in history
-    const filteredApprovals = allApprovals.filter((approval) => {
+    const filteredApprovals = allApprovals.filter((approval: Approval) => {
       const history = JSON.parse(approval.history || '[]') as Array<{
         approverId: string;
       }>;
-      return history.some((h) => h.approverId === req.userId);
+      return history.some(
+        (h: { approverId: string }) => h.approverId === req.userId
+      );
     });
 
     const total = filteredApprovals.length;
@@ -171,7 +173,7 @@ export class ApprovalService {
       page: req.page.page,
       pageSize: req.page.pageSize,
       total,
-      items: paginatedApprovals.map((a) => this.toDTO(a)),
+      items: paginatedApprovals.map((a: Approval) => this.toDTO(a)),
     });
   }
 
@@ -203,20 +205,7 @@ export class ApprovalService {
     return this.prisma.approval.findUnique({ where: { id } });
   }
 
-  private toDTO(a: {
-    id: string;
-    businessType: string;
-    businessId: string;
-    title: string;
-    applicantId: string;
-    currentNode: number | null;
-    payload: string | null;
-    templateId: string;
-    status: string;
-    history: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }): Approval {
+  private toDTO(a: Approval): ApprovalDTO {
     return {
       id: a.id,
       businessType: a.businessType,

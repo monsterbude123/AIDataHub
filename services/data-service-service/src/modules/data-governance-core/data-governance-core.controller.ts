@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import type { Result, DataAsset, PageResult } from '@ai-datahub/contract';
+import type { Result, PageResult, AuditTask } from '@ai-datahub/contract';
 import {
   SearchAssetsRequestDto,
   TagAssetRequestDto,
@@ -41,7 +41,8 @@ import {
   RunAuditTaskRequestDto,
   ListAuditRunsRequestDto,
   AssetTagDto,
-  PageRequestDto,
+  DictionaryType,
+  DataModelStatus,
 } from '@ai-datahub/contract';
 import { DataGovernanceCoreService } from './data-governance-core.service';
 
@@ -54,8 +55,17 @@ export class DataGovernanceCoreController {
   @ApiBody({ type: SearchAssetsRequestDto })
   async searchAssets(
     @Body() req: SearchAssetsRequestDto
-  ): Promise<Result<PageResult<DataAsset>>> {
-    return this.service.searchAssets(req);
+  ): Promise<Result<PageResult<AssetTagDto>>> {
+    return this.service.searchAssets({
+      meta: req.meta,
+      keyword: req.keyword,
+      tags: req.tags,
+      filters: req.filters,
+      page: {
+        page: req.page.page,
+        pageSize: req.page.pageSize,
+      },
+    });
   }
 
   @Post('assets/tag')
@@ -63,7 +73,11 @@ export class DataGovernanceCoreController {
   async tagAsset(
     @Body() req: TagAssetRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.tagAsset(req);
+    return this.service.tagAsset({
+      meta: req.meta,
+      dataAssetId: req.dataAssetId,
+      tags: req.tags,
+    });
   }
 
   @Post('tags')
@@ -71,7 +85,25 @@ export class DataGovernanceCoreController {
   async listAssetTags(
     @Body() req: ListAssetTagsRequestDto
   ): Promise<Result<AssetTagDto[]>> {
-    return this.service.listAssetTags(req);
+    const result = await this.service.listAssetTags({
+      meta: req.meta,
+      keyword: req.keyword,
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: AssetTagDto[] = result.data.map((t) => ({
+      id: t.id,
+      name: t.name,
+      createdAt: t.createdAt,
+    }));
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('export-ledger')
@@ -79,7 +111,12 @@ export class DataGovernanceCoreController {
   async exportLedger(
     @Body() req: ExportLedgerRequestDto
   ): Promise<Result<ExportLedgerResponseDto>> {
-    return this.service.exportLedger(req);
+    return this.service.exportLedger({
+      meta: req.meta,
+      type: req.type,
+      format: req.format,
+      filters: req.filters,
+    });
   }
 
   @Post('standard-element/create')
@@ -87,7 +124,10 @@ export class DataGovernanceCoreController {
   async createStandardDataElement(
     @Body() req: CreateStandardDataElementRequestDto
   ): Promise<Result<{ elementId: string }>> {
-    return this.service.createStandardDataElement(req);
+    return this.service.createStandardDataElement({
+      meta: req.meta,
+      element: req.element,
+    });
   }
 
   @Post('standard-element/update')
@@ -95,7 +135,10 @@ export class DataGovernanceCoreController {
   async updateStandardDataElement(
     @Body() req: UpdateStandardDataElementRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateStandardDataElement(req);
+    return this.service.updateStandardDataElement({
+      meta: req.meta,
+      element: req.element,
+    });
   }
 
   @Post('standard-element/delete')
@@ -103,7 +146,10 @@ export class DataGovernanceCoreController {
   async deleteStandardDataElement(
     @Body() req: DeleteStandardDataElementRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteStandardDataElement(req);
+    return this.service.deleteStandardDataElement({
+      meta: req.meta,
+      elementId: req.elementId,
+    });
   }
 
   @Post('standard-element/list')
@@ -111,7 +157,37 @@ export class DataGovernanceCoreController {
   async listStandardDataElements(
     @Body() req: ListStandardDataElementsRequestDto
   ): Promise<Result<PageResult<StandardDataElementDto>>> {
-    return this.service.listStandardDataElements(req);
+    const result = await this.service.listStandardDataElements({
+      meta: req.meta,
+      keyword: req.keyword,
+      page: {
+        page: req.page.page,
+        pageSize: req.page.pageSize,
+      },
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: PageResult<StandardDataElementDto> = {
+      ...result.data,
+      items: result.data.items.map((e) => ({
+        id: e.id,
+        name: e.name,
+        identifier: e.identifier,
+        type: e.type,
+        length: e.length,
+        description: e.description,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+      })),
+    };
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('type-mapping/upsert')
@@ -119,7 +195,10 @@ export class DataGovernanceCoreController {
   async upsertStandardTypeMapping(
     @Body() req: UpsertStandardTypeMappingRequestDto
   ): Promise<Result<{ mappingId: string }>> {
-    return this.service.upsertStandardTypeMapping(req);
+    return this.service.upsertStandardTypeMapping({
+      meta: req.meta,
+      mapping: req.mapping,
+    });
   }
 
   @Post('type-mapping/list')
@@ -127,7 +206,34 @@ export class DataGovernanceCoreController {
   async listStandardTypeMappings(
     @Body() req: ListStandardTypeMappingsRequestDto
   ): Promise<Result<PageResult<StandardTypeMappingDto>>> {
-    return this.service.listStandardTypeMappings(req);
+    const result = await this.service.listStandardTypeMappings({
+      meta: req.meta,
+      sourceSystem: req.sourceSystem,
+      page: {
+        page: req.page.page,
+        pageSize: req.page.pageSize,
+      },
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: PageResult<StandardTypeMappingDto> = {
+      ...result.data,
+      items: result.data.items.map((m) => ({
+        id: m.id,
+        sourceSystem: m.sourceSystem,
+        sourceType: m.sourceType,
+        standardType: m.standardType,
+        createdAt: m.createdAt,
+      })),
+    };
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('dictionary/create')
@@ -135,7 +241,10 @@ export class DataGovernanceCoreController {
   async createDictionary(
     @Body() req: CreateDictionaryRequestDto
   ): Promise<Result<{ dictionaryId: string }>> {
-    return this.service.createDictionary(req);
+    return this.service.createDictionary({
+      meta: req.meta,
+      dictionary: req.dictionary,
+    });
   }
 
   @Post('dictionary/update')
@@ -143,7 +252,10 @@ export class DataGovernanceCoreController {
   async updateDictionary(
     @Body() req: UpdateDictionaryRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateDictionary(req);
+    return this.service.updateDictionary({
+      meta: req.meta,
+      dictionary: req.dictionary,
+    });
   }
 
   @Post('dictionary/delete')
@@ -151,7 +263,10 @@ export class DataGovernanceCoreController {
   async deleteDictionary(
     @Body() req: DeleteDictionaryRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteDictionary(req);
+    return this.service.deleteDictionary({
+      meta: req.meta,
+      dictionaryId: req.dictionaryId,
+    });
   }
 
   @Post('dictionary/list')
@@ -159,7 +274,35 @@ export class DataGovernanceCoreController {
   async listDictionaries(
     @Body() req: ListDictionariesRequestDto
   ): Promise<Result<PageResult<DictionaryDto>>> {
-    return this.service.listDictionaries(req);
+    const result = await this.service.listDictionaries({
+      meta: req.meta,
+      keyword: req.keyword,
+      page: {
+        page: req.page.page,
+        pageSize: req.page.pageSize,
+      },
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: PageResult<DictionaryDto> = {
+      ...result.data,
+      items: result.data.items.map((d) => ({
+        id: d.id,
+        name: d.name,
+        type: d.type as DictionaryType,
+        config: d.config,
+        createdAt: d.createdAt,
+        updatedAt: d.updatedAt,
+      })),
+    };
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('dictionary/data')
@@ -167,7 +310,35 @@ export class DataGovernanceCoreController {
   async getDictionaryData(
     @Body() req: GetDictionaryDataRequestDto
   ): Promise<Result<PageResult<DictionaryItemDto>>> {
-    return this.service.getDictionaryData(req);
+    const result = await this.service.getDictionaryData({
+      meta: req.meta,
+      dictionaryId: req.dictionaryId,
+      useCache: req.useCache,
+      page: {
+        page: req.page.page,
+        pageSize: req.page.pageSize,
+      },
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: PageResult<DictionaryItemDto> = {
+      ...result.data,
+      items: result.data.items.map((item) => ({
+        id: item.id,
+        dictionaryId: item.dictionaryId,
+        key: item.key,
+        value: item.value,
+        description: item.description,
+      })),
+    };
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('dictionary/import')
@@ -175,7 +346,12 @@ export class DataGovernanceCoreController {
   async importDictionary(
     @Body() req: ImportDictionaryRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.importDictionary(req);
+    return this.service.importDictionary({
+      meta: req.meta,
+      dictionaryId: req.dictionaryId,
+      format: req.format as 'TEMPLATE_V1',
+      payload: req.payload,
+    });
   }
 
   @Post('dictionary/categories')
@@ -183,7 +359,29 @@ export class DataGovernanceCoreController {
   async listDictionaryCategories(
     @Body() req: ListDictionaryCategoriesRequestDto
   ): Promise<Result<DictionaryCategoryNodeDto[]>> {
-    return this.service.listDictionaryCategories(req);
+    const result = await this.service.listDictionaryCategories({
+      meta: req.meta,
+      parentId: req.parentId,
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: DictionaryCategoryNodeDto[] = result.data.map((node) => ({
+      id: node.id,
+      parentId: node.parentId,
+      name: node.name,
+      code: node.code,
+      sort: node.sort,
+      createdAt: node.createdAt,
+      updatedAt: node.updatedAt,
+    }));
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('dictionary/category/create')
@@ -191,7 +389,10 @@ export class DataGovernanceCoreController {
   async createDictionaryCategory(
     @Body() req: CreateDictionaryCategoryRequestDto
   ): Promise<Result<{ categoryId: string }>> {
-    return this.service.createDictionaryCategory(req);
+    return this.service.createDictionaryCategory({
+      meta: req.meta,
+      node: req.node,
+    });
   }
 
   @Post('dictionary/category/update')
@@ -199,7 +400,10 @@ export class DataGovernanceCoreController {
   async updateDictionaryCategory(
     @Body() req: UpdateDictionaryCategoryRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.updateDictionaryCategory(req);
+    return this.service.updateDictionaryCategory({
+      meta: req.meta,
+      node: req.node,
+    });
   }
 
   @Post('dictionary/category/delete')
@@ -207,7 +411,10 @@ export class DataGovernanceCoreController {
   async deleteDictionaryCategory(
     @Body() req: DeleteDictionaryCategoryRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteDictionaryCategory(req);
+    return this.service.deleteDictionaryCategory({
+      meta: req.meta,
+      categoryId: req.categoryId,
+    });
   }
 
   @Post('model/create')
@@ -215,7 +422,10 @@ export class DataGovernanceCoreController {
   async createModel(
     @Body() req: CreateModelRequestDto
   ): Promise<Result<{ modelId: string }>> {
-    return this.service.createModel(req);
+    return this.service.createModel({
+      meta: req.meta,
+      model: req.model,
+    });
   }
 
   @Post('model/approve')
@@ -223,7 +433,10 @@ export class DataGovernanceCoreController {
   async approveModel(
     @Body() req: ApproveModelRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.approveModel(req);
+    return this.service.approveModel({
+      meta: req.meta,
+      modelId: req.modelId,
+    });
   }
 
   @Post('model/publish')
@@ -231,7 +444,11 @@ export class DataGovernanceCoreController {
   async publishModel(
     @Body() req: PublishModelRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.publishModel(req);
+    return this.service.publishModel({
+      meta: req.meta,
+      modelId: req.modelId,
+      online: req.online,
+    });
   }
 
   @Post('model/create-physical')
@@ -239,7 +456,12 @@ export class DataGovernanceCoreController {
   async createPhysicalTables(
     @Body() req: CreatePhysicalTablesRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.createPhysicalTables(req);
+    return this.service.createPhysicalTables({
+      meta: req.meta,
+      modelId: req.modelId,
+      dataSourceId: req.dataSourceId,
+      options: req.options,
+    });
   }
 
   @Post('model/list')
@@ -247,7 +469,36 @@ export class DataGovernanceCoreController {
   async listModels(
     @Body() req: ListModelsRequestDto
   ): Promise<Result<PageResult<DataModelDto>>> {
-    return this.service.listModels(req);
+    const result = await this.service.listModels({
+      meta: req.meta,
+      keyword: req.keyword,
+      page: {
+        page: req.page.page,
+        pageSize: req.page.pageSize,
+      },
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: PageResult<DataModelDto> = {
+      ...result.data,
+      items: result.data.items.map((model) => ({
+        id: model.id,
+        name: model.name,
+        version: model.version,
+        status: model.status as DataModelStatus,
+        definition: model.definition,
+        createdAt: model.createdAt,
+        updatedAt: model.updatedAt,
+      })),
+    };
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('audit/task/upsert')
@@ -255,7 +506,13 @@ export class DataGovernanceCoreController {
   async upsertAuditTask(
     @Body() req: UpsertAuditTaskRequestDto
   ): Promise<Result<{ taskId: string }>> {
-    return this.service.upsertAuditTask(req);
+    return this.service.upsertAuditTask({
+      meta: req.meta,
+      task: req.task as unknown as Omit<
+        AuditTask,
+        'createdAt' | 'updatedAt'
+      > & { id?: string },
+    });
   }
 
   @Post('audit/task/list')
@@ -263,7 +520,27 @@ export class DataGovernanceCoreController {
   async listAuditTasks(
     @Body() req: ListAuditTasksRequestDto
   ): Promise<Result<AuditTaskDto[]>> {
-    return this.service.listAuditTasks(req);
+    const result = await this.service.listAuditTasks({
+      meta: req.meta,
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: AuditTaskDto[] = result.data.map((task) => ({
+      id: task.id,
+      type: task.type,
+      enabled: task.enabled,
+      schedule: task.schedule,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+    }));
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 
   @Post('audit/task/run')
@@ -271,7 +548,10 @@ export class DataGovernanceCoreController {
   async runAuditTask(
     @Body() req: RunAuditTaskRequestDto
   ): Promise<Result<{ runId: string }>> {
-    return this.service.runAuditTask(req);
+    return this.service.runAuditTask({
+      meta: req.meta,
+      taskId: req.taskId,
+    });
   }
 
   @Post('audit/run/list')
@@ -279,6 +559,34 @@ export class DataGovernanceCoreController {
   async listAuditRuns(
     @Body() req: ListAuditRunsRequestDto
   ): Promise<Result<PageResult<AuditRunDto>>> {
-    return this.service.listAuditRuns(req);
+    const result = await this.service.listAuditRuns({
+      meta: req.meta,
+      taskId: req.taskId,
+      page: {
+        page: req.page.page,
+        pageSize: req.page.pageSize,
+      },
+    });
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const dto: PageResult<AuditRunDto> = {
+      ...result.data,
+      items: result.data.items.map((run) => ({
+        id: run.id,
+        taskId: run.taskId,
+        startedAt: run.startedAt,
+        endedAt: run.endedAt,
+        status: run.status,
+        summary: run.summary,
+      })),
+    };
+
+    return {
+      ...result,
+      data: dto,
+    };
   }
 }

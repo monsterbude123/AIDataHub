@@ -40,10 +40,11 @@ export class MySQLConnector implements DatabaseConnector {
       connection = await pool.getConnection();
 
       // 获取服务器版本
-      const [rows] = await connection.query<Array<{ version: string }>>(
+      const [rows] = await connection.query<unknown>(
         'SELECT VERSION() as version'
       );
-      const serverVersion = rows[0]?.version ?? 'unknown';
+      const serverVersion =
+        (rows as Array<{ version: string }>)[0]?.version ?? 'unknown';
 
       const latency = Date.now() - start;
 
@@ -113,13 +114,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<DatabaseInfo[]> {
-    const [rows] = await pool.query<
-      Array<{
-        SCHEMA_NAME: string;
-        DEFAULT_CHARACTER_SET_NAME: string;
-        DEFAULT_COLLATION_NAME: string;
-      }>
-    >(
+    const [rows] = await pool.query<unknown>(
       `
       SELECT
         SCHEMA_NAME,
@@ -132,7 +127,13 @@ export class MySQLConnector implements DatabaseConnector {
       config.database ? [config.database] : []
     );
 
-    return rows.map((row) => ({
+    const typedRows = rows as Array<{
+      SCHEMA_NAME: string;
+      DEFAULT_CHARACTER_SET_NAME: string;
+      DEFAULT_COLLATION_NAME: string;
+    }>;
+
+    return typedRows.map((row) => ({
       name: row.SCHEMA_NAME,
       charset: row.DEFAULT_CHARACTER_SET_NAME,
       collation: row.DEFAULT_COLLATION_NAME,
@@ -143,18 +144,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<TableInfo[]> {
-    const [rows] = await pool.query<
-      Array<{
-        TABLE_SCHEMA: string;
-        TABLE_NAME: string;
-        TABLE_TYPE: string;
-        TABLE_ROWS: number;
-        DATA_LENGTH: number;
-        TABLE_COMMENT: string;
-        CREATE_TIME: Date;
-        UPDATE_TIME: Date | null;
-      }>
-    >(
+    const [rows] = await pool.query<unknown>(
       `
       SELECT
         TABLE_SCHEMA,
@@ -172,7 +162,18 @@ export class MySQLConnector implements DatabaseConnector {
       config.database ? [config.database] : []
     );
 
-    return rows.map((row) => ({
+    const typedRows = rows as Array<{
+      TABLE_SCHEMA: string;
+      TABLE_NAME: string;
+      TABLE_TYPE: string;
+      TABLE_ROWS: number;
+      DATA_LENGTH: number;
+      TABLE_COMMENT: string;
+      CREATE_TIME: Date;
+      UPDATE_TIME: Date | null;
+    }>;
+
+    return typedRows.map((row) => ({
       name: row.TABLE_NAME,
       database: row.TABLE_SCHEMA,
       type: this.mapTableType(row.TABLE_TYPE),
@@ -201,22 +202,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<ColumnInfo[]> {
-    const [rows] = await pool.query<
-      Array<{
-        TABLE_SCHEMA: string;
-        TABLE_NAME: string;
-        COLUMN_NAME: string;
-        COLUMN_TYPE: string;
-        IS_NULLABLE: string;
-        COLUMN_KEY: string;
-        EXTRA: string;
-        COLUMN_DEFAULT: string | null;
-        COLUMN_COMMENT: string;
-        ORDINAL_POSITION: number;
-        CHARACTER_SET_NAME: string | null;
-        COLLATION_NAME: string | null;
-      }>
-    >(
+    const [rows] = await pool.query<unknown>(
       `
       SELECT
         TABLE_SCHEMA,
@@ -239,7 +225,22 @@ export class MySQLConnector implements DatabaseConnector {
       config.database ? [config.database] : []
     );
 
-    return rows.map((row) => ({
+    const typedRows = rows as Array<{
+      TABLE_SCHEMA: string;
+      TABLE_NAME: string;
+      COLUMN_NAME: string;
+      COLUMN_TYPE: string;
+      IS_NULLABLE: string;
+      COLUMN_KEY: string;
+      EXTRA: string;
+      COLUMN_DEFAULT: string | null;
+      COLUMN_COMMENT: string;
+      ORDINAL_POSITION: number;
+      CHARACTER_SET_NAME: string | null;
+      COLLATION_NAME: string | null;
+    }>;
+
+    return typedRows.map((row) => ({
       name: row.COLUMN_NAME,
       tableName: row.TABLE_NAME,
       database: row.TABLE_SCHEMA,
@@ -259,16 +260,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<IndexInfo[]> {
-    const [rows] = await pool.query<
-      Array<{
-        TABLE_SCHEMA: string;
-        TABLE_NAME: string;
-        INDEX_NAME: string;
-        COLUMN_NAME: string;
-        NON_UNIQUE: number;
-        INDEX_TYPE: string;
-      }>
-    >(
+    const [rows] = await pool.query<unknown>(
       `
       SELECT
         TABLE_SCHEMA,
@@ -285,10 +277,19 @@ export class MySQLConnector implements DatabaseConnector {
       config.database ? [config.database] : []
     );
 
+    const typedRows = rows as Array<{
+      TABLE_SCHEMA: string;
+      TABLE_NAME: string;
+      INDEX_NAME: string;
+      COLUMN_NAME: string;
+      NON_UNIQUE: number;
+      INDEX_TYPE: string;
+    }>;
+
     // 聚合同一索引的多个列
     const indexMap = new Map<string, IndexInfo>();
 
-    for (const row of rows) {
+    for (const row of typedRows) {
       const key = `${row.TABLE_SCHEMA}.${row.TABLE_NAME}.${row.INDEX_NAME}`;
 
       if (!indexMap.has(key)) {
@@ -313,16 +314,7 @@ export class MySQLConnector implements DatabaseConnector {
     config: MetadataSourceConfig
   ): Promise<PartitionInfo[]> {
     try {
-      const [rows] = await pool.query<
-        Array<{
-          TABLE_SCHEMA: string;
-          TABLE_NAME: string;
-          PARTITION_NAME: string;
-          PARTITION_EXPRESSION: string;
-          TABLE_ROWS: number;
-          DATA_LENGTH: number;
-        }>
-      >(
+      const [rows] = await pool.query<unknown>(
         `
         SELECT
           TABLE_SCHEMA,
@@ -339,7 +331,16 @@ export class MySQLConnector implements DatabaseConnector {
         config.database ? [config.database] : []
       );
 
-      return rows.map((row) => ({
+      const typedRows = rows as Array<{
+        TABLE_SCHEMA: string;
+        TABLE_NAME: string;
+        PARTITION_NAME: string;
+        PARTITION_EXPRESSION: string;
+        TABLE_ROWS: number;
+        DATA_LENGTH: number;
+      }>;
+
+      return typedRows.map((row) => ({
         name: row.PARTITION_NAME,
         tableName: row.TABLE_NAME,
         database: row.TABLE_SCHEMA,

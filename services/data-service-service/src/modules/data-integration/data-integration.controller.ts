@@ -5,6 +5,10 @@ import type {
   DataSource,
   ColumnMetadata,
   TaskExecution,
+  ProfilingResult,
+  PreviewDataResponse,
+  ExecuteSqlResponse,
+  DataSourceType,
 } from '@ai-datahub/contract';
 import {
   CreateDataSourceRequestDto,
@@ -33,7 +37,22 @@ export class DataIntegrationController {
   createDataSource(
     @Body() req: CreateDataSourceRequestDto
   ): Promise<Result<DataSource>> {
-    return this.service.createDataSource(req);
+    const type: DataSourceType = req.type as unknown as DataSourceType;
+    return this.service.createDataSource({
+      meta: req.meta,
+      dataSource: {
+        name: req.name,
+        type,
+        jdbcUrl: '', // Not in DTO - TODO: add to DTO
+        username: req.username,
+        passwordRef: req.password, // TODO: should be passwordRef
+        driverClass: '', // Not in DTO - TODO: add to DTO
+        orgId: '', // TODO: add orgId to DTO
+        projectId: undefined,
+        description: undefined,
+        status: 'ENABLED',
+      },
+    });
   }
 
   @Post('update-data-source')
@@ -41,7 +60,27 @@ export class DataIntegrationController {
   updateDataSource(
     @Body() req: UpdateDataSourceRequestDto
   ): Promise<Result<DataSource>> {
-    return this.service.updateDataSource(req);
+    const anyReq = req as unknown as Record<string, unknown>;
+    const type: DataSourceType | undefined =
+      anyReq['type'] !== undefined
+        ? (anyReq['type'] as unknown as DataSourceType)
+        : undefined;
+    return this.service.updateDataSource({
+      meta: req.meta,
+      dataSource: {
+        id: req.id,
+        name: req.name ?? '',
+        type: type as DataSourceType,
+        jdbcUrl: '',
+        username: req.username ?? '',
+        passwordRef: req.password,
+        driverClass: '',
+        orgId: '',
+        projectId: undefined,
+        description: undefined,
+        status: 'ENABLED',
+      },
+    });
   }
 
   @Post('delete-data-source')
@@ -49,7 +88,10 @@ export class DataIntegrationController {
   deleteDataSource(
     @Body() req: DeleteDataSourceRequestDto
   ): Promise<Result<{ success: boolean }>> {
-    return this.service.deleteDataSource(req);
+    return this.service.deleteDataSource({
+      meta: req.meta,
+      dataSourceId: req.id,
+    });
   }
 
   @Post('test-connection')
@@ -57,7 +99,22 @@ export class DataIntegrationController {
   testConnection(
     @Body() req: TestConnectionRequestDto
   ): Promise<Result<ConnectionTestResultDto>> {
-    return this.service.testConnection(req);
+    const type: DataSourceType = req.type as unknown as DataSourceType;
+    return this.service.testConnection({
+      meta: req.meta,
+      dataSource: {
+        type,
+        name: '',
+        jdbcUrl: '',
+        username: req.username,
+        passwordRef: req.password,
+        driverClass: '',
+        orgId: '',
+        projectId: undefined,
+        description: undefined,
+        status: 'ENABLED',
+      },
+    });
   }
 
   @Post('list-data-sources')
@@ -65,7 +122,12 @@ export class DataIntegrationController {
   listDataSources(
     @Body() req: ListDataSourcesRequestDto
   ): Promise<Result<DataSource[]>> {
-    return this.service.listDataSources(req);
+    return this.service.listDataSources({
+      meta: req.meta,
+      orgId: '',
+      keyword: undefined,
+      projectId: undefined,
+    });
   }
 
   @Post('collect-initial-metadata')
@@ -73,39 +135,67 @@ export class DataIntegrationController {
   collectInitialMetadata(
     @Body() req: CollectMetadataRequestDto
   ): Promise<Result<ColumnMetadata[]>> {
-    return this.service.collectInitialMetadata(req);
+    return this.service.collectInitialMetadata({
+      meta: req.meta,
+      dataSourceId: req.dataSourceId,
+    });
   }
 
   @Post('submit-access-task')
   @ApiBody({ type: SubmitAccessTaskRequestDto })
   submitAccessTask(
     @Body() req: SubmitAccessTaskRequestDto
-  ): Promise<Result<{ taskId: string }>> {
-    return this.service.submitAccessTask(req);
+  ): Promise<Result<{ taskExecutionId: string }>> {
+    return this.service.submitAccessTask({
+      meta: req.meta,
+      task: {
+        name: '',
+        orgId: '',
+        projectId: undefined,
+        dataSourceId: req.dataAssetId,
+        config: req.conditions || {},
+        schedule: undefined,
+        priority: undefined,
+      },
+    });
   }
 
   @Post('profile-data')
   @ApiBody({ type: ProfileDataRequestDto })
   profileData(
     @Body() req: ProfileDataRequestDto
-  ): Promise<Result<Record<string, unknown>>> {
-    return this.service.profileData(req);
+  ): Promise<Result<ProfilingResult>> {
+    return this.service.profileData({
+      meta: req.meta,
+      dataSourceId: req.dataAssetId,
+      tableName: '',
+      sampleSize: undefined,
+    });
   }
 
   @Post('preview-data')
   @ApiBody({ type: PreviewDataRequestDto })
   previewData(
     @Body() req: PreviewDataRequestDto
-  ): Promise<Result<{ rows: Record<string, unknown>[] }>> {
-    return this.service.previewData(req);
+  ): Promise<Result<PreviewDataResponse>> {
+    return this.service.previewData({
+      meta: req.meta,
+      dataAssetId: req.dataAssetId,
+      limit: req.limit || 100,
+    });
   }
 
   @Post('execute-sql')
   @ApiBody({ type: ExecuteSqlRequestDto })
   executeSql(
     @Body() req: ExecuteSqlRequestDto
-  ): Promise<Result<{ rows: Record<string, unknown>[]; rowCount: number }>> {
-    return this.service.executeSql(req);
+  ): Promise<Result<ExecuteSqlResponse>> {
+    return this.service.executeSql({
+      meta: req.meta,
+      sql: req.sql,
+      projectId: '',
+      isTest: false,
+    });
   }
 
   @Post('get-task-execution')
@@ -113,6 +203,9 @@ export class DataIntegrationController {
   getTaskExecution(
     @Body() req: GetTaskExecutionRequestDto
   ): Promise<Result<TaskExecution>> {
-    return this.service.getTaskExecution(req);
+    return this.service.getTaskExecution({
+      meta: req.meta,
+      taskExecutionId: req.executionId,
+    });
   }
 }

@@ -43,4 +43,7 @@ Thumbs.db
 
 # Claude Code
 .claude/settings.local.json
-docs/superpowers/
+
+
+# Temporary
+.tmp/

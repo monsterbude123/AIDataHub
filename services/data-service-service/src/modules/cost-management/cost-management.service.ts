@@ -14,12 +14,19 @@ import { okResult } from '@ai-datahub/contract';
 import { createLogger } from '@ai-datahub/shared';
 import type { RequestMeta } from '@ai-datahub/contract';
 import { InMemoryQuotaRepository } from './interfaces/quota.repository';
+import { InMemoryOptimizationHintRepository } from './interfaces/optimization-hint.repository';
 
 const logger = createLogger({ module: 'cost-management' });
 
 @Injectable()
 export class CostManagementService implements CostManagementClient {
   private readonly quotaRepository = new InMemoryQuotaRepository();
+  private readonly hintRepository = new InMemoryOptimizationHintRepository();
+
+  constructor() {
+    // Seed with some mock optimization hints for demonstration
+    this.seedMockHints();
+  }
 
   /**
    * Get cost series grouped by dimension and resource type
@@ -30,9 +37,40 @@ export class CostManagementService implements CostManagementClient {
     const traceId = req.meta?.traceId;
     logger.debug('getCostSeries', { query: req.query, traceId });
 
-    // In-memory mock implementation - returns empty series for now
-    // In production this would query the cost database
+    // In-memory mock implementation - generates synthetic data for demonstration
     const result: CostSeries[] = [];
+    const { startAt, endAt } = req.query;
+
+    // Generate weekly points between start and end
+    const start = new Date(startAt);
+    const end = new Date(endAt);
+    const computePoints: CostSeries['points'] = [];
+    const storagePoints: CostSeries['points'] = [];
+
+    const current = new Date(start);
+    while (current <= end) {
+      const timeStr = current.toISOString().split('T')[0];
+      // Random mock data between reasonable ranges
+      computePoints.push({
+        time: timeStr,
+        amount: 10 + Math.random() * 20,
+      });
+      storagePoints.push({
+        time: timeStr,
+        amount: 50 + Math.random() * 100,
+      });
+      // Next week
+      current.setDate(current.getDate() + 7);
+    }
+
+    result.push({
+      resourceType: 'COMPUTE',
+      points: computePoints,
+    });
+    result.push({
+      resourceType: 'STORAGE',
+      points: storagePoints,
+    });
 
     return okResult(result, traceId);
   }
@@ -77,20 +115,42 @@ export class CostManagementService implements CostManagementClient {
   async listOptimizationHints(req: {
     meta?: RequestMeta;
     orgId: string;
-    projectId?: string;
+    projectId: string;
     page: PageRequest;
   }): Promise<Result<PageResult<OptimizationHint>>> {
     const traceId = req.meta?.traceId;
     logger.debug('listOptimizationHints', { ...req, traceId });
 
-    // Mock implementation - returns empty list for now
-    const result: PageResult<OptimizationHint> = {
-      page: req.page.page,
-      pageSize: req.page.pageSize,
-      total: 0,
-      items: [],
-    };
+    const result = await this.hintRepository.findAll({
+      orgId: req.orgId,
+      projectId: req.projectId,
+      page: req.page,
+    });
 
     return okResult(result, traceId);
+  }
+
+  private seedMockHints(): void {
+    this.hintRepository.addHint({
+      type: 'ZOMBIE_TABLE',
+      title: 'Unused partitioned table',
+      detail:
+        "Table sales.events hasn't been queried in 30 days and contains 120GB of data",
+      severity: 'HIGH',
+    });
+
+    this.hintRepository.addHint({
+      type: 'UNUSED_DATA',
+      title: 'Stale backup data',
+      detail: 'Multiple backup partitions from 6 months ago are still retained',
+      severity: 'MEDIUM',
+    });
+
+    this.hintRepository.addHint({
+      type: 'OVER_QUOTA',
+      title: 'Storage quota approaching limit',
+      detail: 'Current usage is 85% of the project storage quota',
+      severity: 'MEDIUM',
+    });
   }
 }

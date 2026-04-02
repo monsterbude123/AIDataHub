@@ -142,7 +142,7 @@ This project uses a structured AI agent workflow with GitNexus code intelligence
 
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **AIDataHub** (2385 symbols, 5042 relationships, 12 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **AIDataHub** (2804 symbols, 6137 relationships, 23 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
