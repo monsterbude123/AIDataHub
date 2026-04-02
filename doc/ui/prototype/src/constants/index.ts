@@ -90,11 +90,11 @@ export const ROUTES = {
   DESENSITIZATION: "/security/desensitization",
   WATERMARK: "/security/watermark",
 
-  // 任务调度
-  SCHEDULER: "/scheduler",
-  DAG: "/scheduler/dag",
-  TASK_LIST: "/scheduler/tasks",
-  LOG_CENTER: "/scheduler/logs",
+  // 任务调度（项目子模块）
+  SCHEDULER: "/project/[id]/scheduler",
+  DAG: "/project/[id]/scheduler/dag",
+  TASK_LIST: "/project/[id]/scheduler/tasks",
+  LOG_CENTER: "/project/[id]/scheduler/logs",
 
   // 数据分析
   ANALYTICS: "/analytics",

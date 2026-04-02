@@ -2,28 +2,21 @@
 
 /**
  * 任务运维列表页
- * 页面路径: /scheduler/tasks
+ * 页面路径: /project/[id]/scheduler/tasks
  */
 
 import { useState, useMemo, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Card, Table, Tag, Button, Space, Input, Select, DatePicker, Badge, Tooltip, Modal } from "antd";
 import { Search, RefreshCw, Download, Play, Eye, Edit, Power, AlertTriangle } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
-import { PageBreadcrumb } from "@/components/ui";
+import { PageBreadcrumb, type BreadcrumbItem } from "@/components/ui";
 import { ROUTES } from "@/constants";
 import { mockTaskOperations, filterTaskOperations, TASK_STATUS_LABELS } from "@/services/mock/task-operation";
 import { exportTaskReport } from "@/services/export";
 import { DAG_NODE_TYPE_LABELS } from "@/types/scheduler";
 import type { TaskOperation, TaskExecutionStatus } from "@/services/mock/task-operation";
-
-/**
- * 面包屑配置
- */
-const BREADCRUMB_ITEMS = [
-  { title: "任务调度", href: ROUTES.SCHEDULER },
-  { title: "任务运维" },
-];
 
 /**
  * 任务状态颜色
@@ -48,6 +41,9 @@ const PRIORITY_COLORS: Record<string, string> = {
  * 任务运维页面组件
  */
 export default function TaskOperationPage() {
+  const params = useParams();
+  const projectId = params.id as string;
+
   const [filters, setFilters] = useState<{
     keyword: string;
     status: TaskExecutionStatus | "";
@@ -61,6 +57,16 @@ export default function TaskOperationPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskOperation | null>(null);
+
+  /**
+   * 面包屑配置（动态项目路由）
+   */
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(() => [
+    { title: "数据项目", href: ROUTES.PROJECT },
+    { title: "项目详情", href: `/project/${projectId}` },
+    { title: "任务调度", href: `/project/${projectId}/scheduler/tasks` },
+    { title: "任务运维" },
+  ], [projectId]);
 
   /**
    * 过滤后的任务列表
@@ -233,7 +239,7 @@ export default function TaskOperationPage() {
 
   return (
     <PageLayout title="任务运维">
-      <PageBreadcrumb items={BREADCRUMB_ITEMS} />
+      <PageBreadcrumb items={breadcrumbItems} />
 
       {/* 统计卡片 */}
       <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>

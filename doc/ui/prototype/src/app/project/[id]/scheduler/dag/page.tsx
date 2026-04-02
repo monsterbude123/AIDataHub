@@ -2,26 +2,22 @@
 
 /**
  * DAG任务编排页
- * 页面路径: /scheduler/dag
+ * 页面路径: /project/[id]/scheduler/dag
  * 使用 ReactFlow 实现可编辑的 DAG 画布
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useParams } from "next/navigation";
 import { Card, Button, Space, message, Select, Input, Collapse, InputNumber, Modal } from "antd";
 import { Save, Play, CheckCircle, Maximize2, Database, FileSearch, Shield, Code, Terminal, GitBranch, RefreshCw } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
-import { PageBreadcrumb } from "@/components/ui";
+import { PageBreadcrumb, type BreadcrumbItem } from "@/components/ui";
 import DAGEditor from "@/components/features/DAGEditor";
 import { ROUTES } from "@/constants";
 import { mockDAGTasks, NODE_PANEL_CONFIG } from "@/services/mock/scheduler";
 import { validateDAG } from "@/lib/dagValidation";
 import { DAG_NODE_TYPE_LABELS, DAG_NODE_COLORS, type DAGNodeType, type DAGNode, type DAGEdge } from "@/types/scheduler";
-
-const BREADCRUMB_ITEMS = [
-  { title: "任务调度", href: ROUTES.SCHEDULER },
-  { title: "DAG编排" },
-];
 
 const NODE_ICONS: Record<DAGNodeType, React.ReactNode> = {
   data_input: <Database size={16} />,
@@ -36,12 +32,25 @@ const NODE_ICONS: Record<DAGNodeType, React.ReactNode> = {
 };
 
 export default function DAGPage() {
+  const params = useParams();
+  const projectId = params.id as string;
+
   const initialDAG = mockDAGTasks[0];
   const [nodes, setNodes] = useState<DAGNode[]>(initialDAG.nodes);
   const [edges, setEdges] = useState<DAGEdge[]>(initialDAG.edges);
   const [selectedNode, setSelectedNode] = useState<DAGNode | null>(null);
   const [validationResult, setValidationResult] = useState<{valid: boolean; errors: string[]; warnings: string[]} | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  /**
+   * 面包屑配置（动态项目路由）
+   */
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(() => [
+    { title: "数据项目", href: ROUTES.PROJECT },
+    { title: "项目详情", href: `/project/${projectId}` },
+    { title: "任务调度", href: `/project/${projectId}/scheduler/dag` },
+    { title: "DAG编排" },
+  ], [projectId]);
 
   const handleNodesChange = useCallback((newNodes: DAGNode[]) => { setNodes(newNodes); setValidationResult(null); }, []);
   const handleEdgesChange = useCallback((newEdges: DAGEdge[]) => { setEdges(newEdges); setValidationResult(null); }, []);
@@ -104,7 +113,7 @@ export default function DAGPage() {
 
   return (
     <PageLayout title="DAG任务编排">
-      {!isFullscreen && <PageBreadcrumb items={BREADCRUMB_ITEMS} />}
+      {!isFullscreen && <PageBreadcrumb items={breadcrumbItems} />}
       <Card style={{ marginBottom: 16, ...fullscreenStyle }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Space>

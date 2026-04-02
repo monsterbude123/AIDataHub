@@ -2,10 +2,11 @@ import { test, expect } from "@playwright/test";
 
 /**
  * DAG 编排页 E2E 测试
+ * 页面路径: /project/[id]/scheduler/dag
  */
 test.describe("DAG 编排", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/scheduler/dag");
+    await page.goto("/project/proj-001/scheduler/dag");
   });
 
   test("应该显示页面标题", async ({ page }) => {

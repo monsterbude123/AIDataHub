@@ -2,10 +2,11 @@ import { test, expect } from "@playwright/test";
 
 /**
  * 任务运维 E2E 测试
+ * 页面路径: /project/[id]/scheduler/tasks
  */
 test.describe("任务运维", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/scheduler/tasks");
+    await page.goto("/project/proj-001/scheduler/tasks");
   });
 
   test("应该显示页面标题", async ({ page }) => {

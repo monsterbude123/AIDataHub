@@ -36,7 +36,7 @@ export const mockNotifications: Notification[] = [
     level: "success",
     status: "unread",
     createdAt: "2024-01-15 08:00:00",
-    link: "/scheduler/logs",
+    link: "/project/proj-001/scheduler/logs",
   },
   {
     id: "4",

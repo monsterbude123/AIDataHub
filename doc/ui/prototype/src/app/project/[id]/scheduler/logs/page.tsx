@@ -2,11 +2,12 @@
 
 /**
  * 统一日志中心页
- * 页面路径: /scheduler/logs
+ * 页面路径: /project/[id]/scheduler/logs
  * 功能：日志查看、搜索过滤、下载导出
  */
 
 import { useState, useEffect, useMemo } from "react";
+import { useParams } from "next/navigation";
 import {
   Card,
   Select,
@@ -37,16 +38,11 @@ import {
 } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
-import { PageBreadcrumb } from "@/components/ui";
+import { PageBreadcrumb, type BreadcrumbItem } from "@/components/ui";
 import { ROUTES } from "@/constants";
 import { exportLogs } from "@/lib/utils";
 import type { LogRecord, LogLevel, LogDownloadFormat } from "@/types/scheduler";
 import { LOG_LEVEL_COLORS } from "@/types/scheduler";
-
-const BREADCRUMB_ITEMS = [
-  { title: "任务调度", href: ROUTES.SCHEDULER },
-  { title: "日志中心" },
-];
 
 /**
  * Mock 日志数据
@@ -143,6 +139,9 @@ const FORMAT_OPTIONS: { value: LogDownloadFormat; label: string; icon: React.Rea
 ];
 
 export default function LogCenterPage() {
+  const params = useParams();
+  const projectId = params.id as string;
+
   const [logs, setLogs] = useState<LogRecord[]>(mockLogs);
   const [selectedTask, setSelectedTask] = useState<string>("all");
   const [selectedExecutionId, setSelectedExecutionId] = useState<string>("all");
@@ -151,6 +150,16 @@ export default function LogCenterPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<LogDownloadFormat>("txt");
+
+  /**
+   * 面包屑配置（动态项目路由）
+   */
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(() => [
+    { title: "数据项目", href: ROUTES.PROJECT },
+    { title: "项目详情", href: `/project/${projectId}` },
+    { title: "任务调度", href: `/project/${projectId}/scheduler/logs` },
+    { title: "日志中心" },
+  ], [projectId]);
 
   /**
    * 过滤日志
@@ -268,7 +277,7 @@ export default function LogCenterPage() {
 
   return (
     <PageLayout title="日志中心">
-      <PageBreadcrumb items={BREADCRUMB_ITEMS} />
+      <PageBreadcrumb items={breadcrumbItems} />
 
       {/* 过滤栏 */}
       <Card style={{ marginBottom: 16 }}>
