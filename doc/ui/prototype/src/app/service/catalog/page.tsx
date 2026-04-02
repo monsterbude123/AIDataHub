@@ -6,8 +6,8 @@
  */
 
 import { useState, useMemo } from "react";
-import { Card, Tag, Button, Space, Input, Select, Modal, Form, Empty, Row, Col } from "antd";
-import { Search, Plus, Eye, Play, Download, Trash2, FileText } from "lucide-react";
+import { Card, Tag, Button, Space, Input, Select, Modal, Form, Empty, Row, Col, Popconfirm, message } from "antd";
+import { Search, Plus, Eye, Play, Download, Trash2, FileText, CheckCircle, XCircle } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
 import { PageBreadcrumb } from "@/components/ui";
@@ -63,7 +63,13 @@ export default function ServiceCatalogPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [testModalOpen, setTestModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<DataService | null>(null);
+  const [testResult, setTestResult] = useState<{
+    status: "success" | "failed" | "running";
+    message: string;
+    duration?: number;
+  } | null>(null);
 
   /**
    * 过滤后的服务列表
@@ -84,16 +90,42 @@ export default function ServiceCatalogPage() {
    * 测试服务
    */
   const handleTestService = (service: DataService) => {
-    // 实际项目中打开测试弹窗或跳转测试页面
-    console.log("Test service:", service.id);
+    setSelectedService(service);
+    setTestResult({ status: "running", message: "正在执行服务测试..." });
+    setTestModalOpen(true);
+
+    // 模拟测试过程
+    setTimeout(() => {
+      const success = Math.random() > 0.3; // 70% 成功率
+      setTestResult({
+        status: success ? "success" : "failed",
+        message: success
+          ? `服务调用成功，返回数据正常`
+          : `服务调用失败：连接超时`,
+        duration: Math.floor(Math.random() * 500) + 100,
+      });
+    }, 1500);
   };
 
   /**
    * 下载服务文档
    */
   const handleDownloadDoc = (service: DataService) => {
-    // 实际项目中调用API下载Word文档
-    console.log("Download doc:", service.id);
+    message.loading({ content: `正在准备下载 ${service.name} 文档...`, key: "download" });
+    setTimeout(() => {
+      message.success({
+        content: `文档 "${service.name}-API文档.docx" 已下载`,
+        key: "download",
+        duration: 3,
+      });
+    }, 1000);
+  };
+
+  /**
+   * 删除服务
+   */
+  const handleDeleteService = (service: DataService) => {
+    message.success(`服务 "${service.name}" 已删除`);
   };
 
   /**
@@ -183,17 +215,28 @@ export default function ServiceCatalogPage() {
           文档
         </Button>
         {service.status !== "published" && (
-          <Button
-            type="text"
-            size="small"
-            danger
-            icon={<Trash2 size={14} />}
-            onClick={(e) => {
-              e.stopPropagation();
+          <Popconfirm
+            title="确认删除"
+            description={`确定要删除服务 "${service.name}" 吗？删除后不可恢复。`}
+            onConfirm={(e) => {
+              e?.stopPropagation();
+              handleDeleteService(service);
             }}
+            onCancel={(e) => e?.stopPropagation()}
+            okText="删除"
+            cancelText="取消"
+            okType="danger"
           >
-            删除
-          </Button>
+            <Button
+              type="text"
+              size="small"
+              danger
+              icon={<Trash2 size={14} />}
+              onClick={(e) => e.stopPropagation()}
+            >
+              删除
+            </Button>
+          </Popconfirm>
         )}
       </Space>
     </Card>
@@ -341,6 +384,52 @@ export default function ServiceCatalogPage() {
             </Card>
           </div>
         )}
+      </Modal>
+
+      {/* 测试服务弹窗 */}
+      <Modal
+        title={`测试服务: ${selectedService?.name || ""}`}
+        open={testModalOpen}
+        onCancel={() => {
+          setTestModalOpen(false);
+          setTestResult(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => setTestModalOpen(false)}>
+            关闭
+          </Button>,
+        ]}
+        width={500}
+      >
+        <div style={{ textAlign: "center", padding: "24px 0" }}>
+          {testResult?.status === "running" && (
+            <div>
+              <Play size={48} style={{ color: "#3B82F6", marginBottom: 16 }} />
+              <div style={{ fontSize: 16, color: "#6B7280" }}>{testResult.message}</div>
+            </div>
+          )}
+          {testResult?.status === "success" && (
+            <div>
+              <CheckCircle size={48} style={{ color: "#10B981", marginBottom: 16 }} />
+              <div style={{ fontSize: 18, fontWeight: 600, color: "#10B981", marginBottom: 8 }}>
+                测试成功
+              </div>
+              <div style={{ fontSize: 14, color: "#6B7280" }}>{testResult.message}</div>
+              <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 8 }}>
+                响应时间: {testResult.duration}ms
+              </div>
+            </div>
+          )}
+          {testResult?.status === "failed" && (
+            <div>
+              <XCircle size={48} style={{ color: "#EF4444", marginBottom: 16 }} />
+              <div style={{ fontSize: 18, fontWeight: 600, color: "#EF4444", marginBottom: 8 }}>
+                测试失败
+              </div>
+              <div style={{ fontSize: 14, color: "#6B7280" }}>{testResult.message}</div>
+            </div>
+          )}
+        </div>
       </Modal>
     </PageLayout>
   );

@@ -6,7 +6,7 @@
  */
 
 import { useState, useMemo } from "react";
-import { Card, Button, Dropdown, message } from "antd";
+import { Card, Button, Dropdown, message, Modal, Form, Input, Select, Popconfirm } from "antd";
 import type { MenuProps } from "antd";
 import {
   Database,
@@ -70,6 +70,8 @@ export default function DataSourceListPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [form] = Form.useForm();
 
   /**
    * 转换分类树数据
@@ -192,7 +194,21 @@ export default function DataSourceListPage() {
    * 处理新增数据源
    */
   const handleCreate = () => {
-    message.info("新增数据源功能开发中...");
+    setCreateModalOpen(true);
+  };
+
+  /**
+   * 处理新增数据源提交
+   */
+  const handleCreateSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      message.success(`数据源 "${values.name}" 创建成功`);
+      setCreateModalOpen(false);
+      form.resetFields();
+    } catch {
+      message.error("请完善表单信息");
+    }
   };
 
   /**
@@ -230,7 +246,18 @@ export default function DataSourceListPage() {
         icon: <Trash2 size={14} />,
         label: "删除",
         danger: true,
-        onClick: () => message.warning("删除功能需要二次确认"),
+        onClick: () => {
+          Modal.confirm({
+            title: "确认删除",
+            content: `确定要删除数据源 "${ds.name}" 吗？删除后不可恢复。`,
+            okText: "删除",
+            okType: "danger",
+            cancelText: "取消",
+            onOk: () => {
+              message.success(`数据源 "${ds.name}" 已删除`);
+            },
+          });
+        },
       },
     ];
 
@@ -373,6 +400,52 @@ export default function DataSourceListPage() {
           />
         </div>
       </div>
+
+      {/* 新增数据源弹窗 */}
+      <Modal
+        title="新增数据源"
+        open={createModalOpen}
+        onCancel={() => {
+          setCreateModalOpen(false);
+          form.resetFields();
+        }}
+        onOk={handleCreateSubmit}
+        okText="创建"
+        cancelText="取消"
+        width={600}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="数据源名称"
+            rules={[{ required: true, message: "请输入数据源名称" }]}
+          >
+            <Input placeholder="请输入数据源名称" />
+          </Form.Item>
+          <Form.Item
+            name="type"
+            label="数据源类型"
+            rules={[{ required: true, message: "请选择数据源类型" }]}
+          >
+            <Select
+              placeholder="请选择数据源类型"
+              options={Object.entries(DATA_SOURCE_TYPE_LABELS).map(([key, label]) => ({
+                value: key,
+                label,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item name="host" label="主机地址">
+            <Input placeholder="例如: localhost 或 192.168.1.100" />
+          </Form.Item>
+          <Form.Item name="port" label="端口">
+            <Input placeholder="例如: 3306" />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <Input.TextArea rows={3} placeholder="请输入数据源描述" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </PageLayout>
   );
 }
