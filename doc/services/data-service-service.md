@@ -1,58 +1,139 @@
-# data-service-service（数据服务聚合服务）
+# DataService - 数据服务聚合服务
 
 > **MVP 架构说明**：此服务当前聚合了多个 bounded context，采用"先合并后拆分"策略。各模块可按需独立拆分为微服务。
 
-## 0. 包含模块（bounded context）
+## 服务信息
 
-| 模块                     | 职责                                             | API 前缀                    | 拆分条件             |
-| ------------------------ | ------------------------------------------------ | --------------------------- | -------------------- |
-| **cost-management**      | 成本管理、配额、优化建议                         | `/api/cost-management`      | 成本核算独立运营时   |
-| **data-governance-core** | 数据治理核心：标准定义、字典、数据模型、审计任务 | `/api/data-governance-core` | 治理规则复杂度增加时 |
-| **data-governance-ops**  | 数据治理运营：质量规则、标签、执行任务           | `/api/data-governance-ops`  | 运营流程自动化时     |
-| **data-integration**     | 数据源管理、连接测试、元数据采集、SQL 执行       | `/api/data-integration`     | 数据接入规模增长时   |
+| 项目     | 值                   |
+| -------- | -------------------- |
+| 服务名称 | data-service-service |
+| 端口     | 4003                 |
+| 网关前缀 | `/api/data/*`        |
+| 实现状态 | ✅ 已实现            |
 
-## 1. 职责边界
+## 包含模块
 
-### data-service（主服务）
+| 模块                     | 职责                                             | API 前缀                      | Contract 来源             |
+| ------------------------ | ------------------------------------------------ | ----------------------------- | ------------------------- |
+| **data-organization**    | 数据分层组织、资产映射                           | `/api/data/organization/*`    | `data-organization.ts`    |
+| **data-integration**     | 数据源管理、连接测试、元数据采集、SQL 执行       | `/api/data/integration/*`     | `data-integration.ts`     |
+| **cost-management**      | 成本管理、配额、优化建议                         | `/api/data/cost/*`            | `cost-management.ts`      |
+| **data-governance-core** | 数据治理核心：标准定义、字典、数据模型、审计任务 | `/api/data/governance-core/*` | `data-governance-core.ts` |
+| **data-governance-ops**  | 数据治理运营：质量规则、标签、执行任务           | `/api/data/governance-ops/*`  | `data-governance-ops.ts`  |
 
-- 对应 bounded context：`data-service`
-- 范围：技术层通用数据 API 服务（发布/下线、授权、限流、调用日志）
-- 不包含：跨机构共享交换业务流程（归 `data-sharing`）
+## 职责边界
+
+### data-organization 模块
+
+- 范围：数据分层组织管理（分层目录、资产映射）
+- 不包含：数据共享交换业务流程（归 `sharing-service`）
 
 ### data-integration 模块
 
 - 范围：数据源管理、连接测试、接入任务提交、初始元数据采集、探查、SQL 开发执行
 - 不包含：元数据全生命周期管理（归 `metadata-service`）
 
-## 2. 依赖
+### cost-management 模块
 
-- **契约**：`@ai-datahub/contract` 的 `DataServiceClient` 与相关 DTO
-- **共享基础设施**：`@ai-datahub/shared`（traceId、错误映射）
-- **下游**：
-  - 查询执行引擎适配（SQL 解释/执行、下载任务）：由实现层适配
-  - 限流实现：Redis（建议）或本地令牌桶（MVP 可先本地）
+- 范围：成本分析、配额管理、优化建议
+- 不包含：任务调度执行（归 `ops-service`）
 
-## 3. API（第一阶段 MVP）
+### data-governance-core 模块
 
-- `POST /data-services` → `createDataService`
-- `PATCH /data-services/:serviceId` → `updateDataService`
-- `POST /data-services/:serviceId/publish` → `publishDataService`
-- `GET /data-services/:serviceId` → `getDataService`
-- `GET /data-services/search` → `searchDataService`
-- `POST /data-services/:serviceId/authorizations` → `addAuthorization`
-- `POST /data-services/:serviceCode/authorizations/check` → `checkAuthorization`
-- `POST /data-services/:serviceCode:invoke` → `invokeDataService`
-- `GET /data-services/:serviceId/call-logs` → `getServiceCallLogs`
+- 范围：数据标准定义、数据字典、数据模型管理、审计任务定义
+- 不包含：质量规则执行（归 `data-governance-ops`）
 
-## 4. 数据存储（建议）
+### data-governance-ops 模块
 
-- 服务定义：PostgreSQL（服务表、字段、配置 JSON）
-- 授权与密钥：PostgreSQL + KMS/密钥托管（MVP 可先存引用/哈希）
-- 调用日志：ClickHouse（建议）或 PostgreSQL（MVP）
+- 范围：数据质量规则、数据标签、治理执行任务
+- 不包含：安全策略管理（归 `security-service`）
 
-## 5. 里程碑
+## 依赖服务
 
-- M1：服务模板跑通（health + traceId + Result）
-- M2：服务发布与检索（create/get/search/publish）
-- M3：授权与限流（add/check + rate-limit）
-- M4：调用日志与统计（logs）
+| 服务                | 依赖原因                 |
+| ------------------- | ------------------------ |
+| system-auth-service | 用户认证、权限校验       |
+| metadata-service    | 元数据查询、数据源元信息 |
+| ops-service         | 任务调度执行             |
+
+## API 端点清单
+
+### data-organization 端点
+
+| 方法 | 端点                              | 功能         |
+| ---- | --------------------------------- | ------------ |
+| GET  | `/api/data/organization/layers`   | 列出分层目录 |
+| POST | `/api/data/organization/layers`   | 创建分层目录 |
+| GET  | `/api/data/organization/mappings` | 列出资产映射 |
+| POST | `/api/data/organization/mappings` | 创建资产映射 |
+
+### data-integration 端点
+
+| 方法 | 端点                                          | 功能           |
+| ---- | --------------------------------------------- | -------------- |
+| POST | `/api/data/integration/data-sources`          | 创建数据源     |
+| GET  | `/api/data/integration/data-sources`          | 列出数据源     |
+| POST | `/api/data/integration/data-sources/:id/test` | 测试数据源连接 |
+| POST | `/api/data/integration/sync-jobs`             | 创建同步任务   |
+
+### cost-management 端点
+
+| 方法 | 端点                                | 功能         |
+| ---- | ----------------------------------- | ------------ |
+| POST | `/api/data/cost/series`             | 获取成本序列 |
+| GET  | `/api/data/cost/quotas`             | 获取配额列表 |
+| POST | `/api/data/cost/optimization-hints` | 获取优化建议 |
+
+### data-governance-core 端点
+
+| 方法 | 端点                                     | 功能         |
+| ---- | ---------------------------------------- | ------------ |
+| GET  | `/api/data/governance-core/standards`    | 列出数据标准 |
+| POST | `/api/data/governance-core/standards`    | 创建数据标准 |
+| GET  | `/api/data/governance-core/dictionaries` | 列出数据字典 |
+| POST | `/api/data/governance-core/audit-tasks`  | 创建审计任务 |
+
+### data-governance-ops 端点
+
+| 方法 | 端点                                       | 功能         |
+| ---- | ------------------------------------------ | ------------ |
+| GET  | `/api/data/governance-ops/quality-rules`   | 列出质量规则 |
+| POST | `/api/data/governance-ops/quality-rules`   | 创建质量规则 |
+| GET  | `/api/data/governance-ops/tags`            | 列出数据标签 |
+| POST | `/api/data/governance-ops/execution-tasks` | 创建执行任务 |
+
+## 目录结构
+
+```
+services/data-service-service/
+├── src/
+│   ├── main.ts
+│   ├── AppModule.ts
+│   ├── controllers/
+│   │   └── HealthController.ts
+│   └── modules/
+│       ├── data-organization/
+│       ├── data-integration/
+│       ├── cost-management/
+│       ├── data-governance-core/
+│       └── data-governance-ops/
+├── test/
+├── package.json
+└── tsconfig.json
+```
+
+## 数据存储建议
+
+| 数据类型   | 存储选型                | 说明                 |
+| ---------- | ----------------------- | -------------------- |
+| 数据源配置 | PostgreSQL              | 加密存储连接信息     |
+| 成本数据   | PostgreSQL + ClickHouse | 热数据PG，历史分析CH |
+| 治理规则   | PostgreSQL              | 结构化配置数据       |
+| 审计日志   | ClickHouse              | 高吞吐日志写入       |
+
+## 变更历史
+
+### 2026-04-02
+
+- 从服务中移除 `task-scheduler` 模块（已迁移到 `ops-service`）
+- 当前包含 5 个模块：data-organization, data-integration, cost-management, data-governance-core, data-governance-ops
