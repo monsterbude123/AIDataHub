@@ -67,7 +67,7 @@ const kpiData: KPICardData[] = [
 const quickLinks = [
   { title: "数据源管理", href: ROUTES.DATA_SOURCES, icon: <Database size={20} />, color: "#3B82F6" },
   { title: "数据质量", href: ROUTES.DATA_QUALITY, icon: <CheckCircle size={20} />, color: "#10B981" },
-  { title: "DAG编排", href: ROUTES.DAG, icon: <Clock size={20} />, color: "#8B5CF6" },
+  { title: "DAG编排", href: "/project/proj-001/scheduler/dag", icon: <Clock size={20} />, color: "#8B5CF6" },
   { title: "组织用户", href: ROUTES.ORG_USER, icon: <Users size={20} />, color: "#F59E0B" },
 ];
 
