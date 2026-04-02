@@ -11,5 +11,6 @@ export * from './clients/SystemIntegrationHttpClient';
 export * from './clients/SelfServiceAnalyticsHttpClient';
 export * from './clients/MetadataHttpClient';
 export * from './clients/SystemAuthHttpClient';
+export * from './clients/SystemAdminHttpClient';
 
 export * from './auth/AuthenticatedHttpClient';

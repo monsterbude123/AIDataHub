@@ -27,7 +27,13 @@
     "start:auth": "npm -w @ai-datahub/system-auth-service run start",
     "start:metadata": "npm -w @ai-datahub/metadata-service run start",
     "start:data": "npm -w @ai-datahub/data-service-service run start",
-    "start:gateway": "npm -w @ai-datahub/api-gateway run start"
+    "start:gateway": "npm -w @ai-datahub/api-gateway run start",
+    "release:sdk:prepare": "node ./scripts/sdk-publish-prepare.mjs --version=1.0.0-alpha.3 --tag=alpha",
+    "release:sdk:prepare:beta": "node ./scripts/sdk-publish-prepare.mjs --version=1.0.0-beta.1 --tag=beta",
+    "release:sdk:pack": "npm pack --dry-run -w packages/sdk",
+    "release:sdk:publish:alpha": "npm publish --tag alpha --access public -w packages/sdk",
+    "release:sdk:publish:beta": "npm publish --tag beta --access public -w packages/sdk",
+    "release:sdk:publish:latest": "npm publish --tag latest --access public -w packages/sdk"
   },
   "keywords": [
     "data-platform",
