@@ -56,8 +56,8 @@ interface ModalFormProps {
   onCancel: () => void;
   /** 表单提交回调 */
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
-  /** 表单字段配置 */
-  fields: FormFieldConfig[];
+  /** 表单字段配置（单步表单时使用） */
+  fields?: FormFieldConfig[];
   /** 初始表单值（编辑模式） */
   initialValues?: Record<string, unknown>;
   /** 弹窗宽度 */
@@ -194,7 +194,7 @@ export function ModalForm({
   /**
    * 当前步骤的字段配置
    */
-  const currentFields = steps ? steps[currentStep]?.fields ?? [] : fields;
+  const currentFields = steps ? steps[currentStep]?.fields ?? [] : fields ?? [];
 
   /**
    * 渲染表单内容

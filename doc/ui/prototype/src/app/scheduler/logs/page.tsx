@@ -225,7 +225,13 @@ export default function LogCenterPage() {
         ? `logs_${selectedTask.replace(/\s+/g, "_")}`
         : "logs";
 
-    exportLogs(filteredLogs, downloadFormat, filename);
+    // 格式化日志内容
+    const content = filteredLogs.map((log) =>
+      `[${log.time}] [${log.level}] [${log.task}] ${log.executionId ? `[${log.executionId}] ` : ""}${log.message}`
+    ).join("\n");
+
+    const fullFilename = `${filename}.${downloadFormat}`;
+    exportLogs(content, fullFilename);
     message.success(`已下载 ${filteredLogs.length} 条日志 (${downloadFormat.toUpperCase()} 格式)`);
     setDownloadModalOpen(false);
   };
@@ -438,7 +444,7 @@ export default function LogCenterPage() {
             onChange={(e) => setDownloadFormat(e.target.value)}
             style={{ width: "100%" }}
           >
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space orientation="vertical" style={{ width: "100%" }}>
               {FORMAT_OPTIONS.map((option) => (
                 <Radio key={option.value} value={option.value}>
                   <Space>

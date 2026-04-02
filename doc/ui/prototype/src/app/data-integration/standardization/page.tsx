@@ -237,7 +237,11 @@ export default function DataStandardizationPage() {
       dataIndex: "status",
       key: "status",
       width: 100,
-      render: (status: string) => <StatusBadge status={status as "completed" | "running" | "draft"} />,
+      render: (status: string) => (
+        <Tag color={status === "completed" ? "success" : status === "running" ? "processing" : "default"}>
+          {status === "completed" ? "已完成" : status === "running" ? "运行中" : "草稿"}
+        </Tag>
+      ),
     },
     { title: "最后执行", dataIndex: "lastExecute", key: "lastExecute", width: 180 },
     { title: "数据量", dataIndex: "dataCount", key: "dataCount", width: 100, render: (v: number) => v.toLocaleString() },

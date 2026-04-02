@@ -72,7 +72,7 @@ export default function DataMapPage() {
    * 处理筛选条件变化
    */
   const handleFilterChange = (
-    filterKey: keyof typeof filters,
+    filterKey: "layers" | "acquisitionMethods" | "locations" | "sensitivityLevels",
     value: string,
     checked: boolean
   ) => {
@@ -100,7 +100,7 @@ export default function DataMapPage() {
   /**
    * 移除单个筛选条件
    */
-  const removeFilter = (filterKey: keyof typeof filters, value: string) => {
+  const removeFilter = (filterKey: "layers" | "acquisitionMethods" | "locations" | "sensitivityLevels", value: string) => {
     setFilters((prev) => ({
       ...prev,
       [filterKey]: prev[filterKey].filter((v) => v !== value),
@@ -120,7 +120,7 @@ export default function DataMapPage() {
    */
   const renderFilterGroup = (
     title: string,
-    filterKey: keyof typeof filters,
+    filterKey: "layers" | "acquisitionMethods" | "locations" | "sensitivityLevels",
     options: Record<string, string>
   ) => (
     <div style={{ marginBottom: 16 }}>
@@ -248,7 +248,7 @@ export default function DataMapPage() {
         </div>
 
         {/* 操作按钮 */}
-        <Space direction="vertical" align="end">
+        <Space orientation="vertical" align="end">
           <Button
             type="text"
             icon={<Eye size={14} />}

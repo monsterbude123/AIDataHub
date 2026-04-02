@@ -5,11 +5,11 @@
  * 包含侧边导航、顶部导航和内容区域
  */
 
-import { useState } from "react";
-import { Layout, Menu, Dropdown, Avatar, Space, Badge } from "antd";
+import { useState, useEffect } from "react";
+import { Layout, Menu, Dropdown, Avatar, Space, Badge, List, Button, Empty, message } from "antd";
 import type { MenuProps } from "antd";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   Database,
@@ -25,11 +25,22 @@ import {
   ChevronDown,
   Layers,
   FolderTree,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  AlertTriangle,
 } from "lucide-react";
 
 import { ROUTES, APP_CONFIG } from "@/constants";
+import {
+  mockNotifications,
+  getUnreadCount,
+  markAllAsRead,
+} from "@/services/mock/notification";
+import type { Notification, NotificationLevel } from "@/types/notification";
+import { NOTIFICATION_LEVEL_COLORS } from "@/types/notification";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 /**
  * 导航菜单配置
@@ -57,10 +68,10 @@ const menuItems: MenuProps["items"] = [
     icon: <Share2 size={16} />,
     label: "数据服务",
     children: [
-      { key: "/data-service/catalog", label: "服务目录" },
-      { key: "/data-service/config", label: "服务配置" },
-      { key: "/data-service/authorization", label: "服务授权" },
-      { key: "/data-service/monitoring", label: "服务监控" },
+      { key: ROUTES.SERVICE_CATALOG, label: <Link href={ROUTES.SERVICE_CATALOG}>服务目录</Link> },
+      { key: ROUTES.SERVICE_CONFIG, label: <Link href={ROUTES.SERVICE_CONFIG}>服务配置</Link> },
+      { key: ROUTES.SERVICE_AUTHORIZATION, label: <Link href={ROUTES.SERVICE_AUTHORIZATION}>服务授权</Link> },
+      { key: ROUTES.SERVICE_MONITORING, label: <Link href={ROUTES.SERVICE_MONITORING}>服务监控</Link> },
     ],
   },
   {
@@ -68,8 +79,8 @@ const menuItems: MenuProps["items"] = [
     icon: <FileText size={16} />,
     label: "元数据管理",
     children: [
-      { key: "/metadata/list", label: "元数据列表" },
-      { key: "/metadata/detail", label: "元数据详情" },
+      { key: ROUTES.METADATA, label: <Link href={ROUTES.METADATA}>元数据列表</Link> },
+      { key: ROUTES.METADATA_DETAIL, label: <Link href={ROUTES.METADATA_DETAIL}>元数据详情</Link> },
     ],
   },
   {
@@ -77,8 +88,8 @@ const menuItems: MenuProps["items"] = [
     icon: <FolderTree size={16} />,
     label: "数据组织",
     children: [
-      { key: "/data-organization/catalog", label: "资源目录" },
-      { key: "/data-organization/mapping", label: "入库映射" },
+      { key: ROUTES.RESOURCE_CATALOG, label: <Link href={ROUTES.RESOURCE_CATALOG}>资源目录</Link> },
+      { key: ROUTES.DATA_MAPPING, label: <Link href={ROUTES.DATA_MAPPING}>入库映射</Link> },
     ],
   },
   {
@@ -99,9 +110,9 @@ const menuItems: MenuProps["items"] = [
     icon: <Layers size={16} />,
     label: "数据安全",
     children: [
-      { key: "/security/desensitization", label: "数据脱敏" },
-      { key: "/security/classification", label: "分级分类" },
-      { key: "/security/watermark", label: "水印管理" },
+      { key: ROUTES.DESENSITIZATION, label: <Link href={ROUTES.DESENSITIZATION}>数据脱敏</Link> },
+      { key: ROUTES.CLASSIFICATION, label: <Link href={ROUTES.CLASSIFICATION}>分级分类</Link> },
+      { key: ROUTES.WATERMARK, label: <Link href={ROUTES.WATERMARK}>水印管理</Link> },
     ],
   },
   {
@@ -119,8 +130,19 @@ const menuItems: MenuProps["items"] = [
     icon: <BarChart3 size={16} />,
     label: "数据分析",
     children: [
-      { key: "/analytics/query", label: "即席查询" },
-      { key: "/analytics/visualization", label: "可视化分析" },
+      { key: ROUTES.AD_HOC_QUERY, label: <Link href={ROUTES.AD_HOC_QUERY}>即席查询</Link> },
+      { key: ROUTES.AD_HOC_VISUALIZATION, label: <Link href={ROUTES.AD_HOC_VISUALIZATION}>可视化分析</Link> },
+    ],
+  },
+  {
+    key: "sharing",
+    icon: <Share2 size={16} />,
+    label: "数据共享",
+    children: [
+      { key: ROUTES.SHARING_HOME, label: <Link href={ROUTES.SHARING_HOME}>共享首页</Link> },
+      { key: ROUTES.SHARING_TASKS, label: <Link href={ROUTES.SHARING_TASKS}>事项任务</Link> },
+      { key: ROUTES.SHARING_RESOURCES, label: <Link href={ROUTES.SHARING_RESOURCES}>资源管理</Link> },
+      { key: ROUTES.SHARING_APPLICATIONS, label: <Link href={ROUTES.SHARING_APPLICATIONS}>服务申请</Link> },
     ],
   },
   {
@@ -132,6 +154,7 @@ const menuItems: MenuProps["items"] = [
       { key: ROUTES.ROLE_PERMISSION, label: <Link href={ROUTES.ROLE_PERMISSION}>角色权限</Link> },
       { key: ROUTES.APPROVAL_CONFIG, label: <Link href={ROUTES.APPROVAL_CONFIG}>审批配置</Link> },
       { key: ROUTES.APPROVAL_TODO, label: <Link href={ROUTES.APPROVAL_TODO}>待办事项</Link> },
+      { key: ROUTES.SYSTEM_SETTINGS, label: <Link href={ROUTES.SYSTEM_SETTINGS}>系统设置</Link> },
     ],
   },
 ];
@@ -160,6 +183,41 @@ const userMenuItems: MenuProps["items"] = [
 ];
 
 /**
+ * 获取通知级别图标
+ */
+const getLevelIcon = (level: NotificationLevel) => {
+  const color = NOTIFICATION_LEVEL_COLORS[level];
+  switch (level) {
+    case "success":
+      return <CheckCircle size={16} style={{ color }} />;
+    case "warning":
+      return <AlertTriangle size={16} style={{ color }} />;
+    case "error":
+      return <AlertCircle size={16} style={{ color }} />;
+    default:
+      return <Info size={16} style={{ color }} />;
+  }
+};
+
+/**
+ * 格式化时间为相对时间
+ */
+const formatRelativeTime = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "刚刚";
+  if (diffMins < 60) return `${diffMins}分钟前`;
+  if (diffHours < 24) return `${diffHours}小时前`;
+  if (diffDays < 7) return `${diffDays}天前`;
+  return dateStr;
+};
+
+/**
  * 页面布局组件属性
  */
 interface PageLayoutProps {
@@ -172,7 +230,50 @@ interface PageLayoutProps {
  */
 export function PageLayout({ children, title }: PageLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 初始化通知数据
+  useEffect(() => {
+    setNotifications([...mockNotifications]);
+    setUnreadCount(getUnreadCount());
+  }, []);
+
+  /**
+   * 标记全部已读
+   */
+  const handleMarkAllRead = () => {
+    markAllAsRead();
+    setNotifications([...mockNotifications]);
+    setUnreadCount(0);
+    message.success("已将全部通知标记为已读");
+  };
+
+  /**
+   * 跳转到通知中心
+   */
+  const handleViewAll = () => {
+    router.push(ROUTES.NOTIFICATIONS);
+  };
+
+  /**
+   * 用户菜单点击处理
+   */
+  const handleUserMenuClick: MenuProps["onClick"] = (e) => {
+    switch (e.key) {
+      case "profile":
+        router.push(ROUTES.PROFILE);
+        break;
+      case "settings":
+        router.push(ROUTES.SYSTEM_SETTINGS);
+        break;
+      case "logout":
+        router.push(ROUTES.LOGIN);
+        break;
+    }
+  };
 
   /**
    * 获取当前选中的菜单项
@@ -193,8 +294,8 @@ export function PageLayout({ children, title }: PageLayoutProps) {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      {/* 侧边导航 */}
+    <Layout style={{ height: "100vh", overflow: "hidden" }}>
+      {/* 侧边导航 - 固定高度，内部可滚动 */}
       <Sider
         collapsible
         collapsed={collapsed}
@@ -202,6 +303,9 @@ export function PageLayout({ children, title }: PageLayoutProps) {
         width={220}
         style={{
           background: "#1E293B",
+          height: "100vh",
+          overflowY: "auto",
+          overflowX: "hidden",
         }}
       >
         {/* Logo */}
@@ -245,8 +349,8 @@ export function PageLayout({ children, title }: PageLayoutProps) {
         />
       </Sider>
 
-      <Layout>
-        {/* 顶部导航 */}
+      <Layout style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+        {/* 顶部导航 - 固定不滚动 */}
         <Header
           style={{
             padding: "0 24px",
@@ -256,6 +360,7 @@ export function PageLayout({ children, title }: PageLayoutProps) {
             justifyContent: "space-between",
             borderBottom: "1px solid #E2E8F0",
             height: 64,
+            flexShrink: 0,
           }}
         >
           <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "#1E293B" }}>
@@ -263,22 +368,130 @@ export function PageLayout({ children, title }: PageLayoutProps) {
           </h1>
 
           <Space size="middle">
-            {/* 通知 */}
-            <Badge count={3} size="small">
-              <button
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  padding: 8,
-                }}
-              >
-                <Bell size={18} style={{ color: "#6B7280" }} />
-              </button>
-            </Badge>
+            {/* 通知下拉 */}
+            <Dropdown
+              trigger={['click']}
+              dropdownRender={() => (
+                <div
+                  style={{
+                    width: 360,
+                    background: '#fff',
+                    borderRadius: 8,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    border: '1px solid #E2E8F0',
+                  }}
+                >
+                  {/* 标题栏 */}
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid #E2E8F0',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, color: '#1E293B' }}>
+                      通知消息
+                      {unreadCount > 0 && (
+                        <Badge count={unreadCount} size="small" style={{ marginLeft: 8 }} />
+                      )}
+                    </span>
+                    {unreadCount > 0 && (
+                      <Button
+                        type="link"
+                        size="small"
+                        style={{ color: '#2563EB', padding: 0 }}
+                        onClick={handleMarkAllRead}
+                      >
+                        全部已读
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* 通知列表 - 只显示未读的前5条 */}
+                  {notifications.filter(n => n.status === 'unread').length > 0 ? (
+                    <List
+                      dataSource={notifications.filter(n => n.status === 'unread').slice(0, 5)}
+                      renderItem={(item) => (
+                        <List.Item
+                          style={{
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s',
+                            background: '#F0F9FF',
+                            borderLeft: `3px solid ${NOTIFICATION_LEVEL_COLORS[item.level]}`,
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#E0F2FE';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#F0F9FF';
+                          }}
+                          onClick={() => item.link && router.push(item.link)}
+                        >
+                          <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                            {getLevelIcon(item.level)}
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 500, color: '#1E293B', marginBottom: 4 }}>
+                                {item.title}
+                              </div>
+                              <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 4 }}>
+                                {item.content}
+                              </div>
+                              <div style={{ fontSize: 12, color: '#9CA3AF' }}>
+                                {formatRelativeTime(item.createdAt)}
+                              </div>
+                            </div>
+                          </div>
+                        </List.Item>
+                      )}
+                      style={{ maxHeight: 300, overflowY: 'auto' }}
+                    />
+                  ) : (
+                    <div style={{ padding: 32, textAlign: 'center' }}>
+                      <Empty description="暂无未读通知" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                    </div>
+                  )}
+
+                  {/* 底部操作栏 */}
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      borderTop: '1px solid #E2E8F0',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Button
+                      type="link"
+                      style={{ color: '#2563EB' }}
+                      onClick={handleViewAll}
+                    >
+                      查看全部通知
+                    </Button>
+                  </div>
+                </div>
+              )}
+              placement="bottomRight"
+            >
+              <Badge count={unreadCount} size="small">
+                <button
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    padding: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Bell size={18} style={{ color: "#6B7280" }} />
+                </button>
+              </Badge>
+            </Dropdown>
 
             {/* 用户菜单 */}
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+            <Dropdown menu={{ items: userMenuItems, onClick: handleUserMenuClick }} placement="bottomRight">
               <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
                 <Avatar size={32} style={{ backgroundColor: "#2563EB" }}>
                   U
@@ -290,13 +503,14 @@ export function PageLayout({ children, title }: PageLayoutProps) {
           </Space>
         </Header>
 
-        {/* 内容区域 */}
+        {/* 内容区域 - 唯一可滚动区域 */}
         <Content
           style={{
-            margin: 0,
+            flex: 1,
             padding: 24,
             background: "#F8FAFC",
-            overflow: "auto",
+            overflowY: "auto",
+            overflowX: "hidden",
           }}
         >
           <div
@@ -304,26 +518,12 @@ export function PageLayout({ children, title }: PageLayoutProps) {
               padding: 24,
               background: "#fff",
               borderRadius: 8,
-              minHeight: "calc(100vh - 160px)",
+              minHeight: "calc(100% - 48px)",
             }}
           >
             {children}
           </div>
         </Content>
-
-        {/* 页脚 */}
-        <Footer
-          style={{
-            textAlign: "center",
-            padding: "12px 24px",
-            background: "#F8FAFC",
-            borderTop: "1px solid #E2E8F0",
-          }}
-        >
-          <span style={{ color: "#94A3B8", fontSize: 12 }}>
-            AIDataHub ©{new Date().getFullYear()} 企业级数据中台
-          </span>
-        </Footer>
       </Layout>
     </Layout>
   );

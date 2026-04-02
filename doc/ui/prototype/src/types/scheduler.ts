@@ -118,3 +118,56 @@ export interface DAGEdge {
   target: string;
   condition?: string;
 }
+
+/**
+ * 日志级别
+ */
+export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
+
+/**
+ * 日志级别颜色配置
+ */
+export const LOG_LEVEL_COLORS: Record<LogLevel, string> = {
+  DEBUG: "#6B7280",
+  INFO: "#2563EB",
+  WARN: "#F59E0B",
+  ERROR: "#EF4444",
+};
+
+/**
+ * 日志记录
+ */
+export interface LogRecord {
+  id: number | string;
+  time: string;
+  level: LogLevel;
+  task: string;
+  executionId?: string;
+  message: string;
+}
+
+/**
+ * 日志过滤参数
+ */
+export interface LogFilterParams {
+  task?: string;
+  executionId?: string;
+  startTime?: string;
+  endTime?: string;
+  levels?: LogLevel[];
+  keyword?: string;
+}
+
+/**
+ * 日志下载格式
+ */
+export type LogDownloadFormat = "txt" | "json" | "csv";
+
+/**
+ * 日志下载选项
+ */
+export interface LogDownloadOptions {
+  format: LogDownloadFormat;
+  filterParams: LogFilterParams;
+  includeMetadata?: boolean;
+}

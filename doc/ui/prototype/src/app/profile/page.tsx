@@ -245,7 +245,7 @@ export default function ProfilePage() {
    * 渲染安全设置 Tab
    */
   const renderSecuritySettings = () => (
-    <Space direction="vertical" style={{ width: "100%" }} size="large">
+    <Space orientation="vertical" style={{ width: "100%" }} size="large">
       {/* 修改密码 */}
       <Card title="修改密码" extra={<Button onClick={() => setPasswordModalOpen(true)}>修改密码</Button>}>
         <Descriptions column={1}>
@@ -277,7 +277,7 @@ export default function ProfilePage() {
 
         <div style={{ marginTop: 16 }}>
           <h4 style={{ marginBottom: 8 }}>OAuth 绑定</h4>
-          <Space direction="vertical" style={{ width: "100%" }}>
+          <Space orientation="vertical" style={{ width: "100%" }}>
             {mockOAuthBindings.map((binding: OAuthBinding) => (
               <div key={binding.provider} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "#F9FAFB", borderRadius: 4 }}>
                 <span>{binding.providerName}</span>
@@ -313,7 +313,7 @@ export default function ProfilePage() {
    * 渲染偏好设置 Tab
    */
   const renderPreferences = () => (
-    <Space direction="vertical" style={{ width: "100%" }} size="large">
+    <Space orientation="vertical" style={{ width: "100%" }} size="large">
       {/* 界面设置 */}
       <Card title={<Space><Palette size={16} /> 界面设置</Space>}>
         <div style={{ display: "grid", gap: 16 }}>

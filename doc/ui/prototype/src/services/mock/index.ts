@@ -7,3 +7,4 @@ export * from "./governance";
 export * from "./system";
 export * from "./scheduler";
 export * from "./data-asset";
+export * from "./notification";

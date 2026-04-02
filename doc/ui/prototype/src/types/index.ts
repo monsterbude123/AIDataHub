@@ -43,3 +43,6 @@ export interface UserInfo {
   avatar?: string;
   role: string;
 }
+
+// 导出各模块类型
+export * from "./notification";

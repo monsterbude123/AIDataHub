@@ -37,11 +37,11 @@ export const APP_CONFIG = {
  * 路由路径常量
  */
 export const ROUTES = {
+  // 公共页面
   HOME: "/",
   LOGIN: "/login",
-  DASHBOARD: "/dashboard",
-  DATA: "/data",
-  METADATA: "/metadata",
+  PROFILE: "/profile",
+
   // 数据集成
   DATA_INTEGRATION: "/data-integration",
   DATA_SOURCES: "/data-integration/sources",
@@ -49,6 +49,23 @@ export const ROUTES = {
   DATA_PROFILING: "/data-integration/profiling",
   DATA_STANDARDIZATION: "/data-integration/standardization",
   SQL_DEV: "/data-integration/sql-dev",
+
+  // 数据服务
+  DATA_SERVICE: "/data-service",
+  SERVICE_CATALOG: "/data-service/catalog",
+  SERVICE_CONFIG: "/data-service/config",
+  SERVICE_AUTHORIZATION: "/data-service/authorization",
+  SERVICE_MONITORING: "/data-service/monitoring",
+
+  // 元数据管理
+  METADATA: "/metadata/list",
+  METADATA_DETAIL: "/metadata/detail",
+
+  // 数据组织
+  DATA_ORGANIZATION: "/data-organization",
+  RESOURCE_CATALOG: "/data-organization/catalog",
+  DATA_MAPPING: "/data-organization/mapping",
+
   // 数据治理
   GOVERNANCE: "/governance",
   DATA_QUALITY: "/governance/data-quality",
@@ -57,15 +74,43 @@ export const ROUTES = {
   TAG_MANAGEMENT: "/governance/tags",
   DATA_STANDARD: "/governance/standard",
   DATA_MODEL: "/governance/model",
+
+  // 数据安全
+  SECURITY: "/security",
+  CLASSIFICATION: "/security/classification",
+  DESENSITIZATION: "/security/desensitization",
+  WATERMARK: "/security/watermark",
+
+  // 任务调度
+  SCHEDULER: "/scheduler",
+  DAG: "/scheduler/dag",
+  TASK_LIST: "/scheduler/tasks",
+  LOG_CENTER: "/scheduler/logs",
+
+  // 数据分析
+  ANALYTICS: "/analytics",
+  AD_HOC_QUERY: "/analytics/query",
+  AD_HOC_VISUALIZATION: "/analytics/visualization",
+
+  // 数据共享
+  SHARING: "/sharing",
+  SHARING_HOME: "/sharing/home",
+  SHARING_TASKS: "/sharing/tasks",
+  SHARING_RESOURCES: "/sharing/resources",
+  SHARING_APPLICATIONS: "/sharing/applications",
+
   // 系统管理
   SYSTEM: "/system",
   ORG_USER: "/system/org-user",
   ROLE_PERMISSION: "/system/role-permission",
   APPROVAL_CONFIG: "/system/approval-config",
   APPROVAL_TODO: "/system/approval-todo",
-  // 任务调度
-  SCHEDULER: "/scheduler",
-  DAG: "/scheduler/dag",
-  TASK_LIST: "/scheduler/tasks",
-  LOG_CENTER: "/scheduler/logs",
+  SYSTEM_SETTINGS: "/system/settings",
+
+  // 任务队列
+  TASK_QUEUE: "/task-queue",
+  QUEUE_MONITOR: "/task-queue/monitor",
+
+  // 通知中心
+  NOTIFICATIONS: "/notifications",
 } as const;

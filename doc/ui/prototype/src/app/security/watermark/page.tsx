@@ -79,7 +79,11 @@ export default function WatermarkPage() {
       dataIndex: "status",
       key: "status",
       width: 80,
-      render: (status: string) => <StatusBadge status={status as "success" | "running" | "failed"} />,
+      render: (status: string) => (
+        <Tag color={status === "success" ? "success" : status === "running" ? "processing" : "error"}>
+          {status === "success" ? "成功" : status === "running" ? "运行中" : "失败"}
+        </Tag>
+      ),
     },
     {
       title: "操作",

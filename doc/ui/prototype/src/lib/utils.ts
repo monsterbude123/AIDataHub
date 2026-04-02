@@ -41,3 +41,30 @@ export function sleep(ms: number): Promise<void> {
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
+
+/**
+ * 下载文件
+ * @param content - 文件内容
+ * @param filename - 文件名
+ * @param mimeType - MIME 类型
+ */
+export function downloadFile(content: string | Blob, filename: string, mimeType?: string): void {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType || "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * 导出日志
+ * @param content - 日志内容
+ * @param filename - 文件名
+ */
+export function exportLogs(content: string, filename: string): void {
+  downloadFile(content, filename, "text/plain;charset=utf-8");
+}

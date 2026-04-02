@@ -239,7 +239,7 @@ export default function SystemSettingsPage() {
 
         <Alert
           type="info"
-          message="邮件模板配置"
+          title="邮件模板配置"
           description="系统支持密码重置、账号激活、审批通知、告警通知等邮件模板，可在模板管理中自定义内容。"
           showIcon
           style={{ marginBottom: 16 }}
@@ -379,7 +379,7 @@ export default function SystemSettingsPage() {
           </Button>
         </div>
 
-        <Space direction="vertical" style={{ width: "100%" }}>
+        <Space orientation="vertical" style={{ width: "100%" }}>
           {ipWhitelist.map((ip, index) => (
             <div key={index} style={{ display: "flex", gap: 8 }}>
               <Input
@@ -468,7 +468,7 @@ export default function SystemSettingsPage() {
 
         <Alert
           type="info"
-          message="日志导出配置"
+          title="日志导出配置"
           description="支持将日志导出到 Elasticsearch、Splunk 等外部系统，可在日志管理中配置导出规则。"
           showIcon
           style={{ marginBottom: 16 }}
@@ -567,7 +567,7 @@ export default function SystemSettingsPage() {
       >
         <Alert
           type="info"
-          message="将使用当前配置尝试连接存储服务"
+          title="将使用当前配置尝试连接存储服务"
           description="请确保配置信息正确，测试将验证连接权限和访问能力。"
           showIcon
         />

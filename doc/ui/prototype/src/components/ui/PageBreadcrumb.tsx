@@ -25,6 +25,8 @@ export interface BreadcrumbItem {
 interface PageBreadcrumbProps {
   /** 面包屑项列表 */
   items: BreadcrumbItem[];
+  /** 自定义类名 */
+  className?: string;
   /** 额外的 Antd Breadcrumb 属性 */
   breadcrumbProps?: Omit<BreadcrumbProps, "items">;
 }
@@ -39,9 +41,10 @@ function SeparatorIcon() {
 /**
  * 页面面包屑组件
  * @param items - 面包屑项列表
+ * @param className - 自定义类名
  * @param breadcrumbProps - 额外的 Antd Breadcrumb 属性
  */
-export function PageBreadcrumb({ items, breadcrumbProps }: PageBreadcrumbProps) {
+export function PageBreadcrumb({ items, className, breadcrumbProps }: PageBreadcrumbProps) {
   const breadcrumbItems = items.map((item) => ({
     title: item.href ? <a href={item.href}>{item.title}</a> : item.title,
   }));
@@ -51,6 +54,7 @@ export function PageBreadcrumb({ items, breadcrumbProps }: PageBreadcrumbProps) 
       separator={<SeparatorIcon />}
       items={breadcrumbItems}
       style={{ marginBottom: 16 }}
+      className={className}
       {...breadcrumbProps}
     />
   );
