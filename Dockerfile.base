@@ -1,0 +1,76 @@
+# =============================================================================
+# AI DataHub Base Image
+# =============================================================================
+# Build once and use for all services. Rebuild when:
+# - Node.js version changes
+# - Package dependencies change significantly
+# - Shared packages (contract, shared, database) are updated
+#
+# Build:
+#   docker build -f Dockerfile.base -t ai-datahub-base:latest .
+#
+# Use in service Dockerfile:
+#   FROM ai-datahub-base:latest AS runner
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Builder - Install dependencies and build all packages
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ git
+
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package.json package-lock.json* ./
+COPY packages/ ./packages/
+COPY services/ ./services/
+
+# Install all dependencies
+RUN npm ci --ignore-scripts
+
+# Build shared packages in correct dependency order
+RUN npm -w @ai-datahub/contract run build
+RUN npm -w @ai-datahub/shared run build
+RUN npm -w @ai-datahub/database run build
+
+# Prune to production dependencies only
+RUN npm prune --production
+
+# -----------------------------------------------------------------------------
+# Stage 2: Runner - Minimal production image
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS runner
+
+# Security: update packages and install dumb-init
+RUN apk update && apk upgrade && \
+    apk add --no-cache dumb-init wget && \
+    rm -rf /var/cache/apk/*
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001 -G nodejs
+
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production \
+    NODE_OPTIONS="--enable-source-maps" \
+    NPM_CONFIG_UPDATE_NOTIFIER=false
+
+# Copy production dependencies and built packages
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nestjs:nodejs /app/packages ./packages
+COPY --from=builder --chown=nestjs:nodejs /app/services ./services
+COPY --from=builder --chown=nestjs:nodejs /app/package.json ./
+
+# Switch to non-root user
+USER nestjs
+
+# Default entrypoint with proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+
+# Default command (override in service-specific Dockerfile)
+CMD ["node", "dist/main.js"]

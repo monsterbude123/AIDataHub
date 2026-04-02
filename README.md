@@ -93,32 +93,92 @@ AI DataHub 是一个面向企业的数据中台开发 SDK，采用 DDD 领域驱
 
 # 快速开始
 
+## 方式一：Docker 一键启动（推荐）
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/your-org/ai-datahub.git
+cd ai-datahub
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，设置 JWT_SECRET、POSTGRES_PASSWORD 等
+
+# 3. 一键启动（Linux/macOS）
+./start.sh build
+
+# 或 Windows
+start.bat build
+
+# 4. 访问服务
+# API Gateway:  http://localhost:3000
+# Swagger Docs: http://localhost:3000/api/docs
+# MinIO Console: http://localhost:9001
 ```
-  # 安装依赖
-  npm install
 
-  # 初始化数据库（首次运行）
-  cd packages/database && npx prisma db push && cd ..
+### Docker 常用命令
 
-  # 构建所有包
-  npm run build
+```bash
+# 查看服务状态
+./start.sh status
 
-  # 类型检查
-  npm run build:check
+# 查看日志
+./start.sh logs
 
-  # 运行测试
-  npm run test
+# 停止服务
+./start.sh stop
 
-  安装使用
+# 重启服务
+./start.sh restart
 
-  # 安装核心契约包
-  npm install @ai-datahub/contract
-
-  # 安装基础设施工具包
-  npm install @ai-datahub/shared
-
-  # 安装共享数据库包
-  npm install @ai-datahub/database
+# 清理所有数据
+./start.sh clean
 ```
+
+## 方式二：本地开发
+
+```bash
+# 安装依赖
+npm install
+
+# 初始化数据库（首次运行）
+cd packages/database && npx prisma db push && cd ..
+
+# 构建所有包
+npm run build
+
+# 类型检查
+npm run build:check
+
+# 运行测试
+npm run test
+
+# 启动开发服务
+npm run dev:gateway  # API Gateway (端口 3000)
+npm run dev:auth     # 认证服务 (端口 4001)
+npm run dev:metadata # 元数据服务 (端口 4002)
+npm run dev:data     # 数据服务 (端口 4003)
+```
+
+# 安装使用
+
+```bash
+# 安装核心契约包
+npm install @ai-datahub/contract
+
+# 安装基础设施工具包
+npm install @ai-datahub/shared
+
+# 安装共享数据库包
+npm install @ai-datahub/database
+```
+
+# 文档
+
+- [架构全景](doc/ARCHITECTURE.md)
+- [服务规划](doc/services/README.md)
+- [SDK 设计手册](doc/design/sdk/README.md)
+- [Docker 部署指南](doc/plans/2026-04-02-docker-deployment-design.md)
+- [领域服务计划](doc/plans/2026-04-02-domain-services-plan.md)
 
 许可证 - MIT

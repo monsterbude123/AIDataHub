@@ -1,0 +1,86 @@
+# =============================================================================
+# AI DataHub Docker Ignore
+# =============================================================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+*.tsbuildinfo
+.npm/
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.env.development
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker (prevent recursive copy)
+Dockerfile*
+docker-compose*.yml
+.docker/
+.dockerignore
+
+# Testing
+coverage/
+.nyc_output/
+*.test.ts
+*.spec.ts
+__tests__/
+test/
+tests/
+vitest.config.*
+jest.config.*
+
+# Documentation
+docs/
+doc/
+*.md
+!README.md
+LICENSE
+CHANGELOG*
+CONTRIBUTING*
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+.circleci/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+*.swp
+.cache/
+.temp/
+.tmp/
+
+# Build artifacts
+*.tgz
+*.tar.gz
+
+# Local data
+data/
+uploads/

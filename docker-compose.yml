@@ -1,13 +1,17 @@
-# Development Infrastructure for AIDataHub
-#
+# =============================================================================
+# AI DataHub Docker Compose - Development Infrastructure
+# =============================================================================
 # This file starts all required infrastructure services (PostgreSQL, Redis, etc.)
-# Application services run locally on your machine for development,
-# you don't need to containerize them during development.
+# Application services run locally on your machine for development.
 #
 # Usage:
-#   docker-compose up -d      # Start all infrastructure
-#   docker-compose down      # Stop all infrastructure
+#   docker-compose up -d           # Start all infrastructure
+#   docker-compose down            # Stop all infrastructure
 #   docker-compose logs -f postgres  # View PostgreSQL logs
+#
+# For full production deployment, see:
+#   doc/plans/2026-04-02-docker-deployment-design.md
+# =============================================================================
 
 version: '3.8'
 
