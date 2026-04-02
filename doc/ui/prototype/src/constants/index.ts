@@ -42,6 +42,9 @@ export const ROUTES = {
   LOGIN: "/login",
   PROFILE: "/profile",
 
+  // 数据项目
+  PROJECT: "/project",
+
   // 数据集成
   DATA_INTEGRATION: "/integration",
   DATA_SOURCES: "/integration/sources",
@@ -106,6 +109,13 @@ export const ROUTES = {
   APPROVAL_CONFIG: "/system/approval-config",
   APPROVAL_TODO: "/system/approval-todo",
   SYSTEM_SETTINGS: "/system/settings",
+
+  // 基础设施
+  TENANT_MANAGEMENT: "/infrastructure/tenant",
+  QUEUE_MANAGEMENT: "/infrastructure/queue",
+  WORKER_MANAGEMENT: "/infrastructure/worker",
+  ENGINE_CONFIG: "/infrastructure/engine",
+  CONFIG_TEMPLATE: "/infrastructure/template",
 
   // 任务队列
   TASK_QUEUE: "/task-queue",

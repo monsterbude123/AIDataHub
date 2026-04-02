@@ -47,6 +47,8 @@ import {
   Trash2,
   Check,
   ExternalLink,
+  FolderKanban,
+  Server,
 } from "lucide-react";
 
 import { ROUTES, APP_CONFIG } from "@/constants";
@@ -74,6 +76,11 @@ const menuItems: MenuProps["items"] = [
     key: ROUTES.HOME,
     icon: <Home size={16} />,
     label: <Link href={ROUTES.HOME}>首页</Link>,
+  },
+  {
+    key: ROUTES.PROJECT,
+    icon: <FolderKanban size={16} />,
+    label: <Link href={ROUTES.PROJECT}>数据项目</Link>,
   },
   {
     key: "integration",
@@ -153,6 +160,18 @@ const menuItems: MenuProps["items"] = [
       { key: ROUTES.SHARING_TASKS, label: <Link href={ROUTES.SHARING_TASKS}>事项任务</Link> },
       { key: ROUTES.SHARING_RESOURCES, label: <Link href={ROUTES.SHARING_RESOURCES}>资源管理</Link> },
       { key: ROUTES.SHARING_APPLICATIONS, label: <Link href={ROUTES.SHARING_APPLICATIONS}>服务申请</Link> },
+    ],
+  },
+  {
+    key: "infrastructure",
+    icon: <Server size={16} />,
+    label: "基础设施",
+    children: [
+      { key: ROUTES.TENANT_MANAGEMENT, label: <Link href={ROUTES.TENANT_MANAGEMENT}>租户管理</Link> },
+      { key: ROUTES.QUEUE_MANAGEMENT, label: <Link href={ROUTES.QUEUE_MANAGEMENT}>资源队列</Link> },
+      { key: ROUTES.WORKER_MANAGEMENT, label: <Link href={ROUTES.WORKER_MANAGEMENT}>Worker节点</Link> },
+      { key: ROUTES.ENGINE_CONFIG, label: <Link href={ROUTES.ENGINE_CONFIG}>引擎配置</Link> },
+      { key: ROUTES.CONFIG_TEMPLATE, label: <Link href={ROUTES.CONFIG_TEMPLATE}>配置模板</Link> },
     ],
   },
   {
