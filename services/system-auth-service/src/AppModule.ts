@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { HealthController } from './controllers/HealthController';
 import { DatabaseModule } from './common/database/database.module';
 import { OrganizationModule } from './modules/organization/organization.module';
@@ -12,6 +13,9 @@ import { ApprovalModule } from './modules/approval/approval.module';
 import { DataPermissionModule } from './modules/data-permission/data-permission.module';
 import { InitModule } from './modules/init/init.module';
 import { UserModule } from './modules/user/user.module';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import type { MiddlewareConsumer, NestModule } from '@nestjs/common';
 
 @Module({
   imports: [
@@ -29,5 +33,15 @@ import { UserModule } from './modules/user/user.module';
     DataPermissionModule,
   ],
   controllers: [HealthController],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+  }
+}

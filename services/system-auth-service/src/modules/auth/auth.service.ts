@@ -2,39 +2,14 @@ import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { comparePassword } from '../crypto';
+import type {
+  LoginRequest,
+  LoginResponse,
+  JwtPayload,
+  AuthenticatedUser,
+} from './auth.dtos';
 
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    username: string;
-    email?: string;
-    realName?: string;
-    orgId: string;
-  };
-  roles: string[];
-}
-
-export interface JwtPayload {
-  userId: string;
-  username: string;
-  roles: string[];
-}
-
-export interface AuthenticatedUser {
-  id: string;
-  username: string;
-  email?: string;
-  realName?: string;
-  orgId: string;
-  roles: string[];
-  permissions: string[];
-}
+export type { LoginRequest, LoginResponse, JwtPayload, AuthenticatedUser };
 
 @Injectable()
 export class AuthService {
@@ -79,8 +54,8 @@ export class AuthService {
     });
 
     const roleCodes = userRoles
-      .filter((ur) => ur.role.enabled)
-      .map((ur) => ur.role.code);
+      .filter((ur: { role: { enabled: boolean } }) => ur.role.enabled)
+      .map((ur: { role: { code: string } }) => ur.role.code);
 
     // Generate JWT token
     const payload: JwtPayload = {
@@ -124,10 +99,10 @@ export class AuthService {
         include: { role: true },
       });
 
-      const roleIds = userRoles.map((ur) => ur.roleId);
+      const roleIds = userRoles.map((ur: { roleId: string }) => ur.roleId);
       const roleCodes = userRoles
-        .filter((ur) => ur.role.enabled)
-        .map((ur) => ur.role.code);
+        .filter((ur: { role: { enabled: boolean } }) => ur.role.enabled)
+        .map((ur: { role: { code: string } }) => ur.role.code);
 
       // Get permissions for all roles
       const rolePermissions = await this.prisma.rolePermission.findMany({
@@ -136,8 +111,10 @@ export class AuthService {
       });
 
       const permissionCodes = rolePermissions
-        .map((rp) => rp.permission?.code)
-        .filter((code): code is string => code !== undefined);
+        .map((rp: { permission?: { code?: string } }) => rp.permission?.code)
+        .filter(
+          (code: string | undefined): code is string => code !== undefined
+        );
 
       return {
         id: user.id,
@@ -158,7 +135,7 @@ export class AuthService {
       where: { userId },
     });
 
-    const roleIds = userRoles.map((ur) => ur.roleId);
+    const roleIds = userRoles.map((ur: { roleId: string }) => ur.roleId);
 
     if (roleIds.length === 0) {
       return [];
@@ -170,7 +147,7 @@ export class AuthService {
     });
 
     return rolePermissions
-      .map((rp) => rp.permission?.code)
-      .filter((code): code is string => code !== undefined);
+      .map((rp: { permission?: { code?: string } }) => rp.permission?.code)
+      .filter((code: string | undefined): code is string => code !== undefined);
   }
 }

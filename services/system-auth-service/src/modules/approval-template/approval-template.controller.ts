@@ -15,10 +15,13 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
-  ApiBody,
 } from '@nestjs/swagger';
 import { ApprovalTemplateService } from './approval-template.service';
 import type { Result, ApprovalTemplate } from '@ai-datahub/contract';
+import {
+  CreateApprovalTemplateRequest,
+  UpdateApprovalTemplateRequest,
+} from './approval-template.dtos';
 
 @ApiTags('审批模板')
 @ApiBearerAuth()
@@ -32,27 +35,8 @@ export class ApprovalTemplateController {
     description: '创建新的审批流程模板',
   })
   @ApiResponse({ status: 201, description: '成功创建审批模板' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        template: {
-          type: 'object',
-          properties: {
-            businessType: { type: 'string', description: '业务类型' },
-            name: { type: 'string', description: '模板名称' },
-            definition: { type: 'object', description: '审批流程定义' },
-          },
-          required: ['businessType', 'name', 'definition'],
-        },
-      },
-    },
-  })
   createApprovalTemplate(
-    @Body()
-    body: {
-      template: Omit<ApprovalTemplate, 'id' | 'createdAt' | 'updatedAt'>;
-    }
+    @Body() body: CreateApprovalTemplateRequest
   ): Promise<Result<{ templateId: string }>> {
     return this.service.createApprovalTemplate(body);
   }
@@ -61,25 +45,8 @@ export class ApprovalTemplateController {
   @ApiOperation({ summary: '更新审批模板', description: '更新审批模板信息' })
   @ApiResponse({ status: 200, description: '成功更新审批模板' })
   @ApiResponse({ status: 404, description: '审批模板不存在' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        template: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            businessType: { type: 'string' },
-            name: { type: 'string' },
-            definition: { type: 'object' },
-          },
-          required: ['id', 'businessType', 'name', 'definition'],
-        },
-      },
-    },
-  })
   updateApprovalTemplate(
-    @Body() body: { template: ApprovalTemplate }
+    @Body() body: UpdateApprovalTemplateRequest
   ): Promise<Result<{ success: boolean }>> {
     return this.service.updateApprovalTemplate(body);
   }

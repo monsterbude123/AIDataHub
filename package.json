@@ -18,7 +18,15 @@
     "change": "changeset",
     "version": "changeset version",
     "release": "changeset publish",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev:auth": "npm -w @ai-datahub/system-auth-service run dev",
+    "dev:metadata": "npm -w @ai-datahub/metadata-service run dev",
+    "dev:data": "npm -w @ai-datahub/data-service-service run dev",
+    "dev:tasks": "npm -w @ai-datahub/task-scheduler-service run dev",
+    "dev:gateway": "npm -w @ai-datahub/api-gateway run dev",
+    "start:auth": "npm -w @ai-datahub/system-auth-service run start",
+    "start:metadata": "npm -w @ai-datahub/metadata-service run start",
+    "start:data": "npm -w @ai-datahub/data-service-service run start"
   },
   "keywords": [
     "data-platform",

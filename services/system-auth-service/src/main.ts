@@ -7,9 +7,15 @@ import {
 } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { FastifyInstance } from 'fastify';
-import { createTraceId, getTraceIdFromHeaders } from '@ai-datahub/shared';
+import {
+  createTraceId,
+  getTraceIdFromHeaders,
+  createLogger,
+} from '@ai-datahub/shared';
 
 import { AppModule } from './AppModule';
+
+const logger = createLogger({ service: 'system-auth-service' });
 
 function registerTraceMiddleware(fastify: FastifyInstance) {
   fastify.addHook('onRequest', async (req, reply) => {
@@ -51,18 +57,16 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, '0.0.0.0');
-  // db path
   const dbPath = process.env.DATABASE_URL;
-  console.log(dbPath);
-  // eslint-disable-next-line no-console
-  console.log(`system-auth-service listening on port ${port}`);
-  // eslint-disable-next-line no-console
-  console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+  logger.info('Database URL configured', { dbPath });
+  logger.info('service started', { port, service: 'system-auth-service' });
+  logger.info('Swagger documentation available', {
+    url: `http://localhost:${port}/api/docs`,
+  });
 }
 
 bootstrap().catch((e) => {
   // 进程启动失败不能静默
-  // eslint-disable-next-line no-console
-  console.error(e);
+  logger.error('failed to start service', e);
   process.exit(1);
 });

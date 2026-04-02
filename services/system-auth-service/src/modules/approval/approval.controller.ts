@@ -6,10 +6,14 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
-  ApiBody,
 } from '@nestjs/swagger';
 import { ApprovalService } from './approval.service';
 import type { Result, Approval, PageResult } from '@ai-datahub/contract';
+import {
+  CreateApprovalRequest,
+  ApproveApprovalRequest,
+  RemindApprovalRequest,
+} from './approval.dtos';
 
 @ApiTags('审批管理')
 @ApiBearerAuth()
@@ -21,28 +25,8 @@ export class ApprovalController {
   @ApiOperation({ summary: '创建审批', description: '创建新的审批请求' })
   @ApiResponse({ status: 201, description: '成功创建审批' })
   @ApiResponse({ status: 400, description: '审批模板不存在' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        businessType: { type: 'string', description: '业务类型' },
-        businessId: { type: 'string', description: '业务ID' },
-        title: { type: 'string', description: '审批标题' },
-        applicantId: { type: 'string', description: '申请人ID' },
-        payload: { type: 'object', description: '审批内容' },
-      },
-      required: ['businessType', 'businessId', 'title', 'applicantId'],
-    },
-  })
   createApproval(
-    @Body()
-    body: {
-      businessType: string;
-      businessId: string;
-      title: string;
-      applicantId: string;
-      payload?: Record<string, unknown>;
-    }
+    @Body() body: CreateApprovalRequest
   ): Promise<Result<{ approvalId: string }>> {
     return this.service.createApproval(body);
   }
@@ -56,25 +40,9 @@ export class ApprovalController {
   @ApiResponse({ status: 400, description: '审批状态无效' })
   @ApiResponse({ status: 404, description: '审批不存在' })
   @ApiParam({ name: 'id', description: '审批ID', type: 'string' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        action: { type: 'string', enum: ['APPROVE', 'REJECT'] },
-        comment: { type: 'string', description: '审批意见' },
-        approverId: { type: 'string', description: '审批人ID' },
-      },
-      required: ['action', 'approverId'],
-    },
-  })
   approve(
     @Param('id') id: string,
-    @Body()
-    body: {
-      action: 'APPROVE' | 'REJECT';
-      comment?: string;
-      approverId: string;
-    }
+    @Body() body: ApproveApprovalRequest
   ): Promise<Result<{ success: boolean }>> {
     return this.service.approve({
       approvalId: id,
@@ -152,17 +120,9 @@ export class ApprovalController {
   @ApiResponse({ status: 200, description: '成功发送催办' })
   @ApiResponse({ status: 404, description: '审批不存在' })
   @ApiParam({ name: 'id', description: '审批ID', type: 'string' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', description: '催办消息' },
-      },
-    },
-  })
   remindApproval(
     @Param('id') id: string,
-    @Body() body?: { message?: string }
+    @Body() body?: RemindApprovalRequest
   ): Promise<Result<{ success: boolean }>> {
     return this.service.remindApproval({
       approvalId: id,

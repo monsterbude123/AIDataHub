@@ -99,12 +99,19 @@ export class DataPermissionService {
     ]);
 
     return okResult({
-      items: items.map((p) => ({
-        id: p.id,
-        roleId: p.roleId,
-        scope: JSON.parse(p.scope),
-        createdAt: p.createdAt.toISOString(),
-      })),
+      items: items.map(
+        (p: {
+          id: string;
+          roleId: string;
+          scope: string;
+          createdAt: Date;
+        }) => ({
+          id: p.id,
+          roleId: p.roleId,
+          scope: JSON.parse(p.scope),
+          createdAt: p.createdAt.toISOString(),
+        })
+      ),
       total,
       page: req.page.page,
       pageSize: req.page.pageSize,

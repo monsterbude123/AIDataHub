@@ -4,8 +4,8 @@ import {
   okResult,
   type Result,
   type ApprovalTemplate,
-  type UpsertApprovalTemplateRequest,
 } from '@ai-datahub/contract';
+import type { UpdateApprovalTemplateRequest } from './approval-template.dtos';
 import { SystemAuthException } from '../../common/errors/system-auth.exception';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class ApprovalTemplateService {
   }
 
   async updateApprovalTemplate(
-    req: UpsertApprovalTemplateRequest
+    req: UpdateApprovalTemplateRequest
   ): Promise<Result<{ success: boolean }>> {
     const existing = await this.prisma.approvalTemplate.findUnique({
       where: { id: req.template.id },
@@ -78,14 +78,23 @@ export class ApprovalTemplateService {
     });
 
     return okResult(
-      templates.map((t) => ({
-        id: t.id,
-        businessType: t.businessType,
-        name: t.name,
-        definition: JSON.parse(t.definition),
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
-      }))
+      templates.map(
+        (t: {
+          id: string;
+          businessType: string;
+          name: string;
+          definition: string;
+          createdAt: Date;
+          updatedAt: Date;
+        }) => ({
+          id: t.id,
+          businessType: t.businessType,
+          name: t.name,
+          definition: JSON.parse(t.definition),
+          createdAt: t.createdAt.toISOString(),
+          updatedAt: t.updatedAt.toISOString(),
+        })
+      )
     );
   }
 

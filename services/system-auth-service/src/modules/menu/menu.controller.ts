@@ -5,10 +5,10 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiBody,
 } from '@nestjs/swagger';
 import { MenuService } from './menu.service';
 import type { Result, MenuNode } from '@ai-datahub/contract';
+import { UpsertMenuNodeRequest } from './menu.dtos';
 
 @ApiTags('菜单管理')
 @ApiBearerAuth()
@@ -29,32 +29,8 @@ export class MenuController {
     description: '创建或更新菜单节点（幂等操作）',
   })
   @ApiResponse({ status: 200, description: '成功创建/更新菜单节点' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        node: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', description: '节点ID（更新时必填）' },
-            parentId: { type: 'string', description: '父节点ID' },
-            type: { type: 'string', enum: ['DIRECTORY', 'MENU', 'BUTTON'] },
-            name: { type: 'string', description: '节点名称' },
-            path: { type: 'string', description: '路由路径' },
-            icon: { type: 'string', description: '图标' },
-            permissionCode: { type: 'string', description: '权限码' },
-            enabled: { type: 'boolean', description: '是否启用' },
-            sort: { type: 'number', description: '排序' },
-          },
-        },
-      },
-    },
-  })
   upsertMenuNode(
-    @Body()
-    body: {
-      node: Omit<MenuNode, 'createdAt' | 'updatedAt'> & { id?: string };
-    }
+    @Body() body: UpsertMenuNodeRequest
   ): Promise<Result<{ nodeId: string }>> {
     return this.service.upsertMenuNode(body);
   }

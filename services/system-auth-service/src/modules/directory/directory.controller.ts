@@ -14,10 +14,10 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
-  ApiBody,
 } from '@nestjs/swagger';
 import { DirectoryService } from './directory.service';
 import type { Result, DirectoryTreeNode } from '@ai-datahub/contract';
+import { UpsertDirectoryNodeRequest } from './directory.dtos';
 
 @ApiTags('目录树管理')
 @ApiBearerAuth()
@@ -49,31 +49,8 @@ export class DirectoryController {
     description: '创建或更新目录节点（幂等操作）',
   })
   @ApiResponse({ status: 200, description: '成功创建/更新目录节点' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        node: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', description: '节点ID（更新时必填）' },
-            parentId: { type: 'string', description: '父节点ID' },
-            name: { type: 'string', description: '节点名称' },
-            code: { type: 'string', description: '节点编码' },
-            attributes: { type: 'object', description: '扩展属性' },
-          },
-          required: ['name', 'code'],
-        },
-      },
-    },
-  })
   upsertDirectoryNode(
-    @Body()
-    body: {
-      node: Omit<DirectoryTreeNode, 'createdAt' | 'updatedAt'> & {
-        id?: string;
-      };
-    }
+    @Body() body: UpsertDirectoryNodeRequest
   ): Promise<Result<{ nodeId: string }>> {
     return this.service.upsertDirectoryNode(body);
   }

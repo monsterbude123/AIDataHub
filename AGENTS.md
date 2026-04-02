@@ -693,7 +693,7 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **AIDataHub** (1996 symbols, 4090 relationships, 49 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **AIDataHub** (2385 symbols, 5042 relationships, 12 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

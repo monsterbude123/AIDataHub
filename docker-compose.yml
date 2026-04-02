@@ -1,0 +1,49 @@
+# Development Infrastructure for AIDataHub
+#
+# This file starts all required infrastructure services (PostgreSQL, Redis, etc.)
+# Application services run locally on your machine for development,
+# you don't need to containerize them during development.
+#
+# Usage:
+#   docker-compose up -d      # Start all infrastructure
+#   docker-compose down      # Stop all infrastructure
+#   docker-compose logs -f postgres  # View PostgreSQL logs
+
+version: '3.8'
+
+services:
+  # PostgreSQL - primary relational database for all services
+  postgres:
+    image: postgres:16-alpine
+    container_name: aidatahub-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aidatahub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aidatahub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis - for caching, rate limiting, session storage
+  redis:
+    image: redis:7-alpine
+    container_name: aidatahub-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres-data:
+  redis-data:

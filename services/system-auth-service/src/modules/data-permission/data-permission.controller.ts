@@ -6,7 +6,6 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
-  ApiBody,
 } from '@nestjs/swagger';
 import { DataPermissionService } from './data-permission.service';
 import type {
@@ -15,6 +14,7 @@ import type {
   PageResult,
   PageRequest,
 } from '@ai-datahub/contract';
+import { UpsertDataPermissionRequest } from './data-permission.dtos';
 
 @ApiTags('数据权限')
 @ApiBearerAuth()
@@ -29,27 +29,8 @@ export class DataPermissionController {
   })
   @ApiResponse({ status: 200, description: '成功设置数据权限' })
   @ApiResponse({ status: 404, description: '角色不存在' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        permission: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', description: '权限ID（更新时必填）' },
-            roleId: { type: 'string', description: '角色ID' },
-            scope: { type: 'object', description: '数据范围定义' },
-          },
-          required: ['roleId', 'scope'],
-        },
-      },
-    },
-  })
   upsertDataPermission(
-    @Body()
-    body: {
-      permission: Omit<DataPermission, 'createdAt'> & { id?: string };
-    }
+    @Body() body: UpsertDataPermissionRequest
   ): Promise<Result<{ permissionId: string }>> {
     return this.service.upsertDataPermission(body);
   }

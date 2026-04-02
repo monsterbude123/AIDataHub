@@ -121,7 +121,7 @@ export class MenuService {
       return [];
     }
 
-    const childIds = children.map((c) => c.id);
+    const childIds = children.map((c: { id: string }) => c.id);
     const grandChildIds: string[] = [];
 
     for (const childId of childIds) {
