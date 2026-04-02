@@ -11,13 +11,20 @@
 3. [错误处理规范](#3-错误处理规范)
 4. [日志规范](#4-日志规范)
 5. [认证授权规范](#5-认证授权规范)
+   - 5.1 [JWT 全局认证](#51-jwt-全局认证)
+   - 5.2 [公开端点约定](#52-公开端点约定)
+   - 5.3 [权限控制](#53-权限控制)
 6. [API 文档规范](#6-api-文档规范)
+   - 6.1 [DTO 文件组织](#61-dto-文件组织)
+   - 6.2 [Swagger 装饰器要求](#62-swagger-装饰器要求)
+   - 6.3 [必须提供的信息](#63-必须提供的信息)
 7. [数据库与持久化规范](#7-数据库与持久化规范)
 8. [测试规范](#8-测试规范)
 9. [文档规范](#9-文档规范)
 10. [Git 提交规范](#10-git-提交规范)
 11. [链路追踪与幂等性规范](#11-链路追踪与幂等性规范)
 12. [本地开发环境规范](#12-本地开发环境规范)
+13. [API 网关规范](#13-api-网关规范)
 
 ---
 
@@ -39,8 +46,7 @@ services/{service-name}/
 │   │   └── HealthController.ts   # 健康检查（必须）
 │   ├── modules/                   # 业务模块（按领域拆分）
 │   │   └── {domain}/              # 每个领域一个模块
-│   │       ├── dto/               # 请求/响应 DTO
-│   │       ├── entities/          # 实体定义（如果需要）
+│   │       ├── {domain}.dtos.ts    # 请求/响应 DTO 类（带 Swagger 装饰）
 │   │       ├── {domain}.controller.ts
 │   │       ├── {domain}.module.ts
 │   │       └── {domain}.service.ts
@@ -248,7 +254,33 @@ getHealth() {
 
 ### 5.3 权限控制
 
-使用 CASL 进行基于能力的权限控制：
+#### 5.3.1 单点职责架构（核心原则）
+
+**唯一完整认证权限服务**：只有 `system-auth-service` 负责：
+
+- 用户登录/登出、JWT 签发
+- 组织/角色/权限/用户管理
+- RBAC/ACL 权限决策
+
+**其他服务职责**：只做 JWT 令牌签名验证，不负责权限决策：
+
+- 验证令牌签名是否有效
+- 从令牌中提取用户信息（userId、roles、permissions）
+- 将用户信息附加到请求上下文
+- **不**调用本地权限检查
+- 需要权限决策时，调用 `system-auth-service` 远程检查
+
+#### 5.3.2 权限检查流程
+
+```
+服务接收到请求 → 验证 JWT 令牌 → 调用 system-auth-service 检查权限 → 执行业务逻辑
+```
+
+这样避免了重复实现认证逻辑，保证权限规则全局一致性。
+
+#### 5.3.3 权限检查实现
+
+使用 CASL 进行基于能力的权限控制（仅 `system-auth-service`）：
 
 ```typescript
 // 检查用户是否有权限
@@ -259,31 +291,48 @@ const isAllowed = this.caslAbilityFactory.can(user, 'read', dataAsset);
 
 ## 6. API 文档规范
 
-### 6.1 Swagger 装饰器要求
+### 6.1 DTO 文件组织
+
+**所有 DTO 类必须放在单独文件**：
+
+- 每个模块一个 DTO 文件：`{domain}.dtos.ts`
+- 所有请求/响应 DTO 都在这里定义
+- 控制器只导入使用，不直接定义 DTO
+
+### 6.2 Swagger 装饰器要求
 
 所有控制器、DTO、方法必须添加完整的 Swagger 装饰：
 
 ```typescript
-// DTO 必须
-export class LoginDto {
-  @ApiProperty({ description: 'Username' })
-  username: string;
+// user.dtos.ts - DTO 必须每个属性都有 @ApiProperty
+export class CreateUserData {
+  @ApiProperty({ description: '用户名' })
+  username: string = undefined!;
 
-  @ApiProperty({ description: 'Password' })
-  password: string;
+  @ApiProperty({ description: '邮箱' })
+  email: string = undefined!;
 }
 
-// 控制器方法必须
-@ApiOperation({ summary: 'User login' })
-@ApiResponse({ status: 200, description: 'Login successful', type: LoginResponse })
-@ApiResponse({ status: 401, description: 'Invalid credentials' })
-@Post('login')
-login(@Body() dto: LoginDto) {
+export class CreateUserRequest {
+  @ApiProperty({ description: '用户信息', type: () => CreateUserData })
+  user: CreateUserData = undefined!;
+}
+
+// user.controller.ts - 控制器方法必须
+@ApiOperation({ summary: '创建用户' })
+@ApiResponse({ status: 201, description: '创建成功' })
+@Post()
+createUser(@Body() dto: CreateUserRequest) {
   // ...
 }
 ```
 
-### 6.2 必须提供的信息
+**TypeScript 严格模式要求**：
+
+- 所有非可选 DTO 属性必须提供初始值：`field: Type = undefined!;`
+- 可选属性保留 `?`：`field?: Type;`
+
+### 6.3 必须提供的信息
 
 - `@ApiProperty` 每个 DTO 字段必须有 `description`
 - `@ApiOperation` 每个方法必须有 `summary`
@@ -496,15 +545,63 @@ npm run start:data
 ## 🔍 自查清单（提交前检查）
 
 - [ ] 项目结构符合本规范
-- [ ] 没有 `any` 类型
+- [ ] 没有隐式 `any` 类型
+- [ ] 所有 DTO 提取到单独 `*.dtos.ts` 文件
+- [ ] 每个 DTO 属性都有 `@ApiProperty` 装饰和描述
 - [ ] 全局异常过滤器已注册
-- [ ] 使用共享 logger，没有 `console.log`
+- [ ] 使用共享 logger，没有 `console.log`（启动日志除外）
 - [ ] 全局认证已配置，`@Public()` 正确使用
-- [ ] 所有 DTO 和控制器方法有 Swagger 装饰
+- [ ] 遵循单点职责认证架构（只有 system-auth-service 做权限决策）
 - [ ] 单元测试覆盖核心逻辑，覆盖率 >= 80%
 - [ ] 服务设计文档已更新 `doc/services/`
 - [ ] 实施计划已创建 `doc/plans/`
 - [ ] 重要架构决策已追加到 `doc/DECISIONS.md`
+
+---
+
+## 总结
+
+遵循本规范可以保证：
+
+1. **一致性**：所有服务结构一致，新人容易上手
+2. **可维护性**：文档和代码同步，找得到看得懂
+3. **可追溯性**：决策有记录，问题好排查
+4. **可扩展性**：新增服务复制模板即可，不需要重新设计结构
+
+---
+
+## 13. API 网关规范
+
+### 13.1 网关职责
+
+API 网关是**统一入口**，负责：
+
+- 统一入口，对外暴露单一 API 地址
+- 基于路径路由转发到后端微服务
+- CORS 处理（浏览器跨域请求）
+- `traceId` 生成并透传给后端服务
+- 请求日志记录
+
+### 13.2 路由规则
+
+路由基于路径前缀转发：
+
+```
+Gateway: http://gateway:port/
+  /api/auth/*      → http://system-auth-service:port/*
+  /api/metadata/*  → http://metadata-service:port/*
+  /api/data/*      → http://data-service:port/*
+  /api/tasks/*     → http://task-scheduler:port/*
+```
+
+路由规则通过环境变量配置，不硬编码。
+
+### 13.3 traceId 生成
+
+- 请求进入网关时生成 `traceId`（UUID）
+- 通过 HTTP 头 `X-Trace-Id` 透传给后端
+- 后端服务必须从请求头提取并继续透传给下游
+- 所有日志和错误响应必须包含 `traceId`
 
 ---
 
