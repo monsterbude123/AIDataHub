@@ -272,8 +272,8 @@ export function ModalForm({
           </Space>
         )
       }
-      destroyOnClose
       maskClosable={false}
+      forceRender
       {...modalProps}
     >
       {/* 分步表单进度指示 */}

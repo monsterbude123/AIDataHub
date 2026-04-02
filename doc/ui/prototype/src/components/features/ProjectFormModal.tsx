@@ -15,6 +15,7 @@ import {
   Row,
   Col,
 } from "antd";
+import dayjs from "dayjs";
 import { mockUsers } from "@/services/mock/system";
 import type { Project } from "@/types/project";
 
@@ -72,8 +73,8 @@ export function ProjectFormModal({
         code: editData.code,
         description: editData.description,
         managerId: editData.managerId,
-        startDate: editData.startDate,
-        expectedEndDate: editData.expectedEndDate,
+        startDate: editData.startDate ? dayjs(editData.startDate) : undefined,
+        expectedEndDate: editData.expectedEndDate ? dayjs(editData.expectedEndDate) : undefined,
       });
     }
   }, [open, editData, form]);
