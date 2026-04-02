@@ -32,7 +32,6 @@ import {
   FileText,
   Settings,
   Shield,
-  Clock,
   Share2,
   BarChart3,
   User,
@@ -82,7 +81,6 @@ const menuItems: MenuProps["items"] = [
     label: "数据集成",
     children: [
       { key: ROUTES.DATA_SOURCES, label: <Link href={ROUTES.DATA_SOURCES}>数据源管理</Link> },
-      { key: ROUTES.DATA_SOURCE_CONFIG, label: <Link href={ROUTES.DATA_SOURCE_CONFIG}>数据源配置</Link> },
       { key: ROUTES.DATA_PROFILING, label: <Link href={ROUTES.DATA_PROFILING}>数据探查</Link> },
       { key: ROUTES.DATA_STANDARDIZATION, label: <Link href={ROUTES.DATA_STANDARDIZATION}>标准化</Link> },
       { key: ROUTES.SQL_DEV, label: <Link href={ROUTES.SQL_DEV}>SQL开发</Link> },
@@ -94,8 +92,6 @@ const menuItems: MenuProps["items"] = [
     label: "数据服务",
     children: [
       { key: ROUTES.SERVICE_CATALOG, label: <Link href={ROUTES.SERVICE_CATALOG}>服务目录</Link> },
-      { key: ROUTES.SERVICE_CONFIG, label: <Link href={ROUTES.SERVICE_CONFIG}>服务配置</Link> },
-      { key: ROUTES.SERVICE_AUTHORIZATION, label: <Link href={ROUTES.SERVICE_AUTHORIZATION}>服务授权</Link> },
       { key: ROUTES.SERVICE_MONITORING, label: <Link href={ROUTES.SERVICE_MONITORING}>服务监控</Link> },
     ],
   },
@@ -105,7 +101,6 @@ const menuItems: MenuProps["items"] = [
     label: "元数据管理",
     children: [
       { key: ROUTES.METADATA, label: <Link href={ROUTES.METADATA}>元数据列表</Link> },
-      { key: ROUTES.METADATA_DETAIL, label: <Link href={ROUTES.METADATA_DETAIL}>元数据详情</Link> },
     ],
   },
   {
@@ -138,16 +133,6 @@ const menuItems: MenuProps["items"] = [
       { key: ROUTES.DESENSITIZATION, label: <Link href={ROUTES.DESENSITIZATION}>数据脱敏</Link> },
       { key: ROUTES.CLASSIFICATION, label: <Link href={ROUTES.CLASSIFICATION}>分级分类</Link> },
       { key: ROUTES.WATERMARK, label: <Link href={ROUTES.WATERMARK}>水印管理</Link> },
-    ],
-  },
-  {
-    key: "scheduler",
-    icon: <Clock size={16} />,
-    label: "任务调度",
-    children: [
-      { key: ROUTES.DAG, label: <Link href={ROUTES.DAG}>DAG编排</Link> },
-      { key: ROUTES.TASK_LIST, label: <Link href={ROUTES.TASK_LIST}>任务运维</Link> },
-      { key: ROUTES.LOG_CENTER, label: <Link href={ROUTES.LOG_CENTER}>日志中心</Link> },
     ],
   },
   {
