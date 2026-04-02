@@ -6,7 +6,7 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
-import { Card, Checkbox, Input, Tag, Button, Space, Modal, Table, Breadcrumb, Empty } from "antd";
+import { Card, Checkbox, Input, Tag, Button, Space, Modal, Table, Breadcrumb, Empty, message } from "antd";
 import { Search, Filter, Download, Eye, X } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
@@ -113,6 +113,15 @@ export default function DataMapPage() {
   const handleViewDetail = (asset: DataAsset) => {
     setSelectedAsset(asset);
     setDetailModalOpen(true);
+  };
+
+  const handleExportAsset = (asset: DataAsset, e: React.MouseEvent) => {
+    e.stopPropagation();
+    message.success(`已导出 ${asset.name} 数据`);
+  };
+
+  const handleExportAll = () => {
+    message.success("已导出数据台账");
   };
 
   /**
@@ -262,10 +271,7 @@ export default function DataMapPage() {
           <Button
             type="text"
             icon={<Download size={14} />}
-            onClick={(e) => {
-              e.stopPropagation();
-              // 导出功能
-            }}
+            onClick={(e) => handleExportAsset(asset, e)}
           >
             导出
           </Button>
@@ -296,7 +302,7 @@ export default function DataMapPage() {
                 清空筛选 ({selectedFilterCount})
               </Button>
             )}
-            <Button type="primary" icon={<Download size={14} />}>
+            <Button type="primary" icon={<Download size={14} />} onClick={handleExportAll}>
               导出台账
             </Button>
           </Space>

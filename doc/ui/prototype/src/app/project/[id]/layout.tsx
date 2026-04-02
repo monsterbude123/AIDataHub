@@ -20,6 +20,7 @@ import {
   Spin,
   Empty,
   Popconfirm,
+  message,
 } from "antd";
 import {
   Edit,
@@ -167,6 +168,10 @@ export default function ProjectDetailLayout({ children }: ProjectDetailLayoutPro
     router.push(ROUTES.PROJECT);
   };
 
+  const handleEditProject = () => {
+    message.info("打开项目编辑弹窗");
+  };
+
   /**
    * 渲染 Tab 内容
    */
@@ -235,7 +240,7 @@ export default function ProjectDetailLayout({ children }: ProjectDetailLayoutPro
                 </Space>
               </div>
               <Space>
-                <Button icon={<Edit size={14} />}>编辑</Button>
+                <Button icon={<Edit size={14} />} onClick={handleEditProject}>编辑</Button>
                 <Popconfirm
                   title="确认删除此项目？"
                   description="删除后数据将无法恢复"

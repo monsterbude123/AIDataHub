@@ -7,7 +7,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Card, Table, Tag, Button, Space, Input, Select, DatePicker, Badge, Tooltip, Modal } from "antd";
+import { Card, Table, Tag, Button, Space, Input, Select, DatePicker, Badge, Tooltip, Modal, message } from "antd";
 import { Search, RefreshCw, Download, Play, Eye, Edit, Power, AlertTriangle } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
@@ -113,6 +113,10 @@ export default function TaskOperationPage() {
     console.log("Offline task:", task.id);
   };
 
+  const handleEditTask = (task: TaskOperation) => {
+    message.info(`编辑任务: ${task.name}`);
+  };
+
   /**
    * 导出任务运维报表
    */
@@ -208,7 +212,7 @@ export default function TaskOperationPage() {
               执行
             </Button>
           )}
-          <Button type="text" size="small" icon={<Edit size={14} />}>
+          <Button type="text" size="small" icon={<Edit size={14} />} onClick={() => handleEditTask(record)}>
             修改
           </Button>
           {record.onlineStatus === "online" && (
