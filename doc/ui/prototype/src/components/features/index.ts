@@ -3,3 +3,4 @@
  */
 
 export { DataSourceFormModal } from "./DataSourceFormModal";
+export { ProjectFormModal } from "./ProjectFormModal";

@@ -46,3 +46,4 @@ export interface UserInfo {
 
 // 导出各模块类型
 export * from "./notification";
+export * from "./project";
