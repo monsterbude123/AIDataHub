@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command", "command": "if ! grep -q 'use client' \"$CLAUDE_TARGET_FILE\" 2>/dev/null && grep -qE '(window|document|localStorage|sessionStorage|navigator|location)' \"$CLAUDE_TARGET_FILE\" 2>/dev/null; then echo \"错误：服务端组件中不能使用浏览器 API，请添加 'use client' 标记为客户端组件\"; exit 2; fi; exit 0",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

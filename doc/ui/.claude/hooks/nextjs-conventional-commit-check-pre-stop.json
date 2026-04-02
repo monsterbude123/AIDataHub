@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "在提交代码前，请确认你的提交信息遵循 Conventional Commits 规范，格式为：<type>(<scope>): <subject>，type 只能是 feat|fix|docs|style|refactor|perf|test|chore",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

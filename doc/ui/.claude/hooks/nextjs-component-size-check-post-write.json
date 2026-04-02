@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command", "command": "LINE_COUNT=$(wc -l < \"$CLAUDE_TARGET_FILE\"); if [ \"$LINE_COUNT\" -gt 500 ] && echo \"$CLAUDE_TARGET_FILE\" | grep -E '\\.(tsx|jsx)$' >/dev/null; then echo \"警告：组件文件 $CLAUDE_TARGET_FILE 超过 500 行（当前 $LINE_COUNT 行），需要拆分组件\"; exit 1; fi; exit 0",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
