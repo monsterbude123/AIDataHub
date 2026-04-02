@@ -5,23 +5,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 目录定位
 
 本目录 (`doc/ui`) 是 AIDataHub 数据中台的前端 UI 设计文档目录，包含：
+
 - 设计系统规范（颜色、字体、布局、交互）
 - 11 个功能模块共 32 个页面的详细设计文档
 - Next.js 前端开发技能、规则、Agent 配置
 
 ## 前端技术栈
 
-| Technology | Version | 用途 |
-|------------|---------|------|
-| Next.js | 14.x (App Router) | 核心全栈框架，SSR/SSG/ISR |
-| React | 18.x | 函数式组件 + Hooks |
-| TypeScript | 5.x | 强制类型安全，禁止 `any` |
-| Tailwind CSS | 3.x | 原子化样式 |
-| TanStack Query | 5.x | 服务端数据缓存管理 |
-| Zod | 3.x | 运行时数据校验 |
-| Jest + RTL | 29.x + 14.x | 单元测试 |
-| Playwright | 1.40.x | E2E 测试 |
-| Lucide React | 0.29x | 图标库 |
+| Technology     | Version           | 用途                      |
+| -------------- | ----------------- | ------------------------- |
+| Next.js        | 14.x (App Router) | 核心全栈框架，SSR/SSG/ISR |
+| React          | 18.x              | 函数式组件 + Hooks        |
+| TypeScript     | 5.x               | 强制类型安全，禁止 `any`  |
+| Tailwind CSS   | 3.x               | 原子化样式                |
+| TanStack Query | 5.x               | 服务端数据缓存管理        |
+| Zod            | 3.x               | 运行时数据校验            |
+| Jest + RTL     | 29.x + 14.x       | 单元测试                  |
+| Playwright     | 1.40.x            | E2E 测试                  |
+| Lucide React   | 0.29x             | 图标库                    |
 
 ## 设计系统架构
 
@@ -74,12 +75,12 @@ constants/           # 全局常量
 
 ### 色彩
 
-| 角色 | Hex |
-|------|-----|
-| Primary | #2563EB |
-| Success | #10B981 |
-| Warning | #F59E0B |
-| Error | #EF4444 |
+| 角色       | Hex     |
+| ---------- | ------- |
+| Primary    | #2563EB |
+| Success    | #10B981 |
+| Warning    | #F59E0B |
+| Error      | #EF4444 |
 | Processing | #3B82F6 |
 
 ### 布局
@@ -91,25 +92,25 @@ constants/           # 全局常量
 
 ### Z-Index 尺度
 
-| 层级 | z-index |
-|------|---------|
-| Dropdown | 10 |
-| Sticky Header | 20 |
-| Modal Backdrop | 30 |
-| Modal Content | 40 |
-| Toast | 50 |
+| 层级           | z-index |
+| -------------- | ------- |
+| Dropdown       | 10      |
+| Sticky Header  | 20      |
+| Modal Backdrop | 30      |
+| Modal Content  | 40      |
+| Toast          | 50      |
 
 禁止随意使用大 z-index 值。
 
 ### 图表选型
 
-| 数据类型 | 推荐图表 |
-|----------|----------|
+| 数据类型    | 推荐图表       |
+| ----------- | -------------- |
 | KPI vs 目标 | Bullet / Gauge |
-| 状态分布 | Pie / Donut |
-| 时间趋势 | Line / Area |
-| TOP 排名 | 横向 Bar |
-| 数据血缘 | React-Flow DAG |
+| 状态分布    | Pie / Donut    |
+| 时间趋势    | Line / Area    |
+| TOP 排名    | 横向 Bar       |
+| 数据血缘    | React-Flow DAG |
 
 ## 测试要求
 
@@ -120,6 +121,7 @@ constants/           # 全局常量
 ## 提交规范
 
 遵循 Conventional Commits：
+
 ```
 <type>(<scope>): <subject>
 ```

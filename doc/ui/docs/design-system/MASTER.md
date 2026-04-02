@@ -14,39 +14,39 @@
 
 ## Color Palette
 
-| Role | Hex |
-|------|-----|
-| Primary | #2563EB |
-| Secondary | #3B82F6 |
-| CTA | #F97316 |
-| Background Light | #F8FAFC |
-| Background Dark | #0F172A |
-| Surface Light | #FFFFFF |
-| Surface Dark | #1E293B |
-| Text Primary Light | #1E293B |
-| Text Primary Dark | #F1F5F9 |
+| Role                 | Hex     |
+| -------------------- | ------- |
+| Primary              | #2563EB |
+| Secondary            | #3B82F6 |
+| CTA                  | #F97316 |
+| Background Light     | #F8FAFC |
+| Background Dark      | #0F172A |
+| Surface Light        | #FFFFFF |
+| Surface Dark         | #1E293B |
+| Text Primary Light   | #1E293B |
+| Text Primary Dark    | #F1F5F9 |
 | Text Secondary Light | #475569 |
-| Text Secondary Dark | #94A3B8 |
-| Border Light | #E2E8F0 |
-| Border Dark | #334155 |
+| Text Secondary Dark  | #94A3B8 |
+| Border Light         | #E2E8F0 |
+| Border Dark          | #334155 |
 
 ### Status Colors
 
-| Status | Hex |
-|--------|-----|
-| Success | #10B981 |
-| Warning | #F59E0B |
-| Error | #EF4444 |
+| Status     | Hex     |
+| ---------- | ------- |
+| Success    | #10B981 |
+| Warning    | #F59E0B |
+| Error      | #EF4444 |
 | Processing | #3B82F6 |
-| Pending | #6B7280 |
+| Pending    | #6B7280 |
 
 ### Sensitivity Level Colors
 
-| Level | Hex |
-|-------|-----|
-| Public | #10B981 |
-| Internal | #3B82F6 |
-| Secret | #F59E0B |
+| Level        | Hex     |
+| ------------ | ------- |
+| Public       | #10B981 |
+| Internal     | #3B82F6 |
+| Secret       | #F59E0B |
 | Confidential | #EF4444 |
 
 ## Typography
@@ -59,15 +59,15 @@
 
 ### Type Scale
 
-| Level | Size | Weight |
-|-------|------|--------|
-| H1 | 28px | 700 |
-| H2 | 24px | 600 |
-| H3 | 20px | 600 |
-| H4 | 16px | 600 |
-| Body | 16px | 400 |
-| Body Small | 14px | 400 |
-| Caption | 12px | 300 |
+| Level      | Size | Weight |
+| ---------- | ---- | ------ |
+| H1         | 28px | 700    |
+| H2         | 24px | 600    |
+| H3         | 20px | 600    |
+| H4         | 16px | 600    |
+| Body       | 16px | 400    |
+| Body Small | 14px | 400    |
+| Caption    | 12px | 300    |
 
 ### Google Fonts Import
 
@@ -91,25 +91,25 @@
 
 ### Z-Index Scale
 
-| Component | Z-Index |
-|-----------|---------|
-| Dropdown | 10 |
-| Sticky Header | 20 |
-| Modal Backdrop | 30 |
-| Modal Content | 40 |
-| Toast / Popup | 50 |
+| Component      | Z-Index |
+| -------------- | ------- |
+| Dropdown       | 10      |
+| Sticky Header  | 20      |
+| Modal Backdrop | 30      |
+| Modal Content  | 40      |
+| Toast / Popup  | 50      |
 
 ### Spacing Scale
 
-| Unit | Pixels | Usage |
-|------|--------|-------|
-| 1 | 4px | Minimal spacing |
-| 2 | 8px | Inside element |
-| 3 | 12px | Compact |
-| 4 | 16px | Standard |
-| 6 | 24px | Block spacing |
-| 8 | 32px | Section spacing |
-| 12 | 48px | Chapter spacing |
+| Unit | Pixels | Usage           |
+| ---- | ------ | --------------- |
+| 1    | 4px    | Minimal spacing |
+| 2    | 8px    | Inside element  |
+| 3    | 12px   | Compact         |
+| 4    | 16px   | Standard        |
+| 6    | 24px   | Block spacing   |
+| 8    | 32px   | Section spacing |
+| 12   | 48px   | Chapter spacing |
 
 ## Interaction
 
@@ -163,16 +163,16 @@
 
 ## Chart Type Selection Guide
 
-| Data Type | Best Chart | Secondary |
-|-----------|------------|-----------|
-| Multiple KPIs vs Target | Bullet Chart Grid | Multiple Gauges |
-| Single KPI vs Target | Gauge | Progress Bar |
-| Task Status Distribution | Pie / Donut | Bar |
-| Time Series Trend | Line Chart | Area Chart |
-| TOP 10 Ranking | Horizontal Bar | Vertical Bar |
-| Data Storage Hierarchy | Treemap | Sunburst |
-| Data Lineage / DAG | Directed Graph (React-Flow) | Cytoscape |
-| Process Flow / Bottleneck | Process Map | DAG |
+| Data Type                 | Best Chart                  | Secondary       |
+| ------------------------- | --------------------------- | --------------- |
+| Multiple KPIs vs Target   | Bullet Chart Grid           | Multiple Gauges |
+| Single KPI vs Target      | Gauge                       | Progress Bar    |
+| Task Status Distribution  | Pie / Donut                 | Bar             |
+| Time Series Trend         | Line Chart                  | Area Chart      |
+| TOP 10 Ranking            | Horizontal Bar              | Vertical Bar    |
+| Data Storage Hierarchy    | Treemap                     | Sunburst        |
+| Data Lineage / DAG        | Directed Graph (React-Flow) | Cytoscape       |
+| Process Flow / Bottleneck | Process Map                 | DAG             |
 
 ## Recommended Libraries
 
@@ -185,4 +185,4 @@
 
 ---
 
-*This is the master design system. Page-specific overrides go in `pages/[page-name].md` and override these rules.*
+_This is the master design system. Page-specific overrides go in `pages/[page-name].md` and override these rules._

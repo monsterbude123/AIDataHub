@@ -1,17 +1,26 @@
 # 数据共享交换模块 - 页面索引
 
+> 模块路由前缀: `/sharing`
+> 菜单位置: 一级菜单「数据共享」
+
 ## 模块说明
 
 基于信息资源目录体系，提供数据共享交换能力。支持申请审批流程。
 
 ## 功能页面
 
-| 页面 | 文件 | 说明 |
-|------|------|------|
-| 首页仪表盘 | [home-dashboard.md](./home-dashboard.md) | 首页统计概览 |
-| 事项任务 | [tasks.md](./tasks.md) | 待办已办事项审批 |
-| 资源管理 | [resource-management.md](./resource-management.md) | 共享资源目录登记管理 |
-| 服务申请管理 | [service-application.md](./service-application.md) | 服务申请和审批 |
+### 一级菜单页面
+
+| 页面       | 类型  | 菜单名称 | 路由                   | 文档                                               |
+| ---------- | ----- | -------- | ---------------------- | -------------------------------------------------- |
+| 首页仪表盘 | `[M]` | 首页     | `/sharing`             | [home-dashboard.md](./home-dashboard.md)           |
+| 事项任务   | `[M]` | 事项任务 | `/sharing/tasks`       | [tasks.md](./tasks.md)                             |
+| 资源管理   | `[M]` | 资源管理 | `/sharing/resources`   | [resource-management.md](./resource-management.md) |
+| 服务申请   | `[M]` | 服务申请 | `/sharing/application` | [service-application.md](./service-application.md) |
+
+**页面类型说明**：
+
+- `[M]` 菜单页面 - 出现在侧边导航菜单
 
 ## 核心特性
 
@@ -20,3 +29,13 @@
 - 完整申请审批流程
 - 支持多种服务类型：文件下载、库表交换、数据查询、比对服务
 - 自动生成API文档和访问密钥
+
+## 导航结构
+
+```
+数据共享 (一级菜单)
+├── 首页 [M]
+├── 事项任务 [M]
+├── 资源管理 [M]
+└── 服务申请 [M]
+```

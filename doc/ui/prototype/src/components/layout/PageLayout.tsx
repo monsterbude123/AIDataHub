@@ -5,8 +5,24 @@
  * 包含侧边导航、顶部导航和内容区域
  */
 
-import { useState, useEffect } from "react";
-import { Layout, Menu, Dropdown, Avatar, Space, Badge, List, Button, Empty, message } from "antd";
+import { useState, useEffect, useMemo } from "react";
+import {
+  Layout,
+  Menu,
+  Dropdown,
+  Avatar,
+  Space,
+  Badge,
+  List,
+  Button,
+  Empty,
+  message,
+  Modal,
+  Tabs,
+  Tag,
+  Popconfirm,
+  Typography,
+} from "antd";
 import type { MenuProps } from "antd";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -29,6 +45,9 @@ import {
   AlertCircle,
   Info,
   AlertTriangle,
+  Trash2,
+  Check,
+  ExternalLink,
 } from "lucide-react";
 
 import { ROUTES, APP_CONFIG } from "@/constants";
@@ -36,11 +55,17 @@ import {
   mockNotifications,
   getUnreadCount,
   markAllAsRead,
+  markAsRead,
+  deleteNotification,
 } from "@/services/mock/notification";
-import type { Notification, NotificationLevel } from "@/types/notification";
-import { NOTIFICATION_LEVEL_COLORS } from "@/types/notification";
+import type { Notification, NotificationType, NotificationLevel } from "@/types/notification";
+import {
+  NOTIFICATION_LEVEL_COLORS,
+  NOTIFICATION_TYPE_LABELS,
+} from "@/types/notification";
 
 const { Header, Content, Sider } = Layout;
+const { Text } = Typography;
 
 /**
  * 导航菜单配置
@@ -189,13 +214,31 @@ const getLevelIcon = (level: NotificationLevel) => {
   const color = NOTIFICATION_LEVEL_COLORS[level];
   switch (level) {
     case "success":
-      return <CheckCircle size={16} style={{ color }} />;
+      return <CheckCircle size={18} style={{ color }} />;
     case "warning":
-      return <AlertTriangle size={16} style={{ color }} />;
+      return <AlertTriangle size={18} style={{ color }} />;
     case "error":
-      return <AlertCircle size={16} style={{ color }} />;
+      return <AlertCircle size={18} style={{ color }} />;
     default:
-      return <Info size={16} style={{ color }} />;
+      return <Info size={18} style={{ color }} />;
+  }
+};
+
+/**
+ * 获取通知类型标签颜色
+ */
+const getTypeTagColor = (type: NotificationType): string => {
+  switch (type) {
+    case "system":
+      return "blue";
+    case "approval":
+      return "orange";
+    case "data":
+      return "green";
+    case "security":
+      return "red";
+    default:
+      return "default";
   }
 };
 
@@ -232,14 +275,36 @@ export function PageLayout({ children, title }: PageLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   // 初始化通知数据
   useEffect(() => {
     setNotifications([...mockNotifications]);
-    setUnreadCount(getUnreadCount());
   }, []);
+
+  // 未读数量
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n) => n.status === "unread").length;
+  }, [notifications]);
+
+  // 筛选后的通知列表
+  const filteredNotifications = useMemo(() => {
+    let filtered = notifications;
+
+    if (activeTab === "unread") {
+      filtered = filtered.filter((n) => n.status === "unread");
+    } else if (activeTab === "read") {
+      filtered = filtered.filter((n) => n.status === "read");
+    } else if (["system", "approval", "data", "security"].includes(activeTab)) {
+      filtered = filtered.filter((n) => n.type === activeTab);
+    }
+
+    return filtered.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [notifications, activeTab]);
 
   /**
    * 标记全部已读
@@ -247,15 +312,35 @@ export function PageLayout({ children, title }: PageLayoutProps) {
   const handleMarkAllRead = () => {
     markAllAsRead();
     setNotifications([...mockNotifications]);
-    setUnreadCount(0);
     message.success("已将全部通知标记为已读");
   };
 
   /**
-   * 跳转到通知中心
+   * 标记单条已读
    */
-  const handleViewAll = () => {
-    router.push(ROUTES.NOTIFICATIONS);
+  const handleMarkRead = (id: string) => {
+    markAsRead(id);
+    setNotifications([...mockNotifications]);
+    message.success("已标记为已读");
+  };
+
+  /**
+   * 删除通知
+   */
+  const handleDelete = (id: string) => {
+    deleteNotification(id);
+    setNotifications([...mockNotifications]);
+    message.success("通知已删除");
+  };
+
+  /**
+   * 点击通知跳转
+   */
+  const handleNotificationClick = (notification: Notification) => {
+    if (notification.link) {
+      setNotificationModalOpen(false);
+      router.push(notification.link);
+    }
   };
 
   /**
@@ -292,6 +377,19 @@ export function PageLayout({ children, title }: PageLayoutProps) {
     }
     return [];
   };
+
+  /**
+   * 标签页配置
+   */
+  const tabItems = [
+    { key: "all", label: `全部 (${notifications.length})` },
+    { key: "unread", label: `未读 (${unreadCount})` },
+    { key: "read", label: `已读 (${notifications.length - unreadCount})` },
+    { key: "system", label: "系统通知" },
+    { key: "approval", label: "审批通知" },
+    { key: "data", label: "数据通知" },
+    { key: "security", label: "安全通知" },
+  ];
 
   return (
     <Layout style={{ height: "100vh", overflow: "hidden" }}>
@@ -368,127 +466,22 @@ export function PageLayout({ children, title }: PageLayoutProps) {
           </h1>
 
           <Space size="middle">
-            {/* 通知下拉 */}
-            <Dropdown
-              trigger={['click']}
-              dropdownRender={() => (
-                <div
-                  style={{
-                    width: 360,
-                    background: '#fff',
-                    borderRadius: 8,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    border: '1px solid #E2E8F0',
-                  }}
-                >
-                  {/* 标题栏 */}
-                  <div
-                    style={{
-                      padding: '12px 16px',
-                      borderBottom: '1px solid #E2E8F0',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span style={{ fontWeight: 600, color: '#1E293B' }}>
-                      通知消息
-                      {unreadCount > 0 && (
-                        <Badge count={unreadCount} size="small" style={{ marginLeft: 8 }} />
-                      )}
-                    </span>
-                    {unreadCount > 0 && (
-                      <Button
-                        type="link"
-                        size="small"
-                        style={{ color: '#2563EB', padding: 0 }}
-                        onClick={handleMarkAllRead}
-                      >
-                        全部已读
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* 通知列表 - 只显示未读的前5条 */}
-                  {notifications.filter(n => n.status === 'unread').length > 0 ? (
-                    <List
-                      dataSource={notifications.filter(n => n.status === 'unread').slice(0, 5)}
-                      renderItem={(item) => (
-                        <List.Item
-                          style={{
-                            padding: '12px 16px',
-                            cursor: 'pointer',
-                            transition: 'background 0.2s',
-                            background: '#F0F9FF',
-                            borderLeft: `3px solid ${NOTIFICATION_LEVEL_COLORS[item.level]}`,
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#E0F2FE';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#F0F9FF';
-                          }}
-                          onClick={() => item.link && router.push(item.link)}
-                        >
-                          <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-                            {getLevelIcon(item.level)}
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: 500, color: '#1E293B', marginBottom: 4 }}>
-                                {item.title}
-                              </div>
-                              <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 4 }}>
-                                {item.content}
-                              </div>
-                              <div style={{ fontSize: 12, color: '#9CA3AF' }}>
-                                {formatRelativeTime(item.createdAt)}
-                              </div>
-                            </div>
-                          </div>
-                        </List.Item>
-                      )}
-                      style={{ maxHeight: 300, overflowY: 'auto' }}
-                    />
-                  ) : (
-                    <div style={{ padding: 32, textAlign: 'center' }}>
-                      <Empty description="暂无未读通知" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                    </div>
-                  )}
-
-                  {/* 底部操作栏 */}
-                  <div
-                    style={{
-                      padding: '12px 16px',
-                      borderTop: '1px solid #E2E8F0',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Button
-                      type="link"
-                      style={{ color: '#2563EB' }}
-                      onClick={handleViewAll}
-                    >
-                      查看全部通知
-                    </Button>
-                  </div>
-                </div>
-              )}
-              placement="bottomRight"
-            >
-              <Badge count={unreadCount} size="small">
-                <button
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    cursor: "pointer",
-                    padding: 8,
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Bell size={18} style={{ color: "#6B7280" }} />
-                </button>
-              </Badge>
-            </Dropdown>
+            {/* 通知铃铛 */}
+            <Badge count={unreadCount} size="small">
+              <button
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  padding: 8,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                onClick={() => setNotificationModalOpen(true)}
+              >
+                <Bell size={18} style={{ color: "#6B7280" }} />
+              </button>
+            </Badge>
 
             {/* 用户菜单 */}
             <Dropdown menu={{ items: userMenuItems, onClick: handleUserMenuClick }} placement="bottomRight">
@@ -525,6 +518,131 @@ export function PageLayout({ children, title }: PageLayoutProps) {
           </div>
         </Content>
       </Layout>
+
+      {/* 通知中心弹窗 */}
+      <Modal
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Bell size={18} style={{ color: "#2563EB" }} />
+            <span>通知中心</span>
+            {unreadCount > 0 && (
+              <Badge count={unreadCount} size="small" style={{ marginLeft: 8 }} />
+            )}
+          </div>
+        }
+        open={notificationModalOpen}
+        onCancel={() => setNotificationModalOpen(false)}
+        footer={
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ color: "#9CA3AF", fontSize: 13 }}>
+              共 {notifications.length} 条通知
+            </span>
+            {unreadCount > 0 && (
+              <Button type="primary" icon={<Check size={14} />} onClick={handleMarkAllRead}>
+                全部标记已读
+              </Button>
+            )}
+          </div>
+        }
+        width={700}
+        styles={{ body: { padding: 0, maxHeight: 500, overflowY: "auto" } }}
+      >
+        {/* 标签页筛选 */}
+        <div style={{ padding: "12px 24px 0", borderBottom: "1px solid #F1F5F9" }}>
+          <Tabs items={tabItems} activeKey={activeTab} onChange={setActiveTab} size="small" />
+        </div>
+
+        {/* 通知列表 */}
+        {filteredNotifications.length > 0 ? (
+          <List
+            dataSource={filteredNotifications}
+            renderItem={(item) => {
+              const isUnread = item.status === "unread";
+              return (
+                <List.Item
+                  style={{
+                    padding: "16px 24px",
+                    background: isUnread ? "#F0F9FF" : "#fff",
+                    borderLeft: isUnread
+                      ? `3px solid ${NOTIFICATION_LEVEL_COLORS[item.level]}`
+                      : "none",
+                    transition: "background 0.2s",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 16, width: "100%" }}>
+                    {/* 级别图标 */}
+                    <div style={{ paddingTop: 2 }}>{getLevelIcon(item.level)}</div>
+
+                    {/* 通知内容 */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <Text strong style={{ fontSize: 15, color: "#1E293B" }}>
+                          {item.title}
+                        </Text>
+                        <Tag color={getTypeTagColor(item.type)} style={{ marginLeft: 4 }}>
+                          {NOTIFICATION_TYPE_LABELS[item.type]}
+                        </Tag>
+                        {isUnread && <Tag color="processing">未读</Tag>}
+                      </div>
+
+                      <Text style={{ color: "#6B7280", fontSize: 14, display: "block", marginBottom: 8 }}>
+                        {item.content}
+                      </Text>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {formatRelativeTime(item.createdAt)}
+                        </Text>
+
+                        <Space size="small">
+                          {isUnread && (
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<Check size={14} />}
+                              onClick={() => handleMarkRead(item.id)}
+                              style={{ color: "#2563EB" }}
+                            >
+                              标记已读
+                            </Button>
+                          )}
+
+                          {item.link && (
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<ExternalLink size={14} />}
+                              onClick={() => handleNotificationClick(item)}
+                              style={{ color: "#2563EB" }}
+                            >
+                              查看详情
+                            </Button>
+                          )}
+
+                          <Popconfirm
+                            title="确认删除此通知？"
+                            onConfirm={() => handleDelete(item.id)}
+                            okText="删除"
+                            cancelText="取消"
+                          >
+                            <Button type="text" size="small" danger icon={<Trash2 size={14} />}>
+                              删除
+                            </Button>
+                          </Popconfirm>
+                        </Space>
+                      </div>
+                    </div>
+                  </div>
+                </List.Item>
+              );
+            }}
+          />
+        ) : (
+          <div style={{ padding: 48, textAlign: "center" }}>
+            <Empty description="暂无通知" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          </div>
+        )}
+      </Modal>
     </Layout>
   );
 }

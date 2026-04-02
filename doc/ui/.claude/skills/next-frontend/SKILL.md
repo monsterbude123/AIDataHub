@@ -17,20 +17,20 @@ user-invocable: true
 
 ## 核心技术栈（当前最佳实践）
 
-| Technology | Version Requirements | Core Positioning |
-|------------|----------------------|------------------|
-| Next.js | 14.x (App Router 优先) | 核心全栈React框架 |
-| React | 18.x | 基础UI，函数式组件+Hooks |
-| TypeScript | 5.x | 强制类型安全 |
-| Tailwind CSS | 3.x | 原子化CSS，配合shadcn/ui |
-| TanStack Query | 5.x | 服务端数据缓存与状态管理 |
-| Zod | 3.x | 数据运行时校验 |
-| ESLint | 8.x | 代码静态检查 |
-| Prettier | 3.x | 代码格式化 |
-| Jest | 29.x | 单元测试 |
-| React Testing Library | 14.x | 组件测试 |
-| Playwright | 1.40.x | E2E测试 |
-| Lucide React | 0.29x | 轻量图标库 |
+| Technology            | Version Requirements   | Core Positioning         |
+| --------------------- | ---------------------- | ------------------------ |
+| Next.js               | 14.x (App Router 优先) | 核心全栈React框架        |
+| React                 | 18.x                   | 基础UI，函数式组件+Hooks |
+| TypeScript            | 5.x                    | 强制类型安全             |
+| Tailwind CSS          | 3.x                    | 原子化CSS，配合shadcn/ui |
+| TanStack Query        | 5.x                    | 服务端数据缓存与状态管理 |
+| Zod                   | 3.x                    | 数据运行时校验           |
+| ESLint                | 8.x                    | 代码静态检查             |
+| Prettier              | 3.x                    | 代码格式化               |
+| Jest                  | 29.x                   | 单元测试                 |
+| React Testing Library | 14.x                   | 组件测试                 |
+| Playwright            | 1.40.x                 | E2E测试                  |
+| Lucide React          | 0.29x                  | 轻量图标库               |
 
 ## 核心开发铁则（最高优先级，必须严格遵守）
 
@@ -83,6 +83,7 @@ next-frontend-project/
 ## 代码书写规范
 
 ### 命名规范
+
 - 组件文件：帕斯卡命名法 `Button.tsx`
 - 工具/类型/常量：小驼峰 `utils.ts` `userTypes.ts`
 - 页面文件：遵循Next.js规则 `page.tsx` `layout.tsx`
@@ -91,12 +92,14 @@ next-frontend-project/
 - 常量：大写下划线 `const MAX_PAGE_SIZE = 20`
 
 ### 格式规则
+
 - 缩进2空格，禁止Tab
 - 单文件最大500行，超过必须拆分
 - 导入顺序：React/Next核心 → 第三方依赖 → 内部模块 → 样式
 - 单行最大120字符
 
 ### 禁止实践
+
 - 禁止魔法数字/魔法字符串，必须抽常量
 - 禁止直接操作DOM，优先React声明式API
 - 禁止服务端组件使用浏览器API
@@ -105,26 +108,31 @@ next-frontend-project/
 ## 核心模块开发规范
 
 ### 路由层
+
 - 使用路由分组拆分权限/布局
 - 路由层只保留路由级逻辑，业务下沉到服务/组件层
 - 根布局只保留全局共享逻辑，分组可自定义布局
 
 ### 组件层
+
 - 拆分三层：基础UI → 业务通用 → 页面组件
 - 基础UI无业务逻辑，可跨项目复用
 - 业务组件不跨业务依赖
 - 页面组件只负责组合，不包含复杂业务
 
 ### 服务层
+
 - 所有接口统一封装在`services`，禁止组件内直接写请求
 - 所有接口必须定义TS类型，Zod做运行时校验
 - 错误统一处理，禁止重复写错误处理
 
 ### 状态管理层
+
 - 服务端数据统一由TanStack Query管理，禁止存入客户端全局状态
 - 仅跨组件共享的客户端状态才用全局状态，局部优先useState
 
 ### 工具层
+
 - 通用工具放`lib/utils.ts`，业务专用放对应目录
 - 第三方库初始化统一放`lib`，导出封装实例
 
@@ -139,6 +147,7 @@ next-frontend-project/
 ## 代码提交规范
 
 遵循Conventional Commits标准：
+
 ```
 <type>(<scope>): <subject>
 
@@ -148,6 +157,7 @@ next-frontend-project/
 ```
 
 类型说明：
+
 - `feat`: 新增功能
 - `fix`: 修复Bug
 - `docs`: 文档修改
@@ -181,6 +191,7 @@ next-frontend-project/
 ## 使用方式
 
 当你需要开发Next.js项目时，可以随时调用我：
+
 - 项目初始化：我会帮你生成符合规范的项目结构和配置
 - 功能开发：我会遵循最佳实践帮你写符合规范的代码
 - 代码评审：我会帮你检查是否符合开发规范，指出问题并给出优化建议

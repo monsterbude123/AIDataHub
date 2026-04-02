@@ -2,6 +2,17 @@
 
 > 本目录按模块划分页面设计文档，遵循 MASTER + Overrides 层级模式
 
+## 导航设计文档
+
+**详细导航结构请参考**: [navigation.md](../navigation.md)
+
+该文档定义了：
+
+- 完整的菜单导航结构
+- 页面类型定义（菜单页/详情页/配置页/Tab页）
+- 各模块的菜单层级关系
+- 非菜单页面的入口方式
+
 ## 目录结构
 
 ```
@@ -9,93 +20,84 @@ pages/
 ├── index.md               # 本文件 - 主索引
 └── modules/
     ├── common/            # 公共页面
-    │   ├── index.md
-    │   └── login.md
+    ├── data-development-project/  # 数据开发项目管理
+    │   └── scheduler/     # 任务调度子模块
     ├── data-integration/  # 数据集成管理
-    │   ├── index.md
-    │   ├── source-list.md
-    │   ├── source-config.md
-    │   ├── profiling.md
-    │   ├── standardization.md
-    │   └── sql-dev.md
+    │   └── migration/     # 数据迁移子模块
+    ├── infrastructure/    # 基础设施管理
     ├── data-service/      # 数据服务管理
-    │   ├── index.md
-    │   ├── catalog.md
-    │   ├── config.md
-    │   ├── authorization.md
-    │   └── monitoring.md
     ├── metadata/          # 元数据管理
-    │   ├── index.md
-    │   ├── list.md
-    │   └── detail.md
     ├── data-organization/ # 数据组织管理
-    │   ├── index.md
-    │   ├── catalog.md
-    │   └── mapping.md
     ├── governance/        # 数据治理管理
-    │   ├── index.md
-    │   ├── data-map.md
-    │   ├── data-quality.md
-    │   ├── tag-management.md
-    │   ├── lineage.md
-    │   ├── data-standard.md
-    │   └── data-model.md
     ├── security/          # 数据安全管理
-    │   ├── index.md
-    │   ├── desensitization.md
-    │   ├── classification.md
-    │   └── watermark.md
-    ├── scheduler/         # 统一任务调度中心
-    │   ├── index.md
-    │   ├── dag.md
-    │   ├── task-list.md
-    │   └── log-center.md
     ├── system/            # 系统管理
-    │   ├── index.md
-    │   ├── approval-config.md
-    │   ├── approval-todo.md
-    │   ├── org-user.md
-    │   └── role-permission.md
     ├── sharing/           # 数据共享交换
-    │   ├── index.md
-    │   ├── home-dashboard.md
-    │   ├── tasks.md
-    │   ├── resource-management.md
-    │   └── service-application.md
-    └ analytics/          # 用户自助数据分析
-        ├── index.md
-        ├── ad-hoc-query.md
-        └── ad-hoc-visualization.md
+    ├── analytics/         # 用户自助数据分析
     └── task-queue/        # 任务队列管理
-        ├── index.md
-        └── monitor.md
 ```
+
+## 页面类型定义
+
+| 类型     | 标识  | 说明               | 显示位置                   |
+| -------- | ----- | ------------------ | -------------------------- |
+| 菜单页面 | `[M]` | 出现在侧边导航菜单 | 一级/二级/三级菜单         |
+| 详情页面 | `[D]` | 从列表点击进入     | 不在菜单，通过列表操作进入 |
+| 配置页面 | `[C]` | 新增/编辑配置      | 不在菜单，弹窗或独立页面   |
+| Tab页面  | `[T]` | 详情页的Tab标签    | 不在菜单，详情页内部       |
 
 ## 模块概览
 
-| 模块         | 目录               | 页面数 | 核心功能                               |
-| ------------ | ------------------ | ------ | -------------------------------------- |
-| 公共页面     | common/            | 1      | 登录认证                               |
-| 数据集成管理 | data-integration/  | 5      | 数据源、探查、标准化、SQL开发          |
-| 数据服务管理 | data-service/      | 4      | 服务目录、配置、授权、监控             |
-| 元数据管理   | metadata/          | 2      | 元数据列表、详情版本                   |
-| 数据组织管理 | data-organization/ | 2      | 资源目录、入库映射                     |
-| 数据治理管理 | governance/        | 6      | 数据地图、质量、标签、血缘、标准、模型 |
-| 数据安全管理 | security/          | 3      | 脱敏、分级分类、水印                   |
-| 统一任务调度 | scheduler/         | 3      | DAG编排、任务运维、日志中心            |
-| 任务队列管理 | task-queue/        | 1      | 队列监控总览                           |
-| 系统管理     | system/            | 4      | 审批配置、待办、组织用户、角色权限     |
-| 数据共享交换 | sharing/           | 4      | 首页、事项任务、资源管理、服务申请     |
-| 自助数据分析 | analytics/         | 2      | 即席查询、可视化                       |
+| 模块        | 目录                      | 菜单页面 | 核心功能                           |
+| ----------- | ------------------------- | -------- | ---------------------------------- |
+| 公共页面    | common/                   | 0        | 登录认证、个人中心（不在菜单）     |
+| 数据项目    | data-development-project/ | 1        | 项目全生命周期管理                 |
+| └─ 任务调度 | └─ scheduler/             | 0        | DAG编排、运维（从项目详情进入）    |
+| 数据集成    | data-integration/         | 5        | 数据源、探查、标准化、SQL、迁移    |
+| └─ 数据迁移 | └─ migration/             | 1        | 迁移任务列表                       |
+| 基础设施    | infrastructure/           | 5        | 租户、队列、Worker、引擎、模板     |
+| 数据服务    | data-service/             | 2        | 服务目录、监控                     |
+| 元数据      | metadata/                 | 1        | 元数据列表                         |
+| 数据组织    | data-organization/        | 2        | 资源目录、入库映射                 |
+| 数据治理    | governance/               | 6        | 地图、质量、标签、血缘、标准、模型 |
+| 数据安全    | security/                 | 3        | 脱敏、分级分类、水印               |
+| 任务队列    | task-queue/               | 1        | 队列监控                           |
+| 系统管理    | system/                   | 5        | 审批、组织、角色、设置             |
+| 数据共享    | sharing/                  | 4        | 首页、任务、资源、申请             |
+| 自助分析    | analytics/                | 2        | 即席查询、可视化                   |
 
-**总计**: 12个模块，33个页面设计文档
+**菜单页面总计**: 32 个
+
+## 配置层级架构
+
+基础设施管理模块提供**四级配置继承**机制，实现配置复用：
+
+```
+系统级配置（全局默认）
+    ↓ 继承
+租户级配置（租户特定）
+    ↓ 继承
+项目级配置（项目特定）
+    ↓ 引用
+任务级配置（任务参数）
+```
+
+各功能模块通过**配置引用**使用基础设施配置：
+
+| 功能模块    | 引用的配置                        |
+| ----------- | --------------------------------- |
+| 数据迁移    | 引擎(Spark/DataX) + 队列 + Worker |
+| 数据探查    | 引擎(Spark) + 队列                |
+| 数据治理    | 引擎 + 队列 + Worker              |
+| 任务DAG调度 | 队列 + Worker                     |
+| 数据项目    | 项目级默认配置                    |
 
 ## 使用说明
 
-1. **全局设计规范**: 参考 `../MASTER.md`
-2. **页面级覆盖**: 页面文档可覆盖 MASTER 规范中的特定规则
-3. **模块索引**: 每个模块目录有 `index.md` 说明模块功能概览
-4. **页面文档**: 具体页面的布局、交互、组件设计细节
+1. **导航设计**: 参考 [navigation.md](../navigation.md) 了解菜单结构
+2. **全局设计规范**: 参考 `../MASTER.md`
+3. **页面级覆盖**: 页面文档可覆盖 MASTER 规范中的特定规则
+4. **模块索引**: 每个模块目录有 `index.md` 说明模块功能概览和页面类型
+5. **页面文档**: 具体页面的布局、交互、组件设计细节
 
 ## 需求来源
 
