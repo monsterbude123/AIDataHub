@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && npx tsc --noEmit --watch --project ./tsconfig.json 2>/dev/null | grep -E '(error|any)' | head -20 || exit 0",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

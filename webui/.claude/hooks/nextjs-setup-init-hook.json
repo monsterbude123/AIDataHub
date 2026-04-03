@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Setup": [
+      {
+        "matcher": "init",
+        "hooks": [
+          {
+            "type": "command", "command": "cd \"$CLAUDE_PROJECT_DIR\" && cat > .gitignore << 'EOF'\n.env\n.env.local\n.env.*.local\nnode_modules\n.next\nout\ncoverage\n*.log\nEOF\nif [ ! -f .eslintrc.js ]; then cat > .eslintrc.js << 'EOF'\nmodule.exports = {\n  extends: ['next/core-web-vitals', 'eslint:recommended', 'plugin:@typescript-eslint/recommended'],\n  rules: {\n    '@typescript-eslint/no-explicit-any': 'error',\n    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]\n  }\n};\nEOF\nfi\nif [ ! -f .prettierrc ]; then cat > .prettierrc << 'EOF'\n{\n  \"semi\": true,\n  \"tabWidth\": 2,\n  \"singleQuote\": true,\n  \"trailingComma\": \"esm\",\n  \"printWidth\": 120\n}\nEOF\nfi\necho \"Next.js 前端开发规范初始化完成，已添加基础配置\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
