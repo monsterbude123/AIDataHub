@@ -31,6 +31,7 @@ import {
   FileText,
   BarChart3,
   Users,
+  Clock,
 } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
@@ -62,6 +63,9 @@ const tabItems = [
   { key: "docs", label: "文档", icon: <FileText size={16} /> },
   { key: "stats", label: "统计", icon: <BarChart3 size={16} /> },
   { key: "members", label: "成员", icon: <Users size={16} /> },
+  { key: "scheduler/dag", label: "DAG编排", icon: <Clock size={16} /> },
+  { key: "scheduler/tasks", label: "任务运维", icon: <ListTodo size={16} /> },
+  { key: "scheduler/logs", label: "日志中心", icon: <FileText size={16} /> },
 ];
 
 /**
@@ -125,6 +129,10 @@ export default function ProjectDetailLayout({ children }: ProjectDetailLayoutPro
     if (pathname.includes("/docs")) return "docs";
     if (pathname.includes("/stats")) return "stats";
     if (pathname.includes("/members")) return "members";
+    // Scheduler 子模块
+    if (pathname.includes("/scheduler/dag")) return "scheduler/dag";
+    if (pathname.includes("/scheduler/tasks")) return "scheduler/tasks";
+    if (pathname.includes("/scheduler/logs")) return "scheduler/logs";
     return "overview";
   };
 
