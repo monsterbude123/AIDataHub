@@ -10,10 +10,13 @@
   --ant-error-color: #ff4d4f;
 }
 
-/* 全局布局样式 */
+/* 全局布局样式 - 防止外层滚动条 */
 html,
 body {
   height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden !important;
 }
 
 body {
@@ -21,6 +24,12 @@ body {
     "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
     "Noto Color Emoji";
   antialias: true;
+}
+
+/* Next.js 根容器 */
+#__next {
+  height: 100%;
+  overflow: hidden !important;
 }
 
 /* 自定义滚动条 */

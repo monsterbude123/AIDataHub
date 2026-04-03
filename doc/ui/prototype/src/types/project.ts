@@ -289,3 +289,136 @@ export interface ProjectDetailStatistics {
   /** 成员数 */
   totalMembers: number;
 }
+
+// ==================== 项目详情页扩展类型 ====================
+
+/**
+ * 用户头像信息（简化版）
+ */
+export interface UserAvatar {
+  id: string;
+  name: string;
+  avatar: string;
+}
+
+/**
+ * 项目任务类型（详情页）
+ */
+export interface ProjectTaskItem {
+  /** 任务ID */
+  id: string;
+  /** 任务名称 */
+  name: string;
+  /** 任务状态 */
+  status: "completed" | "in_progress" | "pending" | "overdue";
+  /** 优先级 */
+  priority: "high" | "medium" | "low";
+  /** 负责人 */
+  assignee: UserAvatar;
+  /** 关联里程碑ID */
+  milestoneId: string;
+  /** 截止日期 */
+  dueDate: string;
+  /** 完成时间 */
+  completedAt?: string;
+  /** 任务描述 */
+  description?: string;
+}
+
+/**
+ * 任务状态标签映射
+ */
+export const TASK_STATUS_LABELS: Record<ProjectTaskItem["status"], string> = {
+  completed: "已完成",
+  in_progress: "进行中",
+  pending: "待开始",
+  overdue: "已逾期",
+};
+
+/**
+ * 任务优先级标签映射
+ */
+export const TASK_PRIORITY_LABELS: Record<ProjectTaskItem["priority"], string> = {
+  high: "高",
+  medium: "中",
+  low: "低",
+};
+
+/**
+ * 项目统计详情（详情页概览）
+ */
+export interface ProjectStatsDetail {
+  tasks: {
+    total: number;
+    completed: number;
+    inProgress: number;
+    pending: number;
+    overdue: number;
+    completionRate: number;
+  };
+  milestones: {
+    total: number;
+    completed: number;
+    inProgress: number;
+    pending: number;
+    completionRate: number;
+  };
+  documents: {
+    total: number;
+    byType: Record<string, number>;
+  };
+  members: {
+    total: number;
+    byRole: Record<ProjectMemberRole, number>;
+  };
+  time: {
+    elapsedDays: number;
+    remainingDays: number;
+    expectedDuration: number;
+    elapsedPercentage: number;
+  };
+}
+
+/**
+ * 阶段信息详情
+ */
+export interface StageInfoDetail {
+  key: ProjectPhase;
+  name: string;
+  status: "completed" | "in_progress" | "pending";
+  startDate?: string;
+  endDate?: string;
+  completedAt?: string;
+}
+
+/**
+ * 项目详情完整信息
+ */
+export interface ProjectDetailFull extends Project {
+  /** 项目描述 */
+  description: string;
+  /** 负责人完整信息 */
+  owner: UserAvatar;
+  /** 组织信息 */
+  organization: {
+    id: string;
+    name: string;
+  };
+  /** 标签 */
+  tags: string[];
+  /** 优先级 */
+  priority: "high" | "medium" | "low";
+}
+
+/**
+ * 项目动态详情（带操作人头像）
+ */
+export interface ProjectActivityDetail {
+  id: string;
+  projectId: string;
+  type: ProjectActivityType;
+  title: string;
+  description: string;
+  operator: UserAvatar;
+  createdAt: string;
+}

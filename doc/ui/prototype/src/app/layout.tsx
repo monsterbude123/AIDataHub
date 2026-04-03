@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>
+      <body style={{ margin: 0, padding: 0, height: "100%", overflow: "hidden" }}>
         <AntdRegistry>
           <Providers>{children}</Providers>
         </AntdRegistry>

@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { Card, Button, Space, message, Tag } from "antd";
+import { Card, Button, Space, Tag } from "antd";
 import {
   Plus,
   Play,
@@ -32,6 +32,7 @@ import {
   type FormFieldConfig,
 } from "@/components/ui";
 import { ROUTES } from "@/constants";
+import { useMessage } from "@/hooks/useAntdApp";
 import {
   mockQualityRules,
   mockQualityTasks,
@@ -58,6 +59,7 @@ const BREADCRUMB_ITEMS = [
  * 数据质量管理页面组件
  */
 export default function DataQualityPage() {
+  const message = useMessage();
   const [activeTab, setActiveTab] = useState("rules");
   const [ruleModalOpen, setRuleModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<QualityRule | null>(null);

@@ -6,7 +6,7 @@
  */
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, App } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
@@ -35,7 +35,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ConfigProvider locale={zhCN} theme={antdTheme}>
-        {children}
+        <App>
+          <div style={{ height: "100%", overflow: "hidden" }}>
+            {children}
+          </div>
+        </App>
       </ConfigProvider>
     </QueryClientProvider>
   );

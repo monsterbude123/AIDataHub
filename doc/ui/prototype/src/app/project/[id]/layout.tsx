@@ -2,10 +2,11 @@
 
 /**
  * 项目详情布局
- * 包含项目头部信息、阶段进度条和Tab导航
+ * 包含项目头部信息、阶段进度条、快捷入口和Tab导航
  */
 
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import {
   Card,
@@ -31,7 +32,7 @@ import {
   FileText,
   BarChart3,
   Users,
-  Clock,
+  Workflow,
 } from "lucide-react";
 
 import { PageLayout } from "@/components/layout";
@@ -54,18 +55,58 @@ import {
 const { Title, Text } = Typography;
 
 /**
- * Tab 配置
+ * 快捷入口配置
+ */
+const QUICK_ENTRIES = [
+  {
+    key: "tasks",
+    title: "任务管理",
+    icon: <ListTodo size={20} />,
+    href: "/project/[id]/tasks",
+    color: "#2563EB",
+  },
+  {
+    key: "milestones",
+    title: "里程碑",
+    icon: <Flag size={20} />,
+    href: "/project/[id]/milestones",
+    color: "#10B981",
+  },
+  {
+    key: "docs",
+    title: "文档",
+    icon: <FileText size={20} />,
+    href: "/project/[id]/docs",
+    color: "#F59E0B",
+  },
+  {
+    key: "stats",
+    title: "统计",
+    icon: <BarChart3 size={20} />,
+    href: "/project/[id]/stats",
+    color: "#8B5CF6",
+  },
+  {
+    key: "members",
+    title: "成员",
+    icon: <Users size={20} />,
+    href: "/project/[id]/members",
+    color: "#EF4444",
+  },
+  {
+    key: "scheduler",
+    title: "调度中心",
+    icon: <Workflow size={20} />,
+    href: "/project/[id]/scheduler",
+    color: "#3B82F6",
+  },
+];
+
+/**
+ * Tab 配置 - 仅保留概览
  */
 const tabItems = [
   { key: "overview", label: "概览", icon: <LayoutDashboard size={16} /> },
-  { key: "tasks", label: "任务管理", icon: <ListTodo size={16} /> },
-  { key: "milestones", label: "里程碑", icon: <Flag size={16} /> },
-  { key: "docs", label: "文档", icon: <FileText size={16} /> },
-  { key: "stats", label: "统计", icon: <BarChart3 size={16} /> },
-  { key: "members", label: "成员", icon: <Users size={16} /> },
-  { key: "scheduler/dag", label: "DAG编排", icon: <Clock size={16} /> },
-  { key: "scheduler/tasks", label: "任务运维", icon: <ListTodo size={16} /> },
-  { key: "scheduler/logs", label: "日志中心", icon: <FileText size={16} /> },
 ];
 
 /**
@@ -81,13 +122,16 @@ interface ProjectDetailLayoutProps {
  */
 export default function ProjectDetailLayout({ children }: ProjectDetailLayoutProps) {
   const params = useParams();
-  const pathname = usePathname();
   const router = useRouter();
+  const pathname = usePathname();
 
   const projectId = params.id as string;
   const [project, setProject] = useState<Project | null>(null);
   const [statistics, setStatistics] = useState<ProjectDetailStatistics | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // 判断是否为概览页（只有概览页显示完整布局）
+  const isOverviewPage = pathname === `/project/${projectId}`;
 
   /**
    * 加载项目数据
@@ -119,20 +163,10 @@ export default function ProjectDetailLayout({ children }: ProjectDetailLayoutPro
   }, [project]);
 
   /**
-   * 获取当前激活的 Tab
+   * 获取当前激活的 Tab - 仅概览
    */
   const getActiveTab = () => {
-    // 默认为概览
-    if (pathname === `/project/${projectId}`) return "overview";
-    if (pathname.includes("/tasks")) return "tasks";
-    if (pathname.includes("/milestones")) return "milestones";
-    if (pathname.includes("/docs")) return "docs";
-    if (pathname.includes("/stats")) return "stats";
-    if (pathname.includes("/members")) return "members";
-    // Scheduler 子模块
-    if (pathname.includes("/scheduler/dag")) return "scheduler/dag";
-    if (pathname.includes("/scheduler/tasks")) return "scheduler/tasks";
-    if (pathname.includes("/scheduler/logs")) return "scheduler/logs";
+    // 子页面有独立 layout，此 layout 仅用于概览
     return "overview";
   };
 
@@ -224,6 +258,11 @@ export default function ProjectDetailLayout({ children }: ProjectDetailLayoutPro
     );
   }
 
+  // 子页面直接渲染 children，不显示项目详情布局
+  if (!isOverviewPage) {
+    return <>{children}</>;
+  }
+
   return (
     <PageLayout title={project.name}>
       {/* 面包屑 */}
@@ -290,6 +329,35 @@ export default function ProjectDetailLayout({ children }: ProjectDetailLayoutPro
           onAdvance={handleAdvancePhase}
           onRevert={handleRevertPhase}
         />
+      </Card>
+
+      {/* 快捷入口 */}
+      <Card title="快捷入口" style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]}>
+          {QUICK_ENTRIES.map((entry) => {
+            const actualHref = entry.href.replace("[id]", projectId);
+            return (
+              <Col span={4} key={entry.key}>
+                <Link href={actualHref} style={{ textDecoration: "none" }}>
+                  <Card
+                    styles={{
+                      body: {
+                        textAlign: "center",
+                        padding: 16,
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                      },
+                    }}
+                    hoverable
+                  >
+                    <div style={{ color: entry.color, marginBottom: 8 }}>{entry.icon}</div>
+                    <Text strong>{entry.title}</Text>
+                  </Card>
+                </Link>
+              </Col>
+            );
+          })}
+        </Row>
       </Card>
 
       {/* 关键指标卡片 */}

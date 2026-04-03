@@ -283,10 +283,11 @@ export function getFilteredProjects(params: {
 }
 
 /**
- * 根据ID获取项目详情
+ * 根据ID或编号获取项目详情
+ * 支持通过内部ID (proj-xxx) 或项目编号 (PRJ-xxxx-xxx) 查询
  */
-export function getProjectById(id: string): Project | undefined {
-  return mockProjects.find((p) => p.id === id);
+export function getProjectById(idOrCode: string): Project | undefined {
+  return mockProjects.find((p) => p.id === idOrCode || p.code === idOrCode);
 }
 
 /**

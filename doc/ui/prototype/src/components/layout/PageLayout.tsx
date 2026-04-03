@@ -508,6 +508,7 @@ export function PageLayout({ children, title }: PageLayoutProps) {
             background: "#F8FAFC",
             overflowY: "auto",
             overflowX: "hidden",
+            minHeight: 0, // 确保 flex 子元素可以正确收缩
           }}
         >
           <div
@@ -515,7 +516,6 @@ export function PageLayout({ children, title }: PageLayoutProps) {
               padding: 24,
               background: "#fff",
               borderRadius: 8,
-              minHeight: "calc(100% - 48px)",
             }}
           >
             {children}

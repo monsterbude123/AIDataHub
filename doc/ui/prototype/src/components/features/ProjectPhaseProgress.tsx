@@ -77,7 +77,7 @@ export function ProjectPhaseProgress({
     key: phase,
     title: PROJECT_PHASE_LABELS[phase],
     status: (getPhaseStatus(phase, index) === "completed" ? "finish" : getPhaseStatus(phase, index) === "current" ? "process" : "wait") as "finish" | "process" | "wait",
-    description: (
+    content: (
       <Text style={{ fontSize: 12, color: getPhaseStatus(phase, index) === "completed" ? "#10B981" : getPhaseStatus(phase, index) === "current" ? "#F59E0B" : "#6B7280" }}>
         {getPhaseStatus(phase, index) === "completed" && "完成"}
         {getPhaseStatus(phase, index) === "current" && "进行中"}

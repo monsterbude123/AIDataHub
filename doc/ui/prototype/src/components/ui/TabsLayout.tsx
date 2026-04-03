@@ -94,7 +94,6 @@ export function TabsLayout({
       activeKey={activeKey}
       onChange={onChange}
       items={tabsItems}
-      tabPosition={position}
       style={{ marginBottom: 0 }}
       {...tabsProps}
     />

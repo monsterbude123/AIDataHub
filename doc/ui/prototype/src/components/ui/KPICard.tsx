@@ -201,7 +201,7 @@ export function KPICard({
             ) : undefined
           }
           precision={precision}
-          valueStyle={{ color: themeColor, fontWeight: 600 }}
+          styles={{ content: { color: themeColor, fontWeight: 600 } }}
           {...statisticProps}
         />
       </Tooltip>

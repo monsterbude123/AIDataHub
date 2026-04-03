@@ -137,7 +137,7 @@ export default function DAGPage() {
       <div style={{ display: "flex", gap: 16, height: isFullscreen ? "calc(100vh - 80px)" : "calc(100vh - 280px)", minHeight: 500, ...fullscreenStyle }}>
         {!isFullscreen && (
           <Card title="节点面板" style={{ width: 200, overflow: "auto" }} styles={{ body: { padding: 12 } }}>
-            <Collapse defaultActiveKey={["data_integration", "data_governance", "data_processing", "control_flow"]} ghost expandIconPosition="end">
+            <Collapse defaultActiveKey={["data_integration", "data_governance", "data_processing", "control_flow"]} ghost expandIconPlacement="end">
               {NODE_PANEL_CONFIG.map((category) => (
                 <Collapse.Panel key={category.category} header={<span style={{ fontWeight: 500 }}>{category.label}</span>}>
                   {category.nodes.map((node) => renderNodePanelItem(node.type as DAGNodeType))}

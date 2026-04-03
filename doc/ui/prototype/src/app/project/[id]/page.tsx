@@ -2,7 +2,7 @@
 
 /**
  * 项目详情概览页
- * 展示项目基本信息、关键指标和最近动态
+ * 展示项目基本信息和最近动态
  */
 
 import { useParams } from "next/navigation";

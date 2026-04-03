@@ -272,7 +272,7 @@ export function ModalForm({
           </Space>
         )
       }
-      maskClosable={false}
+      mask={{ closable: false }}
       forceRender
       {...modalProps}
     >
