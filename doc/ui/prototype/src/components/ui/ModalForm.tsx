@@ -5,7 +5,7 @@
  * 统一新增/编辑弹窗表单样式
  */
 
-import { Modal, Form, Button, Space, Input, InputNumber, Select, DatePicker, Switch } from "antd";
+import { Modal, Form, Button, Space, Input, InputNumber, Select, DatePicker, Switch, Radio } from "antd";
 import type { ModalProps, FormProps, FormInstance } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useEffect } from "react";
@@ -19,7 +19,7 @@ export interface FormFieldConfig {
   /** 字段标签 */
   label: string;
   /** 字段类型 */
-  type: "text" | "password" | "number" | "select" | "textarea" | "date" | "switch" | "custom";
+  type: "text" | "password" | "number" | "select" | "textarea" | "date" | "switch" | "radio" | "custom";
   /** 是否必填 */
   required?: boolean;
   /** 占位文本 */
@@ -40,8 +40,8 @@ export interface FormFieldConfig {
   componentProps?: Record<string, unknown>;
   /** 字段宽度 */
   width?: number | string;
-  /** 是否隐藏 */
-  hidden?: boolean;
+  /** 是否隐藏（支持布尔值或条件函数） */
+  hidden?: boolean | ((values: Record<string, unknown>) => boolean);
 }
 
 /**
@@ -93,7 +93,8 @@ interface ModalFormProps {
  * 渲染单个表单字段
  */
 function renderFormField(field: FormFieldConfig) {
-  if (field.hidden) return null;
+  // 仅支持布尔值 hidden，函数类型需要组件内部处理
+  if (field.hidden === true) return null;
 
   const baseProps = {
     placeholder: field.placeholder,
@@ -125,6 +126,8 @@ function renderFormField(field: FormFieldConfig) {
       return <DatePicker {...baseProps} style={widthStyle} />;
     case "switch":
       return <Switch {...baseProps} />;
+    case "radio":
+      return <Radio.Group options={field.options} {...baseProps} />;
     case "custom":
       return field.component;
     default:
