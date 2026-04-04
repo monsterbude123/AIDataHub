@@ -1,10 +1,18 @@
-import { PrismaClient } from '@prisma/client';
+import prismaClientPkg from '@prisma/client';
+import { getDatabaseUrl } from '@ai-datahub/shared';
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const { PrismaClient } = prismaClientPkg;
+type PrismaClientInstance = InstanceType<typeof PrismaClient>;
+const globalForPrisma = global as unknown as { prisma: PrismaClientInstance };
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
+    datasources: {
+      db: {
+        url: getDatabaseUrl(),
+      },
+    },
     log:
       process.env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']

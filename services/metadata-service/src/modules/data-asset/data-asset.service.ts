@@ -215,7 +215,7 @@ export class DataAssetService {
       }) => ({
         id: c.id,
         dataAssetId: c.dataAssetId,
-        name: c.name,
+        name: c.name ?? '',
         code: c.code ?? undefined,
         dataType: c.dataType,
         precision: c.precision ?? undefined,

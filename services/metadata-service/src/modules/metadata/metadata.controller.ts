@@ -1,5 +1,6 @@
 import { Body, Controller, Post, Get, Param, Query } from '@nestjs/common';
 import { MetadataService } from './metadata.service';
+import { createCacheFromEnv } from '@ai-datahub/shared';
 import type {
   CollectMetadataRequest,
   CollectMetadataResponse,
@@ -27,6 +28,8 @@ import type {
 
 @Controller('api/metadata')
 export class MetadataController {
+  private readonly cache = createCacheFromEnv({ defaultTtlMs: 20_000 });
+
   constructor(private readonly metadataService: MetadataService) {}
 
   // ============================================================================
@@ -37,7 +40,9 @@ export class MetadataController {
   async createSource(
     @Body() req: CreateMetadataSourceRequest
   ): Promise<Result<MetadataSource>> {
-    return this.metadataService.createMetadataSource(req);
+    const result = await this.metadataService.createMetadataSource(req);
+    this.cache.clear();
+    return result;
   }
 
   @Post('sources/test-connection')
@@ -51,12 +56,22 @@ export class MetadataController {
   async listSources(
     @Query() query: ListMetadataSourcesRequest
   ): Promise<Result<MetadataSourceListResult>> {
-    return this.metadataService.listMetadataSources(query);
+    const cacheKey = `metadata:sources:${query.type ?? 'all'}:${query.status ?? 'all'}:${query.page ?? 1}:${query.pageSize ?? 10}`;
+    const cached = this.cache.get<Result<MetadataSourceListResult>>(cacheKey);
+    if (cached) return cached;
+    const result = await this.metadataService.listMetadataSources(query);
+    if (result.ok) this.cache.set(cacheKey, result, 15_000);
+    return result;
   }
 
   @Get('sources/:id')
   async getSource(@Param('id') id: string): Promise<Result<MetadataSource>> {
-    return this.metadataService.getMetadataSourceById(id);
+    const cacheKey = `metadata:source:${id}`;
+    const cached = this.cache.get<Result<MetadataSource>>(cacheKey);
+    if (cached) return cached;
+    const result = await this.metadataService.getMetadataSourceById(id);
+    if (result.ok) this.cache.set(cacheKey, result, 15_000);
+    return result;
   }
 
   @Post('sources/:id/collect')

@@ -20,6 +20,7 @@ import type {
   Result,
   TaskExecution,
 } from '@ai-datahub/contract';
+import { createEventBusFromEnv, createCacheFromEnv } from '@ai-datahub/shared';
 import type { FastifyReply } from 'fastify';
 
 type GetOpsReportQuery = {
@@ -51,6 +52,8 @@ function invalidArgument(message: string): Result<never> {
 
 @Controller()
 export class OpsController {
+  private readonly cache = createCacheFromEnv({ defaultTtlMs: 15_000 });
+  private readonly eventBus = createEventBusFromEnv();
   private etlConnections: EtlConnection[] = [];
   private datasetSyncRecords: DatasetSyncRecord[] = [];
   private dataSourceHealth: DataSourceHealth[] = [];
@@ -70,6 +73,9 @@ export class OpsController {
       return invalidArgument('endAt must be >= startAt');
     }
 
+    const cacheKey = `ops:report:${q.startAt}:${q.endAt}:${q.module ?? 'all'}`;
+    const cached = this.cache.get<Result<OpsReport>>(cacheKey);
+    if (cached) return cached;
     const generatedAt = nowIso() as ISODateTime;
     const totalExecutions = this.executions.length;
     const failedExecutions = this.executions.filter(
@@ -80,7 +86,7 @@ export class OpsController {
         ? 1
         : (totalExecutions - failedExecutions) / totalExecutions;
 
-    return {
+    const result: Result<OpsReport> = {
       ok: true,
       data: {
         successRate,
@@ -89,6 +95,8 @@ export class OpsController {
         generatedAt,
       },
     };
+    this.cache.set(cacheKey, result, 10_000);
+    return result;
   }
 
   @Get('health/data-sources')
@@ -137,6 +145,10 @@ export class OpsController {
       updatedAt: ts,
     };
     this.etlConnections.push(conn);
+    this.eventBus.publish('ops.etl.connection.created', {
+      connectionId: id,
+      status: conn.status,
+    });
     reply.code(HttpStatus.CREATED);
     return { ok: true, data: { connectionId: id } };
   }
@@ -168,6 +180,10 @@ export class OpsController {
       ...c,
       updatedAt: nowIso() as ISODateTime,
     };
+    this.eventBus.publish('ops.etl.connection.updated', {
+      connectionId: c.id,
+      status: c.status,
+    });
     return { ok: true, data: { success: true } };
   }
 
@@ -185,6 +201,7 @@ export class OpsController {
         },
       };
     }
+    this.eventBus.publish('ops.etl.connection.deleted', { connectionId: id });
     return { ok: true, data: { success: true } };
   }
 

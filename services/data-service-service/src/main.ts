@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
-import type { INestApplication } from '@nestjs/common';
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -147,12 +146,8 @@ async function bootstrap() {
     ListAuditRunsRequestDto,
   ];
 
-  const document = SwaggerModule.createDocument(
-    app as INestApplication,
-    config,
-    { extraModels }
-  );
-  SwaggerModule.setup('api', app as INestApplication, document);
+  const document = SwaggerModule.createDocument(app, config, { extraModels });
+  SwaggerModule.setup('api', app, document);
 
   const port = Number(process.env.PORT ?? 3002);
   await app.listen(port, '0.0.0.0');

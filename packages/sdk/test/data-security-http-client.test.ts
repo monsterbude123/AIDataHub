@@ -11,9 +11,9 @@ describe('DataSecurityHttpClient', () => {
   it('createMaskingAlgorithm should call POST /masking/algorithms', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
-        return ok({ algorithmId: 'alg_1' });
+        return ok({ algorithmId: 'alg_1' }) as Result<T>;
       },
     };
     const client = new DataSecurityHttpClient(http);

@@ -62,6 +62,21 @@ export function loadConfig<T extends ConfigSchema>(schema: T): T {
   return result as T;
 }
 
+export type AppEnv = 'dev' | 'stage' | 'prod';
+
+export function getAppEnv(): AppEnv {
+  const raw = getEnvOrDefault('APP_ENV', 'dev').toLowerCase();
+  if (raw === 'stage') return 'stage';
+  if (raw === 'prod') return 'prod';
+  return 'dev';
+}
+
+export function getDatabaseUrl(): string {
+  const env = getAppEnv().toUpperCase();
+  const key = `DATABASE_URL_${env}`;
+  return getEnvOrThrow(key);
+}
+
 export function requireConfig<T extends ConfigSchema>(schema: T): T {
   const result: ConfigSchema = {};
   for (const [key, defaultValue] of Object.entries(schema)) {

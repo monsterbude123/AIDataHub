@@ -11,9 +11,9 @@ describe('DataLifecycleHttpClient', () => {
   it('getLifecycleReport should map GET query params', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
-        return ok({ points: [] });
+        return ok({ points: [] }) as Result<T>;
       },
     };
     const client = new DataLifecycleHttpClient(http);

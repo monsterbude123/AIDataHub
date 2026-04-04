@@ -83,6 +83,24 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: aidatahub-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - aidatahub-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   minio:
     image: minio/minio:latest
     container_name: aidatahub-minio
@@ -116,7 +134,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      APP_ENV: prod
       PORT: 4001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+      DATABASE_URL_DEV: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_dev?schema=public
+      DATABASE_URL_STAGE: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -124,6 +147,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-aidatahub}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      CACHE_BACKEND: redis
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672
+      EVENT_BUS_BACKEND: rabbitmq
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-at-least-32-chars}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
     ports:
@@ -135,12 +161,34 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  db-migrate:
+    image: node:20-alpine
+    container_name: aidatahub-db-migrate
+    working_dir: /workspace
+    command: sh -c "npm ci && npm -w @ai-datahub/database run db:migrate:deploy && npm -w @ai-datahub/database run db:generate"
+    environment:
+      APP_ENV: prod
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+      DATABASE_URL_DEV: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_dev?schema=public
+      DATABASE_URL_STAGE: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+    volumes:
+      - ./:/workspace
+    networks:
+      - aidatahub-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
 
   metadata-service:
     build:
@@ -150,7 +198,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      APP_ENV: prod
       PORT: 4002
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+      DATABASE_URL_DEV: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_dev?schema=public
+      DATABASE_URL_STAGE: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -158,6 +211,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-aidatahub}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      CACHE_BACKEND: redis
       AUTH_SERVICE_URL: http://auth-service:4001
     ports:
       - "4002:4002"
@@ -169,6 +223,8 @@ services:
       redis:
         condition: service_healthy
       auth-service:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4002/health"]
@@ -185,7 +241,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      APP_ENV: prod
       PORT: 4003
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+      DATABASE_URL_DEV: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_dev?schema=public
+      DATABASE_URL_STAGE: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -220,7 +281,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      APP_ENV: prod
       PORT: 5001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+      DATABASE_URL_DEV: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_dev?schema=public
+      DATABASE_URL_STAGE: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -256,7 +322,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      APP_ENV: prod
       PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+      DATABASE_URL_DEV: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_dev?schema=public
+      DATABASE_URL_STAGE: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -264,6 +335,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-aidatahub}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      CACHE_BACKEND: redis
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672
+      EVENT_BUS_BACKEND: rabbitmq
       AUTH_SERVICE_URL: http://auth-service:4001
       METADATA_SERVICE_URL: http://metadata-service:4002
     ports:
@@ -278,6 +352,8 @@ services:
       auth-service:
         condition: service_healthy
       metadata-service:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
@@ -294,7 +370,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      APP_ENV: prod
       PORT: 3002
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
+      DATABASE_URL_DEV: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_dev?schema=public
+      DATABASE_URL_STAGE: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -302,6 +383,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-aidatahub}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      CACHE_BACKEND: redis
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672
+      EVENT_BUS_BACKEND: rabbitmq
       AUTH_SERVICE_URL: http://auth-service:4001
     ports:
       - "3002:3002"
@@ -313,6 +397,8 @@ services:
       redis:
         condition: service_healthy
       auth-service:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
@@ -330,6 +416,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3003
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -365,6 +452,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3004
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -403,6 +491,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3005
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -444,6 +533,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3006
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-aidatahub}?schema=public
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-postgres}

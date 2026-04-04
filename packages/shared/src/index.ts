@@ -4,3 +4,5 @@ export * from './logger';
 export * from './config';
 export * from './auth';
 export * from './nest-security';
+export * from './cache';
+export * from './event-bus';

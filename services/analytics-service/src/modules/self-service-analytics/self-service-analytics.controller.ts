@@ -21,8 +21,6 @@ import type {
   VisualizationType,
 } from '@ai-datahub/contract';
 
-type PageQuery = { page?: string; pageSize?: string };
-
 function nowIso(): string {
   return new Date().toISOString();
 }

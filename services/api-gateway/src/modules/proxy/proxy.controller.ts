@@ -11,6 +11,8 @@ import { ProxyService } from './proxy.service';
 import { Public } from '@ai-datahub/shared';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
+import { readIncomingTraceId } from '../../common/middleware/trace-id.util';
+
 declare module 'fastify' {
   interface FastifyRequest {
     traceId?: string;
@@ -35,7 +37,7 @@ export class ProxyController {
   @All('*')
   proxy(@Req() req: FastifyRequest, @Res() reply: FastifyReply): void {
     const path = req.url || '/';
-    const traceId = req.traceId || 'unknown';
+    const traceId = req.traceId ?? readIncomingTraceId(req) ?? 'unknown';
 
     const route = this.proxyService.findRoute(path);
 

@@ -11,9 +11,9 @@ describe('SystemAdminHttpClient', () => {
   it('listProjects should map query params', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
-        return ok({ page: 1, pageSize: 10, total: 0, items: [] });
+        return ok({ page: 1, pageSize: 10, total: 0, items: [] }) as Result<T>;
       },
     };
     const client = new SystemAdminHttpClient(http);

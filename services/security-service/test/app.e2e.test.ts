@@ -229,4 +229,73 @@ describe('security-service (e2e)', () => {
 
     await app.close();
   });
+
+  it('covers invalid-argument branches on core endpoints', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    const app = moduleRef.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter()
+    );
+    await app.init();
+    await app.getHttpAdapter().getInstance().ready();
+
+    const badAlgo = await app.inject({
+      method: 'POST',
+      url: '/masking/algorithms',
+      headers: authHeaders,
+      payload: { algorithm: { type: 'HASH' } },
+    });
+    expect(badAlgo.json().ok).toBe(false);
+
+    const badRule = await app.inject({
+      method: 'POST',
+      url: '/masking/rules',
+      headers: authHeaders,
+      payload: { rule: { pattern: '.*' } },
+    });
+    expect(badRule.json().ok).toBe(false);
+
+    const badCls = await app.inject({
+      method: 'POST',
+      url: '/classification',
+      headers: authHeaders,
+      payload: {},
+    });
+    expect(badCls.json().ok).toBe(false);
+
+    const badRlp = await app.inject({
+      method: 'POST',
+      url: '/row-level-policies',
+      headers: authHeaders,
+      payload: { policy: { roleId: 'r1' } },
+    });
+    expect(badRlp.json().ok).toBe(false);
+
+    const badWm = await app.inject({
+      method: 'POST',
+      url: '/watermark/tasks',
+      headers: authHeaders,
+      payload: { task: {} },
+    });
+    expect(badWm.json().ok).toBe(false);
+
+    const badEnc = await app.inject({
+      method: 'POST',
+      url: '/encryption/tasks',
+      headers: authHeaders,
+      payload: { task: { type: 'ENCRYPT' } },
+    });
+    expect(badEnc.json().ok).toBe(false);
+
+    const badLc = await app.inject({
+      method: 'POST',
+      url: '/lifecycle/policies',
+      headers: authHeaders,
+      payload: { policy: { name: 'p' } },
+    });
+    expect(badLc.json().ok).toBe(false);
+
+    await app.close();
+  });
 });

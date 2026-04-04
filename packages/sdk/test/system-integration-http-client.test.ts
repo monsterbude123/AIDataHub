@@ -16,9 +16,9 @@ describe('SystemIntegrationHttpClient', () => {
   it('should map listConnectors to GET /connectors', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
-        return ok<Connector[]>([]);
+        return ok<Connector[]>([]) as Result<T>;
       },
     };
     const client = new SystemIntegrationHttpClient(http);
@@ -40,13 +40,13 @@ describe('SystemIntegrationHttpClient', () => {
   it('should map testConnector to POST /connectors/:id/test', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
         return ok<TestConnectorResponse>({
           success: true,
           message: 'ok',
           testedAt: new Date().toISOString(),
-        });
+        }) as Result<T>;
       },
     };
     const client = new SystemIntegrationHttpClient(http);

@@ -29,12 +29,12 @@ COPY packages/ ./packages/
 COPY services/ ./services/
 
 # Install all dependencies
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 
 # Build shared packages in correct dependency order
 RUN npm -w @ai-datahub/contract run build
 RUN npm -w @ai-datahub/shared run build
-RUN npm -w @ai-datahub/database run build
+RUN npm -w @ai-datahub/sdk run build
 
 # Prune to production dependencies only
 RUN npm prune --production

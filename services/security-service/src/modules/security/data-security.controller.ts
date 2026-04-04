@@ -47,10 +47,10 @@ export class DataSecurityController {
     @Query() q: { keyword?: string }
   ): Result<MaskingAlgorithm[]> {
     let items = [...this.store.algorithms];
-    if (q.keyword)
-      items = items.filter((a) =>
-        a.name.toLowerCase().includes(q.keyword.toLowerCase())
-      );
+    if (q.keyword) {
+      const keyword = q.keyword.toLowerCase();
+      items = items.filter((a) => a.name.toLowerCase().includes(keyword));
+    }
     return { ok: true, data: items };
   }
 
@@ -70,10 +70,10 @@ export class DataSecurityController {
   @Get('masking/rules')
   listMaskingRules(@Query() q: { keyword?: string }): Result<MaskingRule[]> {
     let items = [...this.store.rules];
-    if (q.keyword)
-      items = items.filter((r) =>
-        r.name.toLowerCase().includes(q.keyword.toLowerCase())
-      );
+    if (q.keyword) {
+      const keyword = q.keyword.toLowerCase();
+      items = items.filter((r) => r.name.toLowerCase().includes(keyword));
+    }
     return { ok: true, data: items };
   }
 
@@ -109,8 +109,8 @@ export class DataSecurityController {
     const id = this.store.nextId('cfg');
     const ts = nowIso();
     this.store.configs.push({
-      id,
       ...body.config,
+      id,
       createdAt: ts,
       updatedAt: ts,
     });

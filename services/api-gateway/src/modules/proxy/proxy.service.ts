@@ -12,7 +12,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 @Injectable()
 export class ProxyService implements OnModuleInit {
   private readonly logger = new Logger(ProxyService.name);
-  private proxy: httpProxy.ProxyServer;
+  private proxy!: ReturnType<typeof httpProxy.createProxyServer>;
   private routes: RouteConfig[] = [];
 
   onModuleInit(): void {
@@ -25,7 +25,7 @@ export class ProxyService implements OnModuleInit {
       this.logger.log(`  ${route.prefix} → ${route.target}`);
     });
 
-    // Handle proxy errors
+    // Handle proxy errors (signature matches http-proxy Server error event)
     this.proxy.on(
       'error',
       (err: Error, _req: IncomingMessage, res: ServerResponse) => {

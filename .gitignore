@@ -27,7 +27,12 @@ yarn-error.log*
 
 # OS
 .DS_Store
-Thumbs.db
+
+# Local / generated databases (SQLite and similar — never commit binary stores)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
 
 # Environment
 .env

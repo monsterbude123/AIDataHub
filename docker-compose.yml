@@ -48,6 +48,41 @@ services:
       timeout: 3s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: aidatahub-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: apply Prisma migrations to local PostgreSQL
+  db-migrate:
+    image: node:20-alpine
+    container_name: aidatahub-db-migrate
+    working_dir: /workspace
+    command: sh -c "npm ci && npm -w @ai-datahub/database run db:migrate:deploy && npm -w @ai-datahub/database run db:generate"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aidatahub?schema=public
+      APP_ENV: dev
+      DATABASE_URL_DEV: postgresql://postgres:postgres@postgres:5432/aidatahub?schema=public
+      DATABASE_URL_STAGE: postgresql://postgres:postgres@postgres:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://postgres:postgres@postgres:5432/aidatahub?schema=public
+    volumes:
+      - ./:/workspace
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - migrate
+
 volumes:
   postgres-data:
   redis-data:

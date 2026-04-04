@@ -18,6 +18,7 @@ import type {
   TestConnectorResponse,
   UploadFileResponse,
 } from '@ai-datahub/contract';
+import { createCacheFromEnv, createEventBusFromEnv } from '@ai-datahub/shared';
 
 type UpsertConnectorBody = {
   connector: Omit<Connector, 'createdAt' | 'updatedAt'> & { id?: string };
@@ -69,6 +70,8 @@ function invalidArgument(message: string): Result<never> {
 
 @Controller()
 export class SystemIntegrationController {
+  private readonly cache = createCacheFromEnv({ defaultTtlMs: 20_000 });
+  private readonly eventBus = createEventBusFromEnv();
   private connectors: Connector[] = [];
   private files = new Map<string, { connectorId: string; fileName: string }>();
 
@@ -93,6 +96,7 @@ export class SystemIntegrationController {
       if (idx >= 0) {
         const existing = this.connectors[idx];
         this.connectors[idx] = { ...existing, ...c, updatedAt: ts };
+        this.cache.clear();
         return { ok: true, data: { connectorId: existing.id } };
       }
     }
@@ -107,14 +111,20 @@ export class SystemIntegrationController {
       createdAt: ts,
       updatedAt: ts,
     });
+    this.cache.clear();
     return { ok: true, data: { connectorId: id } };
   }
 
   @Get('connectors')
   listConnectors(@Query() q: ListConnectorsQuery): Result<Connector[]> {
+    const cacheKey = `integration:connectors:${q.type ?? 'all'}`;
+    const cached = this.cache.get<Result<Connector[]>>(cacheKey);
+    if (cached) return cached;
     let items = [...this.connectors];
     if (q.type) items = items.filter((c) => c.type === q.type);
-    return { ok: true, data: items };
+    const result: Result<Connector[]> = { ok: true, data: items };
+    this.cache.set(cacheKey, result, 8_000);
+    return result;
   }
 
   @Post('connectors/:id/test')
@@ -147,6 +157,11 @@ export class SystemIntegrationController {
       return invalidArgument('to is required');
     if (!body.content) return invalidArgument('content is required');
     // MVP：不真正发送，返回模拟 messageId
+    this.eventBus.publish('integration.notification.requested', {
+      connectorId: body.connectorId,
+      channel: body.channel,
+      receivers: body.to.length,
+    });
     return {
       ok: true,
       data: { success: true, messageId: `msg_${Date.now()}`, sentAt: nowIso() },
@@ -162,10 +177,15 @@ export class SystemIntegrationController {
     if (!body.topic) return invalidArgument('topic is required');
     if (!body.payload || typeof body.payload !== 'object')
       return invalidArgument('payload is required');
-    return {
+    const result: Result<PublishMessageResponse> = {
       ok: true,
       data: { success: true, offset: '0', publishedAt: nowIso() },
     };
+    this.eventBus.publish('integration.message.published', {
+      connectorId: body.connectorId,
+      topic: body.topic,
+    });
+    return result;
   }
 
   @Post('files/upload')
@@ -177,6 +197,11 @@ export class SystemIntegrationController {
     const fileRef = `file_${Date.now()}`;
     this.files.set(fileRef, {
       connectorId: body.connectorId,
+      fileName: body.fileName,
+    });
+    this.eventBus.publish('integration.file.uploaded', {
+      connectorId: body.connectorId,
+      fileRef,
       fileName: body.fileName,
     });
     return { ok: true, data: { fileRef, uploadedAt: nowIso() } };

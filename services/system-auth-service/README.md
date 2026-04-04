@@ -80,17 +80,17 @@ curl -H "Authorization: Bearer <your-token>" http://localhost:3000/users
 
 ### 环境变量
 
-| 变量           | 默认值                                                           | 说明                                                    |
-| -------------- | ---------------------------------------------------------------- | ------------------------------------------------------- |
-| `DATABASE_URL` | `file:../../../services/system-auth-service/data/system-auth.db` | SQLite 数据库路径（相对于 `packages/database/prisma/`） |
-| `JWT_SECRET`   | `dev-secret`                                                     | JWT 签名密钥（生产环境必须配置）                        |
-| `PORT`         | `3000`                                                           | 服务监听端口                                            |
-| `NODE_ENV`     | `development`                                                    | 运行环境                                                |
+| 变量                 | 默认值                                                                        | 说明                                 |
+| -------------------- | ----------------------------------------------------------------------------- | ------------------------------------ |
+| `APP_ENV`            | `dev`                                                                         | 应用环境（`dev` / `stage` / `prod`） |
+| `DATABASE_URL_DEV`   | `postgresql://postgres:postgres@localhost:5432/aidatahub_dev?schema=public`   | 开发环境数据库连接串                 |
+| `DATABASE_URL_STAGE` | `postgresql://postgres:postgres@localhost:5432/aidatahub_stage?schema=public` | 预发环境数据库连接串                 |
+| `DATABASE_URL_PROD`  | `postgresql://postgres:postgres@localhost:5432/aidatahub?schema=public`       | 生产环境数据库连接串                 |
+| `JWT_SECRET`         | `dev-secret`                                                                  | JWT 签名密钥（生产环境必须配置）     |
+| `PORT`               | `3000`                                                                        | 服务监听端口                         |
+| `NODE_ENV`           | `development`                                                                 | Node 运行环境                        |
 
-**注意**: `DATABASE_URL` 是相对于 Prisma schema 文件位置 (`packages/database/prisma/schema.prisma`) 解析的。例如：
-
-- 开发环境使用服务本地数据库: `file:../../../services/system-auth-service/data/system-auth.db`
-- 测试环境使用测试数据库: `file:../../../services/system-auth-service/test/data/test.db`
+**注意**: 服务通过 `APP_ENV + DATABASE_URL_*` 选择连接，禁止在代码中硬编码连接串；仅 Prisma CLI 迁移命令需要显式传入 `DATABASE_URL`。
 
 ## Prisma 数据库管理
 
@@ -102,11 +102,11 @@ curl -H "Authorization: Bearer <your-token>" http://localhost:3000/users
 # 从项目根目录运行
 cd packages/database
 
-# 推送 schema 变更到数据库（开发环境）
-npx prisma db push
-
-# 创建迁移（生产环境推荐）
+# 开发环境创建迁移（会自动应用）
 npx prisma migrate dev --name <migration-name>
+
+# CI / 生产环境应用已存在迁移
+npx prisma migrate deploy
 
 # 查看 Prisma Studio 数据库管理界面
 npx prisma studio
@@ -115,16 +115,11 @@ npx prisma studio
 npx prisma generate
 ```
 
-### 数据库文件位置
-
-- **开发数据库**: `services/system-auth-service/data/system-auth.db`
-- **测试数据库**: `services/system-auth-service/test/data/test.db`
-
 首次运行服务前，需要初始化数据库：
 
 ```bash
 cd packages/database
-npx prisma db push
+npx prisma migrate deploy
 ```
 
 ## API 文档

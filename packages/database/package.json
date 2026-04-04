@@ -21,6 +21,9 @@
     "build:check": "tsc -p tsconfig.json --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
+    "db:migrate:reset": "prisma migrate reset --skip-seed",
     "db:studio": "prisma studio",
     "db:push": "prisma db push",
     "test": "npm run build && vitest run",
@@ -29,6 +32,7 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
+    "@ai-datahub/shared": "^0.1.0",
     "@prisma/client": "^5.10.0"
   },
   "devDependencies": {

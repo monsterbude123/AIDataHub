@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { PrismaClient, type Approval } from '@prisma/client';
+import { PrismaClient, type Approval as PrismaApproval } from '@prisma/client';
 import {
   okResult,
   type Result,
@@ -137,7 +137,7 @@ export class ApprovalService {
       page: req.page.page,
       pageSize: req.page.pageSize,
       total,
-      items: approvals.map((a: Approval) => this.toDTO(a)),
+      items: approvals.map((a) => this.toDTO(a)),
     });
   }
 
@@ -151,7 +151,7 @@ export class ApprovalService {
     });
 
     // Filter approvals where user is in history
-    const filteredApprovals = allApprovals.filter((approval: Approval) => {
+    const filteredApprovals = allApprovals.filter((approval) => {
       const history = JSON.parse(approval.history || '[]') as Array<{
         approverId: string;
       }>;
@@ -173,7 +173,7 @@ export class ApprovalService {
       page: req.page.page,
       pageSize: req.page.pageSize,
       total,
-      items: paginatedApprovals.map((a: Approval) => this.toDTO(a)),
+      items: paginatedApprovals.map((a) => this.toDTO(a)),
     });
   }
 
@@ -205,7 +205,7 @@ export class ApprovalService {
     return this.prisma.approval.findUnique({ where: { id } });
   }
 
-  private toDTO(a: Approval): ApprovalDTO {
+  private toDTO(a: PrismaApproval): ApprovalDTO {
     return {
       id: a.id,
       businessType: a.businessType,

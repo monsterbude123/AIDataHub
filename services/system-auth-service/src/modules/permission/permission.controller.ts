@@ -7,6 +7,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { PermissionService } from './permission.service';
+import { createCacheFromEnv } from '@ai-datahub/shared';
 import type {
   Result,
   Permission,
@@ -22,6 +23,8 @@ import {
 @ApiBearerAuth()
 @Controller('permissions')
 export class PermissionController {
+  private readonly cache = createCacheFromEnv({ defaultTtlMs: 20_000 });
+
   constructor(private readonly service: PermissionService) {}
 
   @Get()
@@ -35,11 +38,19 @@ export class PermissionController {
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string
   ): Promise<Result<PageResult<Permission>>> {
+    const cacheKey = `system-auth:permissions:${keyword ?? 'all'}:${page ?? '1'}:${pageSize ?? '20'}`;
+    const cached = this.cache.get<Result<PageResult<Permission>>>(cacheKey);
+    if (cached) return Promise.resolve(cached);
     const pageRequest: PageRequest = {
       page: page ? parseInt(page, 10) : 1,
       pageSize: pageSize ? parseInt(pageSize, 10) : 20,
     };
-    return this.service.listPermissions({ keyword, page: pageRequest });
+    return this.service
+      .listPermissions({ keyword, page: pageRequest })
+      .then((result) => {
+        if (result.ok) this.cache.set(cacheKey, result, 15_000);
+        return result;
+      });
   }
 
   @Post()
@@ -52,6 +63,7 @@ export class PermissionController {
   createPermission(
     @Body() body: CreatePermissionRequest
   ): Promise<Result<{ permissionId: string }>> {
+    this.cache.clear();
     return this.service.createPermission(body);
   }
 
@@ -65,6 +77,7 @@ export class PermissionController {
   bindPermissionsToRole(
     @Body() body: BindPermissionsToRoleRequest
   ): Promise<Result<{ success: boolean }>> {
+    this.cache.clear();
     return this.service.bindPermissionsToRole(body);
   }
 }

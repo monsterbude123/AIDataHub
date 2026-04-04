@@ -136,8 +136,6 @@ describe('ApprovalTemplateService', () => {
           definition: {
             nodes: [{ id: 'node1', type: 'approval' }],
           },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         },
       });
 
@@ -155,8 +153,6 @@ describe('ApprovalTemplateService', () => {
             businessType: 'LEAVE_REQUEST',
             name: 'Leave Approval',
             definition: {},
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
           },
         })
       ).rejects.toThrow('Approval template not found');

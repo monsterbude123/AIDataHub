@@ -8,6 +8,7 @@ import type {
   Result,
   SendNotificationRequest,
   SendNotificationResponse,
+  SystemIntegrationClient,
   TestConnectorRequest,
   TestConnectorResponse,
   UpsertConnectorRequest,
@@ -17,7 +18,7 @@ import type {
 
 import type { HttpClient } from '../http/HttpClient';
 
-export class SystemIntegrationHttpClient {
+export class SystemIntegrationHttpClient implements SystemIntegrationClient {
   constructor(private readonly http: HttpClient) {}
 
   upsertConnector(

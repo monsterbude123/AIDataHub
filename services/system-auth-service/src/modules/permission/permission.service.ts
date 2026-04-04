@@ -106,7 +106,7 @@ export class PermissionService {
     }
 
     // Use transaction for atomicity
-    await this.prisma.$transaction(async (tx: PrismaClient) => {
+    await this.prisma.$transaction(async (tx) => {
       // Delete existing bindings
       await tx.rolePermission.deleteMany({
         where: { roleId: req.roleId },

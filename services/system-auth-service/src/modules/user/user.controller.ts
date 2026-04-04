@@ -17,6 +17,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { UserService } from './user.service';
+import { createCacheFromEnv } from '@ai-datahub/shared';
 import type { Result, User, PageResult } from '@ai-datahub/contract';
 import {
   CreateUserRequest,
@@ -28,6 +29,8 @@ import {
 @ApiBearerAuth()
 @Controller('users')
 export class UserController {
+  private readonly cache = createCacheFromEnv({ defaultTtlMs: 20_000 });
+
   constructor(private readonly service: UserService) {}
 
   @Get()
@@ -56,11 +59,19 @@ export class UserController {
     @Query('page') page?: number,
     @Query('pageSize') pageSize?: number
   ): Promise<Result<PageResult<User>>> {
-    return this.service.listUsers({
-      orgId,
-      keyword,
-      page: { page: page || 1, pageSize: pageSize || 10 },
-    });
+    const cacheKey = `system-auth:users:${orgId ?? 'all'}:${keyword ?? 'all'}:${page || 1}:${pageSize || 10}`;
+    const cached = this.cache.get<Result<PageResult<User>>>(cacheKey);
+    if (cached) return Promise.resolve(cached);
+    return this.service
+      .listUsers({
+        orgId,
+        keyword,
+        page: { page: page || 1, pageSize: pageSize || 10 },
+      })
+      .then((result) => {
+        if (result.ok) this.cache.set(cacheKey, result, 15_000);
+        return result;
+      });
   }
 
   @Post()
@@ -70,6 +81,7 @@ export class UserController {
   createUser(
     @Body() body: CreateUserRequest
   ): Promise<Result<{ userId: string }>> {
+    this.cache.clear();
     return this.service.createUser(body);
   }
 
@@ -80,6 +92,7 @@ export class UserController {
   updateUser(
     @Body() body: UpdateUserRequest
   ): Promise<Result<{ success: boolean }>> {
+    this.cache.clear();
     return this.service.updateUser(body);
   }
 
@@ -91,6 +104,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: '成功删除用户' })
   @ApiParam({ name: 'id', description: '用户ID', type: 'string' })
   deleteUser(@Param('id') id: string): Promise<Result<{ success: boolean }>> {
+    this.cache.clear();
     return this.service.deleteUser({ userId: id });
   }
 
@@ -106,6 +120,7 @@ export class UserController {
     @Param('id') id: string,
     @Body() body: AssignRolesRequest
   ): Promise<Result<{ success: boolean }>> {
+    this.cache.clear();
     return this.service.assignRoles({ userId: id, roleIds: body.roleIds });
   }
 }

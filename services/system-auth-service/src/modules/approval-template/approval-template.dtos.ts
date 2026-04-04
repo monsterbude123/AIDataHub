@@ -62,7 +62,7 @@ export class UpdateApprovalTemplateRequest {
     type: () => UpdateApprovalTemplateData,
     required: true,
   })
-  template: ApprovalTemplate = undefined!;
+  template: Omit<ApprovalTemplate, 'createdAt' | 'updatedAt'> = undefined!;
 }
 
 /**

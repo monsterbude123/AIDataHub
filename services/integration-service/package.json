@@ -10,6 +10,7 @@
     "build": "tsup",
     "build:check": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run",
+    "test:coverage": "npm run build && vitest run --coverage",
     "test:watch": "vitest"
   },
   "dependencies": {

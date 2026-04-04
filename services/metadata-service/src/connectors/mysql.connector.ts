@@ -9,7 +9,7 @@ import type {
   PartitionInfo,
 } from '@ai-datahub/contract';
 import type { DatabaseConnector } from './base';
-import type { Pool, PoolConnection } from 'mysql2/promise';
+import type { Pool, PoolConnection, RowDataPacket } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
 
 /**
@@ -40,7 +40,7 @@ export class MySQLConnector implements DatabaseConnector {
       connection = await pool.getConnection();
 
       // 获取服务器版本
-      const [rows] = await connection.query<unknown>(
+      const [rows] = await connection.query<RowDataPacket[]>(
         'SELECT VERSION() as version'
       );
       const serverVersion =
@@ -114,7 +114,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<DatabaseInfo[]> {
-    const [rows] = await pool.query<unknown>(
+    const [rows] = await pool.query<RowDataPacket[]>(
       `
       SELECT
         SCHEMA_NAME,
@@ -144,7 +144,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<TableInfo[]> {
-    const [rows] = await pool.query<unknown>(
+    const [rows] = await pool.query<RowDataPacket[]>(
       `
       SELECT
         TABLE_SCHEMA,
@@ -202,7 +202,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<ColumnInfo[]> {
-    const [rows] = await pool.query<unknown>(
+    const [rows] = await pool.query<RowDataPacket[]>(
       `
       SELECT
         TABLE_SCHEMA,
@@ -260,7 +260,7 @@ export class MySQLConnector implements DatabaseConnector {
     pool: Pool,
     config: MetadataSourceConfig
   ): Promise<IndexInfo[]> {
-    const [rows] = await pool.query<unknown>(
+    const [rows] = await pool.query<RowDataPacket[]>(
       `
       SELECT
         TABLE_SCHEMA,
@@ -314,7 +314,7 @@ export class MySQLConnector implements DatabaseConnector {
     config: MetadataSourceConfig
   ): Promise<PartitionInfo[]> {
     try {
-      const [rows] = await pool.query<unknown>(
+      const [rows] = await pool.query<RowDataPacket[]>(
         `
         SELECT
           TABLE_SCHEMA,

@@ -1,5 +1,6 @@
 import type {
   AlertRule,
+  DataOperationsClient,
   PageResult,
   RequestMeta,
   Result,
@@ -8,7 +9,11 @@ import type {
 
 import type { HttpClient } from '../http/HttpClient';
 
-export class DataOperationsHttpClient {
+/** MVP 仅覆盖告警查询；其余 ops 端点由服务内或其它 wave 补齐。 */
+export class DataOperationsHttpClient implements Pick<
+  DataOperationsClient,
+  'listAlertRules' | 'searchAlertRules'
+> {
   constructor(private readonly http: HttpClient) {}
 
   listAlertRules(req: { meta?: RequestMeta }): Promise<Result<AlertRule[]>> {

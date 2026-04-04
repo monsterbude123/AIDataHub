@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto';
 import type { FastifyRequest } from 'fastify';
 import type { ServerResponse } from 'http';
 
+import { readIncomingTraceId } from './trace-id.util';
+
 declare module 'fastify' {
   interface FastifyRequest {
     traceId?: string;
@@ -19,7 +21,7 @@ declare module 'fastify' {
 export class TraceIdMiddleware implements NestMiddleware {
   use(req: FastifyRequest, res: ServerResponse, next: () => void): void {
     // Get traceId from request header or generate a new one
-    const traceId = (req.headers['x-trace-id'] as string) || randomUUID();
+    const traceId = readIncomingTraceId(req) || randomUUID();
 
     // Attach traceId to request object for downstream use
     req.traceId = traceId;

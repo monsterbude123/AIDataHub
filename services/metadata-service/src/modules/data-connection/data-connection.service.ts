@@ -91,8 +91,8 @@ export class DataConnectionService {
         passwordEncrypted: source.passwordEncrypted,
         database: source.database,
         status: source.status as 'ACTIVE' | 'INACTIVE',
-        createdAt: source.createdAt,
-        updatedAt: source.updatedAt,
+        createdAt: source.createdAt.toISOString(),
+        updatedAt: source.updatedAt.toISOString(),
       },
       req.meta?.traceId
     );
@@ -138,15 +138,15 @@ export class DataConnectionService {
         }) => ({
           id: s.id,
           name: s.name,
-          type: s.type,
+          type: s.type as MetadataSource['type'],
           host: s.host,
           port: s.port,
           username: s.username,
           passwordEncrypted: s.passwordEncrypted,
-          database: s.database,
+          database: s.database ?? undefined,
           status: s.status as 'ACTIVE' | 'INACTIVE',
-          createdAt: s.createdAt,
-          updatedAt: s.updatedAt,
+          createdAt: s.createdAt.toISOString(),
+          updatedAt: s.updatedAt.toISOString(),
         })
       ),
       total,
@@ -173,15 +173,15 @@ export class DataConnectionService {
     return okResult({
       id: source.id,
       name: source.name,
-      type: source.type,
+      type: source.type as MetadataSource['type'],
       host: source.host,
       port: source.port,
       username: source.username,
       passwordEncrypted: source.passwordEncrypted,
-      database: source.database,
+      database: source.database ?? undefined,
       status: source.status as 'ACTIVE' | 'INACTIVE',
-      createdAt: source.createdAt,
-      updatedAt: source.updatedAt,
+      createdAt: source.createdAt.toISOString(),
+      updatedAt: source.updatedAt.toISOString(),
     });
   }
 }

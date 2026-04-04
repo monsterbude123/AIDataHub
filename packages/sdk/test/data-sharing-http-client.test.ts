@@ -12,13 +12,13 @@ describe('DataSharingHttpClient', () => {
   it('getPortalHomeStats should call GET /portal/stats', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
         return ok({
           todoCount: 0,
           hotResourcesTop10: [],
           resourceDirectoryStats: [],
-        });
+        }) as Result<T>;
       },
     };
     const client = new DataSharingHttpClient(http);
@@ -39,9 +39,9 @@ describe('DataSharingHttpClient', () => {
   it('listRegisteredResources should map page to query', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
-        return ok({ page: 1, pageSize: 10, total: 0, items: [] });
+        return ok({ page: 1, pageSize: 10, total: 0, items: [] }) as Result<T>;
       },
     };
     const client = new DataSharingHttpClient(http);

@@ -247,4 +247,127 @@ describe('sharing-service (e2e)', () => {
 
     await app.close();
   });
+
+  it('covers validation and not-found branches', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    const app = moduleRef.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter()
+    );
+    await app.init();
+    await app.getHttpAdapter().getInstance().ready();
+
+    const dirMissing = await app.inject({
+      method: 'POST',
+      url: '/directories',
+      payload: {},
+    });
+    expect(dirMissing.json().ok).toBe(false);
+
+    const dirUpdateNoId = await app.inject({
+      method: 'PUT',
+      url: '/directories',
+      payload: { node: { name: 'a', code: 'b' } },
+    });
+    expect(dirUpdateNoId.json().ok).toBe(false);
+
+    const regTable = await app.inject({
+      method: 'POST',
+      url: '/resources/registered',
+      payload: {
+        resource: {
+          type: 'TABLE',
+          name: 't1',
+          ownerOrgId: 'org_1',
+          description: 'd',
+        },
+      },
+    });
+    expect(regTable.statusCode).toBe(201);
+    const tableId = regTable.json().data.resourceId as string;
+
+    const testNonApi = await app.inject({
+      method: 'POST',
+      url: `/resources/registered/${tableId}/test`,
+      payload: {},
+    });
+    expect(testNonApi.json().ok).toBe(false);
+
+    const getMissing = await app.inject({
+      method: 'GET',
+      url: '/resources/registered/rr_missing',
+    });
+    expect(getMissing.json().error.code).toBe('RESOURCE_NOT_FOUND');
+
+    const mapBad = await app.inject({
+      method: 'POST',
+      url: '/mappings',
+      payload: {},
+    });
+    expect(mapBad.json().ok).toBe(false);
+
+    const exBad = await app.inject({
+      method: 'POST',
+      url: '/exchange/schedule',
+      payload: { enabled: true },
+    });
+    expect(exBad.json().ok).toBe(false);
+
+    const svcCreate = await app.inject({
+      method: 'POST',
+      url: '/services',
+      payload: {},
+    });
+    expect(svcCreate.json().ok).toBe(false);
+
+    const publishMissingId = await app.inject({
+      method: 'POST',
+      url: '/services/ss_missing/publish',
+      payload: { publish: true },
+    });
+    expect(publishMissingId.json().error.code).toBe('SERVICE_NOT_FOUND');
+
+    const createDir = await app.inject({
+      method: 'POST',
+      url: '/directories',
+      payload: { node: { name: 'n1', code: 'c1' } },
+    });
+    const dId = createDir.json().data.directoryId as string;
+    const createComp = await app.inject({
+      method: 'POST',
+      url: '/resources/compiled',
+      payload: {
+        resource: {
+          directoryId: dId,
+          name: 'cr',
+          type: 'API',
+          shareType: 'UNCONDITIONAL',
+          dataItems: [],
+        },
+      },
+    });
+    const crId = createComp.json().data.compiledResourceId as string;
+    const createSvc = await app.inject({
+      method: 'POST',
+      url: '/services',
+      payload: {
+        service: {
+          compiledResourceId: crId,
+          name: 's1',
+          type: 'API_PROXY',
+        },
+      },
+    });
+    const sid = createSvc.json().data.serviceId as string;
+
+    const publishNoFlag = await app.inject({
+      method: 'POST',
+      url: `/services/${sid}/publish`,
+      payload: {},
+    });
+    expect(publishNoFlag.json().ok).toBe(false);
+
+    await app.close();
+  });
 });

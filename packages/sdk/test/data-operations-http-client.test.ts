@@ -18,9 +18,9 @@ describe('DataOperationsHttpClient', () => {
   it('listAlertRules should call GET /alerts/rules', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
-        return ok<AlertRule[]>([]);
+        return ok<AlertRule[]>([]) as Result<T>;
       },
     };
     const client = new DataOperationsHttpClient(http);
@@ -38,14 +38,14 @@ describe('DataOperationsHttpClient', () => {
   it('searchAlertRules should call GET /alerts/rules/search with query', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
         return ok<PageResult<AlertRule>>({
           page: 1,
           pageSize: 10,
           total: 0,
           items: [],
-        });
+        }) as Result<T>;
       },
     };
     const client = new DataOperationsHttpClient(http);

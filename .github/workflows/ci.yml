@@ -9,6 +9,52 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aidatahub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d aidatahub"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      rabbitmq:
+        image: rabbitmq:3-management
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q check_running"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: dev
+      DATABASE_URL_DEV: postgresql://postgres:postgres@localhost:5432/aidatahub?schema=public
+      DATABASE_URL_STAGE: postgresql://postgres:postgres@localhost:5432/aidatahub_stage?schema=public
+      DATABASE_URL_PROD: postgresql://postgres:postgres@localhost:5432/aidatahub?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aidatahub?schema=public
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      CACHE_BACKEND: memory
+      RABBITMQ_URL: amqp://guest:guest@localhost:5672
+      EVENT_BUS_BACKEND: memory
     steps:
       - uses: actions/checkout@v4
 
@@ -21,6 +67,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Apply database migrations
+        run: npm -w @ai-datahub/database run db:migrate:deploy
+
+      - name: Generate Prisma client
+        run: npm -w @ai-datahub/database run db:generate
+
       - name: Type check
         run: npm run build:check
 
@@ -32,3 +84,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Smoke
+        run: npm run smoke

@@ -160,4 +160,73 @@ describe('analytics-service (e2e)', () => {
 
     await app.close();
   });
+
+  it('covers validation error branches', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    const app = moduleRef.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter()
+    );
+    await app.init();
+    await app.getHttpAdapter().getInstance().ready();
+
+    const noQuery = await app.inject({
+      method: 'POST',
+      url: '/queries',
+      payload: {},
+    });
+    expect(noQuery.json().ok).toBe(false);
+
+    const listNoCreator = await app.inject({
+      method: 'GET',
+      url: '/queries?page=1&pageSize=10',
+    });
+    expect(listNoCreator.json().ok).toBe(false);
+
+    const exploreNoAsset = await app.inject({
+      method: 'POST',
+      url: '/explore',
+      payload: {},
+    });
+    expect(exploreNoAsset.json().ok).toBe(false);
+
+    const create = await app.inject({
+      method: 'POST',
+      url: '/queries',
+      payload: {
+        query: {
+          name: 'q-val',
+          createdBy: 'u_1',
+          definition: { sql: 'select 1' },
+        },
+      },
+    });
+    const qid = create.json().data.queryId as string;
+
+    const exportNoFmt = await app.inject({
+      method: 'POST',
+      url: `/queries/${qid}/export`,
+      payload: {},
+    });
+    expect(exportNoFmt.json().ok).toBe(false);
+
+    const shareNoUsers = await app.inject({
+      method: 'POST',
+      url: `/queries/${qid}/share`,
+      payload: {},
+    });
+    expect(shareNoUsers.json().ok).toBe(false);
+
+    const badViz = await app.inject({
+      method: 'POST',
+      url: '/visualizations',
+      payload: { visualization: { queryId: qid } },
+    });
+    expect(badViz.json().ok).toBe(false);
+
+    await app.inject({ method: 'DELETE', url: `/queries/${qid}` });
+
+    await app.close();
+  });
 });

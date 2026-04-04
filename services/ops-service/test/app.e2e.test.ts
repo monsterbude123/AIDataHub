@@ -347,4 +347,117 @@ describe('ops-service (e2e)', () => {
 
     await app.close();
   });
+
+  it('covers extra validation branches (report/etl/alerts/channels)', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    const app = moduleRef.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter()
+    );
+    await app.init();
+    await app.getHttpAdapter().getInstance().ready();
+
+    const reportMissing = await app.inject({ method: 'GET', url: '/report' });
+    expect(reportMissing.statusCode).toBe(200);
+    expect(reportMissing.json().ok).toBe(false);
+
+    const reportBadDate = await app.inject({
+      method: 'GET',
+      url: '/report?startAt=not-a-date&endAt=2026-01-02T00:00:00.000Z',
+    });
+    expect(reportBadDate.json().ok).toBe(false);
+
+    const reportEndBeforeStart = await app.inject({
+      method: 'GET',
+      url: '/report?startAt=2026-01-03T00:00:00.000Z&endAt=2026-01-02T00:00:00.000Z',
+    });
+    expect(reportEndBeforeStart.json().ok).toBe(false);
+
+    const createConn = await app.inject({
+      method: 'POST',
+      url: '/etl/connections',
+      payload: {
+        connection: { name: 'e1', connectionRef: 'r1', status: 'ENABLED' },
+      },
+    });
+    const ecId = createConn.json().data.connectionId as string;
+
+    const etlUpdateMissing = await app.inject({
+      method: 'PUT',
+      url: '/etl/connections',
+      payload: { connection: {} },
+    });
+    expect(etlUpdateMissing.json().ok).toBe(false);
+
+    const etlUpdateNotFound = await app.inject({
+      method: 'PUT',
+      url: '/etl/connections',
+      payload: {
+        connection: {
+          id: 'ec_missing',
+          name: 'x',
+          connectionRef: 'r',
+          status: 'ENABLED',
+        },
+      },
+    });
+    expect(etlUpdateNotFound.json().error.code).toBe(
+      'ETL_CONNECTION_NOT_FOUND'
+    );
+
+    const etlDeleteNotFound = await app.inject({
+      method: 'DELETE',
+      url: '/etl/connections/ec_missing',
+    });
+    expect(etlDeleteNotFound.json().error.code).toBe(
+      'ETL_CONNECTION_NOT_FOUND'
+    );
+
+    const searchByType = await app.inject({
+      method: 'GET',
+      url: '/alerts/rules/search?page=1&pageSize=10&type=TIMEOUT',
+    });
+    expect(searchByType.json().ok).toBe(true);
+
+    const searchDisabled = await app.inject({
+      method: 'GET',
+      url: '/alerts/rules/search?page=1&pageSize=10&enabled=false',
+    });
+    expect(searchDisabled.json().ok).toBe(true);
+
+    const createRuleMissing = await app.inject({
+      method: 'POST',
+      url: '/alerts/rules',
+      payload: {},
+    });
+    expect(createRuleMissing.json().ok).toBe(false);
+
+    const channelBad = await app.inject({
+      method: 'POST',
+      url: '/alerts/channels',
+      payload: {
+        config: {
+          channel: 'INVALID',
+          enabled: true,
+          config: {},
+        },
+      },
+    });
+    expect(channelBad.json().ok).toBe(false);
+
+    const channelMissingConfig = await app.inject({
+      method: 'POST',
+      url: '/alerts/channels',
+      payload: { config: { channel: 'EMAIL', enabled: true } },
+    });
+    expect(channelMissingConfig.json().ok).toBe(false);
+
+    await app.inject({
+      method: 'DELETE',
+      url: `/etl/connections/${ecId}`,
+    });
+
+    await app.close();
+  });
 });

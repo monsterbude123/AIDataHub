@@ -11,9 +11,14 @@ describe('SystemAuthHttpClient', () => {
   it('login should call POST /auth/login', async () => {
     const calls: HttpClientRequest[] = [];
     const http: HttpClient = {
-      request: async (req) => {
+      request: async <T>(req: HttpClientRequest) => {
         calls.push(req);
-        return ok({ userId: 'u1', username: 'a', token: 't', expiresAt: 'x' });
+        return ok({
+          userId: 'u1',
+          username: 'a',
+          token: 't',
+          expiresAt: 'x',
+        }) as Result<T>;
       },
     };
     const client = new SystemAuthHttpClient(http);

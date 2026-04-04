@@ -139,4 +139,123 @@ describe('integration-service (e2e)', () => {
 
     await app.close();
   });
+
+  it('covers validation and not-found branches', async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    const app = moduleRef.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter()
+    );
+    await app.init();
+    await app.getHttpAdapter().getInstance().ready();
+
+    const missingConnector = await app.inject({
+      method: 'POST',
+      url: '/connectors',
+      payload: {},
+    });
+    expect(missingConnector.json().ok).toBe(false);
+
+    const missingFields = await app.inject({
+      method: 'POST',
+      url: '/connectors',
+      payload: { connector: { type: 'NOTIFICATION' } },
+    });
+    expect(missingFields.json().ok).toBe(false);
+
+    const upsert = await app.inject({
+      method: 'POST',
+      url: '/connectors',
+      payload: {
+        connector: {
+          type: 'NOTIFICATION',
+          name: 'n1',
+          provider: 'smtp',
+          enabled: true,
+          config: { a: 1 },
+        },
+      },
+    });
+    const connectorId = upsert.json().data.connectorId as string;
+
+    const updateSame = await app.inject({
+      method: 'POST',
+      url: '/connectors',
+      payload: {
+        connector: {
+          id: connectorId,
+          type: 'NOTIFICATION',
+          name: 'n1-upd',
+          provider: 'smtp',
+          enabled: false,
+          config: { a: 2 },
+        },
+      },
+    });
+    expect(updateSame.json().ok).toBe(true);
+    expect(updateSame.json().data.connectorId).toBe(connectorId);
+
+    const testMissing = await app.inject({
+      method: 'POST',
+      url: '/connectors/cn_missing/test',
+    });
+    expect(testMissing.json().error.code).toBe('CONNECTOR_NOT_FOUND');
+
+    const notifyBad = await app.inject({
+      method: 'POST',
+      url: '/notify',
+      payload: { connectorId, to: [], content: 'c' },
+    });
+    expect(notifyBad.json().ok).toBe(false);
+
+    const publishBad = await app.inject({
+      method: 'POST',
+      url: '/publish',
+      payload: { connectorId, topic: 't', payload: null },
+    });
+    expect(publishBad.json().ok).toBe(false);
+
+    const uploadBad = await app.inject({
+      method: 'POST',
+      url: '/files/upload',
+      payload: { connectorId },
+    });
+    expect(uploadBad.json().ok).toBe(false);
+
+    const dlMissing = await app.inject({
+      method: 'GET',
+      url: '/files/download-url',
+    });
+    expect(dlMissing.json().ok).toBe(false);
+
+    const uploadOk = await app.inject({
+      method: 'POST',
+      url: '/files/upload',
+      payload: {
+        connectorId,
+        fileName: 'f.txt',
+        contentRef: 'mem://x',
+      },
+    });
+    const fileRef = uploadOk.json().data.fileRef as string;
+
+    const dlWrong = await app.inject({
+      method: 'GET',
+      url: `/files/download-url?connectorId=${encodeURIComponent(
+        connectorId
+      )}&fileRef=${encodeURIComponent('file_wrong')}`,
+    });
+    expect(dlWrong.json().error.code).toBe('FILE_NOT_FOUND');
+
+    const dlOk = await app.inject({
+      method: 'GET',
+      url: `/files/download-url?connectorId=${encodeURIComponent(
+        connectorId
+      )}&fileRef=${encodeURIComponent(fileRef)}`,
+    });
+    expect(dlOk.json().ok).toBe(true);
+
+    await app.close();
+  });
 });

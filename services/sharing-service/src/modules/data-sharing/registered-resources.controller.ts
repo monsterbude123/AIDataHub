@@ -60,13 +60,13 @@ export class RegisteredResourcesController {
       return invalidArgument('resource.ownerOrgId is required');
     const id = `rr_${this.store.registeredResources.length + 1}`;
     const ts = nowIso();
-    const resource: RegisteredResource = {
+    const resource = {
       ...r,
       id,
       status: 'ACTIVE',
       createdAt: ts,
       updatedAt: ts,
-    };
+    } as RegisteredResource;
     this.store.registeredResources.push(resource);
     return { ok: true, data: { resourceId: id } };
   }
@@ -94,7 +94,7 @@ export class RegisteredResourcesController {
       ...existing,
       ...body.resource,
       updatedAt: nowIso(),
-    };
+    } as RegisteredResource;
     return { ok: true, data: { success: true } };
   }
 
