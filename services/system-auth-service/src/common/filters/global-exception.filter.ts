@@ -42,7 +42,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // 构造统一输出
     const response: Result<never> = this.buildResponse(error, traceId);
 
-    reply.status(status).send(response);
+    // Handle both Express-style status() and Fastify-style code()
+    if (typeof reply.code === 'function') {
+      reply.code(status).send(response);
+    } else if (typeof reply.status === 'function') {
+      reply.status(status).send(response);
+    }
   }
 
   private buildResponse(error: SdkError, traceId: string): Result<never> {

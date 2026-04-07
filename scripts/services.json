@@ -1,0 +1,92 @@
+{
+  "services": [
+    {
+      "name": "auth-service",
+      "workspace": "@ai-datahub/system-auth-service",
+      "port": 4001,
+      "script": "dev:auth",
+      "healthCheck": "http://localhost:4001/health",
+      "description": "认证授权服务"
+    },
+    {
+      "name": "metadata-service",
+      "workspace": "@ai-datahub/metadata-service",
+      "port": 4002,
+      "script": "dev:metadata",
+      "healthCheck": "http://localhost:4002/health",
+      "description": "元数据管理服务"
+    },
+    {
+      "name": "data-service",
+      "workspace": "@ai-datahub/data-service-service",
+      "port": 4003,
+      "script": "dev:data",
+      "healthCheck": "http://localhost:4003/health",
+      "description": "数据资产管理服务"
+    },
+    {
+      "name": "task-scheduler",
+      "workspace": "@ai-datahub/task-scheduler-service",
+      "port": 5001,
+      "script": "dev:tasks",
+      "healthCheck": "http://localhost:5001/health",
+      "description": "任务调度服务"
+    },
+    {
+      "name": "api-gateway",
+      "workspace": "@ai-datahub/api-gateway",
+      "port": 3000,
+      "script": "dev:gateway",
+      "healthCheck": "http://localhost:3000/health",
+      "description": "API 网关"
+    },
+    {
+      "name": "ops-service",
+      "workspace": "@ai-datahub/ops-service",
+      "port": 3001,
+      "script": "dev:ops",
+      "healthCheck": "http://localhost:3001/health",
+      "description": "运维监控服务"
+    },
+    {
+      "name": "integration-service",
+      "workspace": "@ai-datahub/integration-service",
+      "port": 3002,
+      "script": "dev:integration",
+      "healthCheck": "http://localhost:3002/health",
+      "description": "系统集成服务"
+    },
+    {
+      "name": "admin-service",
+      "workspace": "@ai-datahub/admin-service",
+      "port": 3003,
+      "script": "dev:admin",
+      "healthCheck": "http://localhost:3003/health",
+      "description": "系统管理服务"
+    },
+    {
+      "name": "sharing-service",
+      "workspace": "@ai-datahub/sharing-service",
+      "port": 3004,
+      "script": "dev:sharing",
+      "healthCheck": "http://localhost:3004/health",
+      "description": "数据共享服务"
+    },
+    {
+      "name": "analytics-service",
+      "workspace": "@ai-datahub/analytics-service",
+      "port": 3005,
+      "script": "dev:analytics",
+      "healthCheck": "http://localhost:3005/health",
+      "description": "自助分析服务"
+    },
+    {
+      "name": "security-service",
+      "workspace": "@ai-datahub/security-service",
+      "port": 3006,
+      "script": "dev:security",
+      "healthCheck": "http://localhost:3006/health",
+      "description": "数据安全服务"
+    }
+  ]
+}

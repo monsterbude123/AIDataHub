@@ -1,4 +1,24 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(node ./**/*)",
+      "Bash(node scripts/*)",
+      "Bash(python ./**/*)",
+      "Bash(npm *)",
+      "Bash(curl *)",
+      "Bash(findstr *)",
+      "Bash(sleep *)",
+      "Bash(docker-compose *)",
+      "Bash(execSync *)",
+      "Bash(process.exit *)",
+      "Bash(console.log *)",
+      "Bash(console.error *)",
+      "Bash(echo *)",
+      "Bash(ls *)",
+      "Bash(export *)",
+      "Bash(concurrently *)"
+    ]
+  },
   "enabledPlugins": {
     "code-simplifier@claude-plugins-official": true
   }

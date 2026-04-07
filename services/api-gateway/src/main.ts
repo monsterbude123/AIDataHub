@@ -20,17 +20,15 @@ import { AppModule } from './AppModule';
  */
 async function bootstrap() {
   const port = process.env.PORT || 3000;
+  // Fix: When using FastifyAdapter with NestJS, do NOT call app.enableCors()
+  // NestJS automatically registers @fastify/cors which causes duplicate OPTIONS route
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
     { logger: ['log', 'warn', 'error'] }
   );
 
-  // Enable CORS for all origins (configure more restrictively in production)
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+  // DO NOT enableCors here - it causes duplicate OPTIONS route registration with FastifyAdapter
 
   // Setup Swagger documentation
   const config = new DocumentBuilder()

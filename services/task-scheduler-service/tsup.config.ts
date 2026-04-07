@@ -6,5 +6,5 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: 'es2020',
-  external: [/bcryptjs/, /jsonwebtoken/],
+  external: ['class-transformer/storage'],
 });

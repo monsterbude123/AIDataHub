@@ -47,6 +47,36 @@ npm -w <package-name> run test       # Test specific package
 npm -w <package-name> run test:watch # Test specific package in watch mode
 ```
 
+### Unified Service Management (Development)
+
+```bash
+# Full development environment setup (first time)
+npm run dev:setup      # Start infra + build + start all services
+
+# Service management
+npm run dev:all        # Start all application services locally
+npm run dev:all:filtered -- --services auth,metadata,gateway  # Start only selected services
+npm run dev:stop       # Stop all running local services
+npm run dev:status     # Check health status of all services
+npm run dev:clean      # Stop all services + stop infrastructure
+
+# Infrastructure management (Docker)
+npm run infra:up       # Start PostgreSQL + Redis + RabbitMQ
+npm run infra:down     # Stop all infrastructure
+npm run infra:status   # Show infrastructure status
+npm run infra:logs     # View infrastructure logs
+```
+
+### Production Docker Deployment
+
+```bash
+npm run prod:up        # Build and start all services (full stack)
+npm run prod:down      # Stop all production services
+npm run prod:status    # Show production status
+npm run prod:logs      # View all production logs
+npm run prod:restart   # Restart all production services
+```
+
 ## Code Architecture
 
 ### Project Structure (Monorepo with npm workspaces)
@@ -57,9 +87,19 @@ ai-datahub/
 │   ├── contract/     # Shared TypeScript contracts (DTOs, error codes, Result, RequestMeta)
 │   ├── sdk/          # Client SDK for HTTP calls (auth, retries, observability)
 │   └── shared/       # Node.js shared infrastructure (logger, config, error handling)
-├── services/         # NestJS microservice implementations
-│   ├── data-service-service/
-│   └── metadata-service/
+├── services/         # NestJS microservice implementations (11 services total)
+│   ├── system-auth-service/      # Authentication & authorization
+│   ├── metadata-service/         # Metadata management
+│   ├── data-service-service/     # Data asset management
+│   ├── task-scheduler-service/   # Task scheduling & DAG orchestration
+│   ├── api-gateway/              # API gateway unified entry
+│   ├── ops-service/              # Operations monitoring
+│   ├── integration-service/      # External system integration
+│   ├── admin-service/            # System administration
+│   ├── sharing-service/          # Data sharing
+│   ├── analytics-service/         # Self-service analytics
+│   └── security-service/         # Data security
+├── scripts/          # Service management scripts (unified start/stop/status)
 ├── doc/              # Documentation and design docs
 └── tests/            # Integration and E2E tests
 ```

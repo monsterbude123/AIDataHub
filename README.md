@@ -135,30 +135,45 @@ start.bat build
 ./start.sh clean
 ```
 
-## 方式二：本地开发
+## 方式二：本地开发（推荐调试）
+
+基础设施（PostgreSQL/Redis/RabbitMQ）使用 Docker，应用服务本地运行，方便调试：
 
 ```bash
-# 安装依赖
+# 1. 安装依赖
 npm install
 
-# 初始化数据库（首次运行）
-cd packages/database && npx prisma db push && cd ..
+# 2. 一键启动基础设施 + 构建 + 启动所有应用服务
+npm run dev:setup
 
-# 构建所有包
-npm run build
+# 3. 检查服务运行状态
+npm run dev:status
 
-# 类型检查
-npm run build:check
-
-# 运行测试
-npm run test
-
-# 启动开发服务
-npm run dev:gateway  # API Gateway (端口 3000)
-npm run dev:auth     # 认证服务 (端口 4001)
-npm run dev:metadata # 元数据服务 (端口 4002)
-npm run dev:data     # 数据服务 (端口 4003)
+# 如果你只想启动部分服务进行开发
+npm run dev:all:filtered -- --services auth,metadata,gateway
 ```
+
+### 本地开发常用命令
+
+```bash
+# 只操作基础设施
+npm run infra:up      # 启动基础设施
+npm run infra:down    # 停止基础设施
+npm run infra:status  # 查看基础设施状态
+
+# 只操作应用服务
+npm run dev:all       # 启动所有应用服务
+npm run dev:stop      # 停止所有应用服务
+npm run dev:status    # 检查应用服务健康状态
+npm run dev:clean     # 停止所有应用服务和基础设施
+
+# 生产环境完整 Docker 部署
+npm run prod:up       # 构建并启动所有服务
+npm run prod:down     # 停止所有服务
+npm run prod:status   # 查看生产环境状态
+```
+
+> **开发模式优势**：基础设施在 Docker 保证环境一致性，应用服务本地运行支持断点调试，修改代码自动重启
 
 # 安装使用
 

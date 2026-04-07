@@ -505,40 +505,101 @@ feat: 添加全局异常过滤器
 
 ## 12. 本地开发环境规范
 
-### 12.1 基础设施
+### 12.1 统一服务管理
 
-基础设施（PostgreSQL、Redis）通过 Docker 运行，应用服务在本地运行：
+项目提供了统一的服务启停脚本，支持一键启动/停止所有服务：
+
+### 12.1.1 开发环境完整流程
 
 ```bash
-# 启动所有基础设施（PostgreSQL + Redis）
-docker-compose up -d
+# 首次开发环境初始化：安装依赖 + 启动基础设施 + 构建 + 启动所有服务
+npm run dev:setup
 
-# 查看日志
-docker-compose logs -f postgres
+# 检查服务运行状态
+npm run dev:status
 
-# 停止所有基础设施
-docker-compose down
+# 停止所有服务和基础设施
+npm run dev:clean
 ```
 
-### 12.2 快捷启动脚本
+### 12.1.2 常用操作
 
-根目录 `package.json` 提供了快捷启动单个服务开发：
+```bash
+# 只启动基础设施（PostgreSQL + Redis + RabbitMQ）
+npm run infra:up
+
+# 只停止基础设施
+npm run infra:down
+
+# 查看基础设施状态
+npm run infra:status
+
+# 查看基础设施日志
+npm run infra:logs
+
+# 启动所有应用服务（需要基础设施已运行）
+npm run dev:all
+
+# 只启动指定服务（通过名称前缀筛选）
+npm run dev:all:filtered -- --services auth,metadata,gateway
+
+# 停止所有本地运行的应用服务
+npm run dev:stop
+
+# 检查所有服务健康状态
+npm run dev:status
+```
+
+### 12.1.3 生产环境完整部署（全 Docker）
+
+```bash
+# 一键构建并启动所有服务（包括基础设施和应用）
+npm run prod:up
+
+# 查看状态
+npm run prod:status
+
+# 查看所有服务日志
+npm run prod:logs
+
+# 停止所有服务
+npm run prod:down
+
+# 重启所有服务
+npm run prod:restart
+```
+
+### 12.2 单个服务开发
+
+根目录 `package.json` 也提供了快捷启动单个服务开发，适合在单独终端窗口开发：
 
 ```bash
 # 开发模式启动（自动编译监听）
-npm run dev:auth      # system-auth-service
-npm run dev:metadata  # metadata-service
-npm run dev:data      # data-service-service
-npm run dev:gateway   # api-gateway
-npm run dev:tasks     # task-scheduler-service
+npm run dev:auth        # system-auth-service
+npm run dev:metadata    # metadata-service
+npm run dev:data        # data-service-service
+npm run dev:tasks       # task-scheduler-service
+npm run dev:gateway     # api-gateway
+npm run dev:ops         # ops-service
+npm run dev:integration # integration-service
+npm run dev:admin       # admin-service
+npm run dev:sharing     # sharing-service
+npm run dev:analytics   # analytics-service
+npm run dev:security    # security-service
 
 # 生产模式启动（编译后运行）
 npm run start:auth
 npm run start:metadata
 npm run start:data
+npm run start:gateway
+npm run start:tasks
+npm run start:ops
+npm run start:integration
+npm run start:admin
+npm run start:sharing
+npm run start:analytics
+npm run start:security
 ```
-
-这样你可以在不同终端窗口同时启动多个服务进行开发测试。
 
 ---
 
